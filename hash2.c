@@ -98,7 +98,7 @@ int search_offset(psum_node* phead,int hash_val){
 		if(curr->hash_val==hash_val){
 			offset=curr->curr_off;
 			curr->curr_off++;
-			printf("Epistrefw offset: %d\n\n",offset );
+			//printf("Epistrefw offset: %d\n\n",offset );
 			return offset;
 		}
 		curr=curr->next;
@@ -108,12 +108,32 @@ int search_offset(psum_node* phead,int hash_val){
 
 }
 
+//
+
+int search_match(hist_node* bigger,hist_node* smaller,hist_node** moving){
+	*moving=smaller;
+	while((((*moving)->hash_val)<bigger->hash_val)&&(moving!=NULL)){
+		(*moving)=(*moving)->next;
+	}
+	if((*moving)==NULL){		
+		printf("No matching hash values where found.\n");
+		return 0;
+	}
+	else{
+		printf("Match found, hash value: %d\n", (*moving)->hash_val);
+		return 1;
+	}
+}
+
 int final_hash(hist_node* R_head, hist_node* S_head,psum_node* R_phead,psum_node* S_phead){
-	int i,numofhvR,numofhvS,buck_size,B_size,hash_val,toHash,*buck_start,*buck_end; //B_size=megethos tou pinaka Bucket 
-	numofhvS=0;																				 //pou tha ftiaxtei sti sinexeia
-	numofhvR=0;
-	hist_node* curr_R=R_head;
-	hist_node* curr_S=S_head; 
+	int i,buck_size,B_size,hash_val,toHash,*buck_start,*buck_end,match; //B_size=megethos tou pinaka Bucket 
+	hist_node **curr_R,**curr_S, *start_point;
+
+	curr_R=malloc(sizeof(hist_node*));
+	if (curr_R== NULL) { fprintf(stderr, "Malloc failed \n"); return 1;}
+	curr_S=malloc(sizeof(hist_node*));
+	if (curr_S== NULL) { fprintf(stderr, "Malloc failed \n"); return 1;}
+
 
 	buck_start=malloc(sizeof(int));
 	if (buck_start == NULL) { fprintf(stderr, "Malloc failed \n"); return 1;}
@@ -121,67 +141,60 @@ int final_hash(hist_node* R_head, hist_node* S_head,psum_node* R_phead,psum_node
 	if (buck_end == NULL) { fprintf(stderr, "Malloc failed \n"); return 1;}
 
 
-	//metraw posa hash values exei to kathe relation
-	while(curr_R!=NULL){
-		numofhvR++;
-		curr_R=curr_R->next;
-	}
-	while(curr_S!=NULL){
-		numofhvS++;
-		curr_S=curr_S->next;
-	}
+	*curr_R=R_head;
+	*curr_S=S_head;
 
-	curr_R=R_head;
-	curr_S=S_head;
+	while(((*curr_R)!=NULL)&&((*curr_S)!=NULL)){
+		if(((*curr_R)->hash_val)>=((*curr_S)->hash_val)){
+			start_point=(*curr_S);
+			match=search_match((*curr_R),(*curr_S),curr_S);
+			if(match){
+				hash_val=(*curr_R)->hash_val;
+				//printf("Vrethike koino hashvalue: %d\n\n",curr_R->hash_val);
+				toHash=buck_compare((*curr_R),(*curr_S),R_phead,S_phead,buck_start,buck_end,hash_val);
+				buck_size=(*buck_end)-(*buck_start);
+				B_size=next_prime(buck_size);
+				printf("O pinakas Bucket tha exei megethos: %d\n\n",B_size);
 
-	if(numofhvR<numofhvS){
-		while(curr_R!=NULL){
-			while(curr_S!=NULL){
-				if(curr_R->hash_val==curr_S->hash_val){
-					hash_val=curr_R->hash_val;
-					printf("Vrethike koino hashvalue: %d\n\n",curr_R->hash_val);
-					toHash=buck_compare(curr_R,curr_S,R_phead,S_phead,buck_start,buck_end,hash_val);
-					buck_size=(*buck_end)-(*buck_start);
-					B_size=next_prime(buck_size);
-					printf("O pinakas Bucket tha exei megethos: %d\n\n",B_size);
-
-					for(i=(*buck_start);i<(*buck_end);i++){
-						
-					}
-					break;
-				}
-				else curr_S=curr_S->next;
+				/*for(i=(*buck_start);i<(*buck_end);i++){
+					//BUCKET CHAIN
+				}*/
+				(*curr_R)=(*curr_R)->next;
+				(*curr_S)=(*curr_S)->next;
 			}
-			curr_R=curr_R->next;
-			curr_S=S_head;			
+			else{
+				(*curr_R)=(*curr_R)->next;
+				(*curr_S)=start_point->next;			}
+		}
+		else{
+			start_point=(*curr_R);
+			match=search_match((*curr_S),(*curr_R),curr_R);
+			if(match){
+				hash_val=(*curr_S)->hash_val;
+				//printf("Vrethike koino hashvalue: %d\n\n",curr_R->hash_val);
+				toHash=buck_compare((*curr_R),(*curr_S),R_phead,S_phead,buck_start,buck_end,hash_val);
+				buck_size=(*buck_end)-(*buck_start);
+				B_size=next_prime(buck_size);
+				printf("O pinakas Bucket tha exei megethos: %d\n\n",B_size);
+
+				/*for(i=(*buck_start);i<(*buck_end);i++){
+					////BUCKET CHAIN
+					
+				}*/
+				(*curr_R)=(*curr_R)->next;
+				(*curr_S)=(*curr_S)->next;
+			}
+			else{
+				(*curr_R)=start_point->next;
+				(*curr_S)=(*curr_S)->next;
+			}
 		}
 	}
-	else{
-		while(curr_S!=NULL){
-			while(curr_R!=NULL){
-				if(curr_S->hash_val==curr_R->hash_val){
-					hash_val=curr_R->hash_val;
-					printf("Vrethike koino hashvalue: %d\n\n",curr_S->hash_val);
-					toHash=buck_compare(curr_R,curr_S,R_phead,S_phead,buck_start,buck_end,hash_val);
-					buck_size=(*buck_end)-(*buck_start);
-					B_size=next_prime(buck_size);
-					printf("O pinakas Bucket tha exei megethos: %d\n\n",B_size);
 
-
-					for(i=(*buck_start);i<(*buck_end);i++){
-						
-					}
-					break;
-				}
-				else curr_R=curr_R->next;
-			}
-			curr_S=curr_S->next;
-			curr_R=R_head;			
-		}
-
-	}
 	free(buck_start);
 	free(buck_end);
+	free(curr_R);
+	free(curr_S);
 	return 0;
 }
 
