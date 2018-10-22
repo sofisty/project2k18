@@ -8,8 +8,11 @@ int hash_func(int value, int n){
 	return (value%l);
 }
 
+//THA TO MAZEPSW 
 
 hist_node*  update_hist(hist_node* head, int hash_val, int* total_buckets){
+	hist_node* temp;
+	int flag=0;
 	if(head==NULL){
 		head = malloc(sizeof(hist_node));
 		if (head == NULL) {
@@ -18,25 +21,50 @@ hist_node*  update_hist(hist_node* head, int hash_val, int* total_buckets){
 
 		head->hash_val = hash_val;
 		head->count=1;
+		head->next=NULL;
 		*total_buckets=1;
 		return head;
 	}	
 	hist_node * current = head;
 	if(current->hash_val==hash_val){ current->count+=1; return head; }
+	if(current->hash_val>hash_val){
+		temp=head;
+		head = malloc(sizeof(hist_node));
+		if (head == NULL) {
+	    fprintf(stderr, "Malloc failed \n"); return NULL;
+		}
+
+		head->hash_val = hash_val;
+		head->count=1;
+		head->next=temp;
+		*total_buckets+=1;
+		return head;
+	}
 
     while (current->next != NULL) {
+    	if(current->next->hash_val==hash_val) { current->next->count+=1; return head; }
+    	if(current->next->hash_val<hash_val){ 
+    		current = current->next;
+       		
+    	}
+    	else{break; flag=1;} //to current next exei megalutero value
 
-        current = current->next;
-        if(current->hash_val==hash_val) { current->count+=1; return head; }
+        
     }
-
+    if(flag==1){
+    	temp=current->next;
+    }
+    else{
+    	temp=NULL;
+    }
+    
     current->next = malloc(sizeof(hist_node));
     if (current->next == NULL) {
 	    fprintf(stderr, "Malloc failed \n"); return NULL;
 	}
     current->next->hash_val = hash_val;
     current->next->count=1;
-    current->next->next = NULL;
+    current->next->next = temp;
     *total_buckets+=1;
     
 
@@ -159,94 +187,7 @@ void print_R(relation* R){
 }
 
 //----------------------------------------------------------------------------------
-int hash2_func(int value,int prime){
-	return (value%prime);
-}
 
-//kai kala veltisto to vrhka eipa na to valw na to deis
-int isPrime(int n) {// assuming n > 1
-    int i;
-    int root;
-	 if (n%2 == 0 || n%3 == 0)return 0;
-	root = (int)sqrt(n);
-
-    for (i=5; i<=root; i+=6){if (n%i == 0)return 0;}
-
-    for (i=7; i<=root; i+=6){if (n%i == 0)return 0;}
-
-    return 1;
-}
-
-
-int next_prime(int value){
-
-	/*int divisors, i, prime, j=1;
-	divisors=0;
-	i=value;
-	while(1){
-		i++;
-		divisors=0;
-		for(j=1;j<=i;j++){
-			if((i%j)==0) divisors++;
-		}
-		if(divisors==2){
-			prime=i;
-			break;
-		} 		
-	}
-	printf("Next prime number of %d : %d\n",value, prime);
-	*/
-	if(value==0)return 1;
-	if(value==1)return 2;
-
-	if(	(value+1)%2==0){value+=2;}
-	else {value+=1;}
-
-	while(isPrime(value)!=1)value++;
-	return value;
-	
-	
-}
-
-
-
-int bucket_chain(relation* R_new, int start, int end, int hash_size, int** bucket, int** chain){ //tha kaleitai gia kathe bucket pou exei ginei eurethrio
-																								// hash_size einai o next prime			
-	int  i;
-	
-	for(i=0; i<hash_size; i++){
-		bucket[i]=malloc(sizeof(int));
-		if (bucket[i] == NULL) { fprintf(stderr, "Malloc failed \n"); return 1;}
-	}
-
-	for(i=0; i<10; i++){
-		chain[i]=malloc(sizeof(int));
-		if (chain[i] == NULL) { fprintf(stderr, "Malloc failed \n"); return 1;}
-	}
-	
-	for(i=0; i<hash_size; i++)*bucket[i]=-1;
-	for(i=0; i<bucket_size; i++)*chain[i]=-1;
-	
-	int prev, y;
-	for(i=start; i<end; i++){ //sarwsh tou eurethriou
-		y=hash2_func( R_new->tuples[i].key,hash_size);
-
-		if(y>=hash_size || y<0){fprintf(stderr, "hash2 value does not match\n"); return 1;}
-		if(*bucket[y]==-1){ //an den exei mpei prohgoumenh timh 
-			*bucket[y]=i; //vale sthn thesh y(bucket y ths hash2) thn thesh  i 
-		}
-		else{
-			prev=*bucket[y];
-			*bucket[y]=i;
-			*chain[i]=prev;
-		}
-	}
-	
-
-	return 0;
-
-
-} 
 
 
 //XWRAEI MEXRI 5 TUPLES / THA TO ALLAKSOUME
