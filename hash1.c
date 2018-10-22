@@ -47,7 +47,7 @@ hist_node*  update_hist(hist_node* head, int hash_val, int* total_buckets){
     		current = current->next;
        		
     	}
-    	else{break; flag=1;} //to current next exei megalutero value
+    	else{ flag=1; break;} //to current next exei megalutero value
 
         
     }
@@ -81,6 +81,20 @@ void print_hist(hist_node * head) {
     }
 }
 
+void free_hist(hist_node* head){
+	hist_node* temp=head;
+	hist_node* curr=head;
+
+	while(curr->next!=NULL){
+		temp=curr;
+		curr=curr->next;
+		free(temp);
+		temp=NULL;
+	}
+	free(curr);
+	curr=NULL;
+	
+}
 
 
 psum_node* create_psumlist(psum_node* psum_head, hist_node* hist_head ){
@@ -133,6 +147,23 @@ void print_psum(psum_node * head) {
 }
 
 
+void free_psum(psum_node* head){
+	psum_node* temp=head;
+	psum_node* curr=head;
+
+	while(curr->next!=NULL){
+		temp=curr;
+		curr=curr->next;
+		free(temp);
+		temp=NULL;
+	}
+	free(curr);
+	curr=NULL;
+
+	
+}
+
+
 int search_Psum(psum_node* head, int key, int n ){
 	psum_node* curr=head;
 	int hash_val;
@@ -144,7 +175,7 @@ int search_Psum(psum_node* head, int key, int n ){
 		if(curr->hash_val==hash_val){
 			offset=curr->curr_off;
 			curr->curr_off++;
-			printf("Epistrefw offset: %d\n",offset );
+			//printf("Epistrefw offset: %d\n",offset );
 			return offset;
 		}
 		curr=curr->next;
@@ -308,13 +339,31 @@ result* search_results(result* result_list, relation* S_new, int startS, int end
 
 } 
 
+void free_result_list(result* result_list){
+	result* temp= result_list;
+	result* curr=result_list;
+	while(curr!=NULL){
+		temp=curr;
+		curr=curr->next;
+		free(temp->tuplesR);
+		temp->tuplesR=NULL;
+		free(temp->tuplesS);
+		temp->tuplesS=NULL;
+		free(temp);
+		temp=NULL;
+	}
+
+}
+
+
 
 
 int main(){
 	
 	//int  values[10] = { 0b100100, 0b111001, 0b100001, 0b101101, 0b110100, 0b101101, 0b101001, 0b100101, 0b001101, 0b111100};
 	//int  values[10] = { 0b100100, 0b100100, 0b100100,0b100100, 0b100100, 0b100100, 0b100100,0b100100, 0b100100, 0b100100};
-	int values[12]={0b10000,0b10000,0b10000,0b10000,0b10000,0b10000,0b10000,0b10000,0b10000,0b10000,0b10000,0b10000 };
+	int values[12]={0b10001,0b10011,0b10111,0b10101,0b10001,0b10001,0b10001,0b10001,0b10001,0b10001,0b10001,0b10001 };
+
 	int i, total_bucketsR=0, total_bucketsS=0, hash_size, bucket_size;
 
 	tuple* rel_t;
@@ -365,7 +414,7 @@ int main(){
  	//int values2[10]={0b111100, 0b111001, 0b100111, 0b101100, 0b100000, 0b111111, 0b101111, 0b000011, 0b111110, 0b110000};
  	
 
- 	int values2[10]={0b10000, 0b10000, 0b10000, 0b10000, 0b10000, 0b10000, 0b10000, 0b10000, 0b10000, 0b10001};
+ 	int values2[10]={0b10000, 0b10001, 0b10001, 0b10111, 0b10001, 0b10001, 0b10011, 0b10001, 0b10001, 0b10001};
  	for(i=0; i<10; i++){
 		rel_t[i].key=values2[i];
 		rel_t[i].payload=10;
@@ -390,7 +439,7 @@ int main(){
 		S_head=update_hist(S_head, hash_val, &total_bucketsS);
 
 	}
-	//print_hist( S_head);
+	print_hist( S_head);
 
 	S_phead=create_psumlist( S_phead, S_head) ;
 	//printf("\n\n");
@@ -404,8 +453,8 @@ int main(){
  	//--------------------------------------------------------------------------------------
 
 	//AUTHAIRETH DOKIMH STO PRWTO BUCKET TOU R
-
-	bucket_size=10;
+ 	final_hash(R_head, S_head, phead, S_phead);
+	/*bucket_size=10;
 	hash_size= next_prime(bucket_size);
 	printf("Hash size: %d\n",hash_size );
 
@@ -423,6 +472,32 @@ int main(){
 	result* result_list=NULL;
 	result_list=search_results(result_list, S_new, 0, 12, bucket, chain, R_new, hash_size, 0);
 	print_results( result_list);
+	*/
+
+	//----------------------------------------------------------------------------------
+
+	//free_bucket(hash_size, bucket); //gia kathe bucket kai chain pou ftiaxnetai 
+	//free_chain(bucket_size, chain); 
+	
+	//free_result_list( result_list);
+	
+
+	free_hist(R_head);
+	free_hist(S_head);
+ 	free_psum(phead);
+ 	free_psum(S_phead);
+ 	free(rel_t);
+ 	free(R);
+ 	free(S);
+ 	free(R_new->tuples);
+ 	free(S_new->tuples);
+	free(R_new);
+	free(S_new);
+
+
+	//free(bucket);
+	//free(chain);
+
 	
 
 

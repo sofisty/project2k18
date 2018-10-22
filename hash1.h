@@ -41,11 +41,13 @@ typedef struct result {
 int hash_func(int value, int n);
 hist_node*  update_hist(hist_node* head, int hash_val, int* total_buckets);
 void print_hist(hist_node*  head);
+void free_hist(hist_node* head);
 
-psum_node* add_psum_node(psum_node* head,  int hash_val, int offset);
+
 psum_node* create_psumlist(psum_node* psum_head, hist_node* hist_head);
 void print_psum(psum_node * head);
 int search_Psum(psum_node* head, int key, int n );
+void free_psum(psum_node* head);
 
 relation* reorder_R(psum_node* phead, relation* R, relation* R_new, int n  );
 void print_R(relation* R);
@@ -56,6 +58,7 @@ void print_R(relation* R);
 result* search_results(result* result_list, relation* S_new, int startS, int endS, int** bucket, int** chain, relation* R_new, int hash_size,  int index);
 result* store_results(result* result_list, tuple resultR, tuple resultS );
 void print_results(result* result_list);
+void free_result_list(result* result_list);
 
 
 #endif

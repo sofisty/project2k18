@@ -19,6 +19,6 @@ int bucket_chain(relation* R_new, int start, int end, int hash_size, int** bucke
 int final_hash(hist_node* R_head, hist_node* S_head,psum_node* R_phead,psum_node* S_phead);
 
 int search_offset(psum_node* phead,int hash_val);
-int search_match(hist_node* bigger,hist_node* smaller,hist_node** moving);
+int search_match(hist_node* bigger,hist_node* smaller,hist_node* moving);
 
 #endif

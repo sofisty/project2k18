@@ -110,92 +110,142 @@ int search_offset(psum_node* phead,int hash_val){
 
 //
 
-int search_match(hist_node* bigger,hist_node* smaller,hist_node** moving){
-	*moving=smaller;
-	while((((*moving)->hash_val)<bigger->hash_val)&&(moving!=NULL)){
-		(*moving)=(*moving)->next;
+int search_match(hist_node* bigger,hist_node* smaller,hist_node* moving){
+	moving=smaller;
+	while((((moving)->hash_val)<bigger->hash_val)&&(moving!=NULL)){
+		(moving)=(moving)->next;
 	}
-	if((*moving)==NULL){		
+	if((moving)==NULL){		
 		printf("No matching hash values where found.\n");
 		return 0;
 	}
 	else{
-		printf("Match found, hash value: %d\n", (*moving)->hash_val);
+		printf("Match found, hash value: %d\n", (moving)->hash_val);
 		return 1;
 	}
 }
 
+//final_hash(R_head,S_head,phead,S_phead);
+
+
+//THN EXW ALLAKSEI ARKETA , LEIPOUN OMWS PALI TA COMPARE BUCKETS DEN TA XW VALEI
+//kai vasika oles tis sunarthseis tis evala mesa an den s aresei ennoeitai allakse to olo 
+//apla ayto skefthka ekeinh thn stigmh 
+//douleuei komple mou fainetai
+
 int final_hash(hist_node* R_head, hist_node* S_head,psum_node* R_phead,psum_node* S_phead){
-	int i,buck_size,B_size,hash_val,toHash,*buck_start,*buck_end,match; //B_size=megethos tou pinaka Bucket 
-	hist_node **curr_R,**curr_S, *start_point;
+	
+	//ta sxoliasa gia ta warnings
+	//int i,buck_size,B_size,toHash,buck_start,buck_end; //B_size=megethos tou pinaka Bucket 
+	
+	int hash_val;
+	hist_node *curr_R,*curr_S;//, *start_point;
+	psum_node *curr_Rp,*curr_Sp;//, *start_pointP;
 
-	curr_R=malloc(sizeof(hist_node*));
-	if (curr_R== NULL) { fprintf(stderr, "Malloc failed \n"); return 1;}
-	curr_S=malloc(sizeof(hist_node*));
-	if (curr_S== NULL) { fprintf(stderr, "Malloc failed \n"); return 1;}
+	hist_node* temp; //ayto pou kineitai
+	psum_node* ptemp;
 
+	curr_R=R_head; //currents
+	curr_S=S_head;
 
-	buck_start=malloc(sizeof(int));
-	if (buck_start == NULL) { fprintf(stderr, "Malloc failed \n"); return 1;}
-	buck_end=malloc(sizeof(int));
-	if (buck_end == NULL) { fprintf(stderr, "Malloc failed \n"); return 1;}
+	curr_Rp=R_phead;
+	curr_Sp=S_phead;
 
+	int flag=0, match=0, greater=1;
 
-	*curr_R=R_head;
-	*curr_S=S_head;
+	while(((curr_R)!=NULL)&&((curr_S)!=NULL)){
+		
 
-	while(((*curr_R)!=NULL)&&((*curr_S)!=NULL)){
-		if(((*curr_R)->hash_val)>=((*curr_S)->hash_val)){
-			start_point=(*curr_S);
-			match=search_match((*curr_R),(*curr_S),curr_S);
-			if(match){
-				hash_val=(*curr_R)->hash_val;
-				//printf("Vrethike koino hashvalue: %d\n\n",curr_R->hash_val);
-				toHash=buck_compare((*curr_R),(*curr_S),R_phead,S_phead,buck_start,buck_end,hash_val);
-				buck_size=(*buck_end)-(*buck_start);
-				B_size=next_prime(buck_size);
-				printf("O pinakas Bucket tha exei megethos: %d\n\n",B_size);
-
-				/*for(i=(*buck_start);i<(*buck_end);i++){
-					//BUCKET CHAIN
-				}*/
-				(*curr_R)=(*curr_R)->next;
-				(*curr_S)=(*curr_S)->next;
-			}
-			else{
-				(*curr_R)=(*curr_R)->next;
-				(*curr_S)=start_point->next;			}
+		if(curr_R->hash_val==curr_S->hash_val){
+			printf("VRHKA MATCH %d %d\n",curr_R->hash_val,curr_S->hash_val);
+			//COMPARE BUCKETS KAI BUCKET CHAIN
+			curr_R=curr_R->next;
+			curr_Rp=curr_Rp->next;
+			
+			curr_S=curr_S->next;
+			curr_Sp=curr_Sp->next;
 		}
-		else{
-			start_point=(*curr_R);
-			match=search_match((*curr_S),(*curr_R),curr_R);
-			if(match){
-				hash_val=(*curr_S)->hash_val;
-				//printf("Vrethike koino hashvalue: %d\n\n",curr_R->hash_val);
-				toHash=buck_compare((*curr_R),(*curr_S),R_phead,S_phead,buck_start,buck_end,hash_val);
-				buck_size=(*buck_end)-(*buck_start);
-				B_size=next_prime(buck_size);
-				printf("O pinakas Bucket tha exei megethos: %d\n\n",B_size);
+		else{ 
+			
+			if(curr_R->hash_val>curr_S->hash_val){ //AN HASH_VAL TOU R>S krataw to R kai kineitai to S
+				temp=curr_S->next; //kineitai to S kai arxikopoieitai sto epomeno tou
+				ptemp=curr_Sp->next;
+				hash_val=curr_R->hash_val; //h hash_value pou sugkrinetai
+				flag=0;
+			}
+			else{ //HASH_VAL S> R kineitai to S
+				temp=curr_R->next;
+				ptemp=curr_Rp->next;
+				hash_val=curr_S->hash_val;
+				flag=1;
+			}
 
-				/*for(i=(*buck_start);i<(*buck_end);i++){
-					////BUCKET CHAIN
+			while(temp!=NULL){ //proxwraei ena apo ta 2 istogrammata analoga to flag
+				if(temp->hash_val==hash_val){match=1; break;} 
+				if(temp->hash_val>hash_val){greater=1; break;} //an vrethei megalutero value apo to zhtoumeno hash_value 
+																// shmainei oti den uparxei sto hist pou psaxnoume
+				temp=temp->next;
+				ptemp=ptemp->next;
+			}
+
+			if(temp==NULL){ //enas apo tous 2 pinakes eftase sto telos kai epeidh einai taksinomhmenoi den uparxei allo match
+				printf("There are no other hash matches\n");
+				break;
+			}
+
+			if(match==1){ //an uparxei match
+				if(flag==0){//proxwrousa to S ara to epomeno stoixeio tou tha einai to temp->next
+					printf("MATCH %d %d\n",curr_R->hash_val,temp->hash_val);
+					//COMPARE BUCKETS KAI BUCKET CHAIN meta curr_R, curr_Rp klp klp
 					
-				}*/
-				(*curr_R)=(*curr_R)->next;
-				(*curr_S)=(*curr_S)->next;
+					curr_R=curr_R->next; 
+					curr_Rp=curr_Rp->next;
+
+					curr_S=temp->next;
+					curr_Sp=ptemp->next;
+				}
+				else if (flag==1){//proxwrousa to R ara to epomeno stoixeio tou tha einai to temp->next
+					printf("MATCH %d %d\n",curr_S->hash_val,temp->hash_val);
+					//COMPARE BUCKETS KAI BUCKET CHAIN meta curr_R, curr_Rp klp klp
+					curr_S=curr_S->next;
+					curr_Sp=curr_Sp->next;
+
+					curr_R=temp->next;
+					curr_Rp=ptemp->next;
+				
+				}
+				
+				match=0; 
 			}
-			else{
-				(*curr_R)=start_point->next;
-				(*curr_S)=(*curr_S)->next;
+			else if(match==0 && greater==1){ //an den vrethhke match shmainei oti vrhke kapoia timh megaluterh apo thn hash pou anazhtousame 
+								//kai tha ginei h epomenh hash_value pou anazhtoume  
+
+				if(flag==0){ //proxwrouse o S
+					curr_S=temp; //kai ara stamathse o temp se mia timh > hash_value opou ginetai h current
+					curr_Sp=ptemp;
+					curr_R=curr_R->next;
+					curr_Rp=curr_Rp->next;
+				}
+				else if (flag==1){ //antistoixa gia ton R
+					curr_R=temp;
+					curr_Rp=ptemp;
+					curr_S=curr_S->next;
+					curr_Sp=curr_Sp->next;
+				}
 			}
+
+		
+
 		}
+		
+		
 	}
 
-	free(buck_start);
-	free(buck_end);
-	free(curr_R);
-	free(curr_S);
-	return 0;
+
+	
+		
+
+		return 0;
 }
 
 
