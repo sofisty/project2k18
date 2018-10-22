@@ -1,5 +1,6 @@
 #include "hash1.h"
 
+
 int hash_func(int value, int n){
 	int l=1;
 	for(int i =0; i<n; i++) l*=2;
@@ -8,7 +9,7 @@ int hash_func(int value, int n){
 }
 
 
-hist_node*  update_hist(hist_node* head, int hash_val){
+hist_node*  update_hist(hist_node* head, int hash_val, int* total_buckets){
 	if(head==NULL){
 		head = malloc(sizeof(hist_node));
 		if (head == NULL) {
@@ -17,6 +18,7 @@ hist_node*  update_hist(hist_node* head, int hash_val){
 
 		head->hash_val = hash_val;
 		head->count=1;
+		*total_buckets=1;
 		return head;
 	}	
 	hist_node * current = head;
@@ -35,6 +37,9 @@ hist_node*  update_hist(hist_node* head, int hash_val){
     current->next->hash_val = hash_val;
     current->next->count=1;
     current->next->next = NULL;
+    *total_buckets+=1;
+    
+
     return head;
 
 }
@@ -47,6 +52,7 @@ void print_hist(hist_node * head) {
         current = current->next;
     }
 }
+
 
 
 psum_node* create_psumlist(psum_node* psum_head, hist_node* hist_head ){
@@ -122,7 +128,7 @@ int search_Psum(psum_node* head, int key, int n ){
 
 relation* reorder_R(psum_node* phead, relation* R, relation* R_new, int n  ){
 	int i, size=R->num_tuples;
-	int  offset, key;
+	int  offset, key, payload;
 	//printf(" SIZE %d\n",size );
 	R_new->num_tuples=size;
 	R_new->tuples=malloc(size* sizeof(tuple));
@@ -131,9 +137,12 @@ relation* reorder_R(psum_node* phead, relation* R, relation* R_new, int n  ){
 	for(i=0; i<size; i++){
 
 		key=R->tuples[i].key;
+		payload=R->tuples[i].payload;
 		offset=search_Psum( phead, key, n );
 		//print_psum( phead);
 		R_new->tuples[offset].key=key;
+		R_new->tuples[offset].payload=payload;
+
 
 
 	}
@@ -149,18 +158,61 @@ void print_R(relation* R){
 	}
 }
 
+//----------------------------------------------------------------------------------
+int hash2_func(int value,int prime){
+	return (value%prime);
+}
 
-//NA DEIS TO SONG OF THE SEA!!
+//kai kala veltisto to vrhka eipa na to valw na to deis
+int isPrime(int n) {// assuming n > 1
+    int i;
+    int root;
+	 if (n%2 == 0 || n%3 == 0)return 0;
+	root = (int)sqrt(n);
+
+    for (i=5; i<=root; i+=6){if (n%i == 0)return 0;}
+
+    for (i=7; i<=root; i+=6){if (n%i == 0)return 0;}
+
+    return 1;
+}
 
 
-int bucket_chain(tuple* tuples,int bucket_size, int hash_size, int** bucket, int** chain){ //tha kaleitai gia kathe bucket pou exei ginei eurethrio
-																						//bucket size =oi eggrafes pou exei to bucket prin thn hash2 
-																						//hash size = to range ths hash2 (prwtos)			
+int next_prime(int value){
+
+	/*int divisors, i, prime, j=1;
+	divisors=0;
+	i=value;
+	while(1){
+		i++;
+		divisors=0;
+		for(j=1;j<=i;j++){
+			if((i%j)==0) divisors++;
+		}
+		if(divisors==2){
+			prime=i;
+			break;
+		} 		
+	}
+	printf("Next prime number of %d : %d\n",value, prime);
+	*/
+	if(value==0)return 1;
+	if(value==1)return 2;
+
+	if(	(value+1)%2==0){value+=2;}
+	else {value+=1;}
+
+	while(isPrime(value)!=1)value++;
+	return value;
+	
+	
+}
+
+
+
+int bucket_chain(relation* R_new, int start, int end, int hash_size, int** bucket, int** chain){ //tha kaleitai gia kathe bucket pou exei ginei eurethrio
+																								// hash_size einai o next prime			
 	int  i;
-
-	//bucket=malloc(sizeof(int*));
-	//*bucket=malloc(hash_size* sizeof(int));
-	//if (bucket == NULL) { fprintf(stderr, "Malloc failed \n"); return 1;}
 	
 	for(i=0; i<hash_size; i++){
 		bucket[i]=malloc(sizeof(int));
@@ -176,8 +228,9 @@ int bucket_chain(tuple* tuples,int bucket_size, int hash_size, int** bucket, int
 	for(i=0; i<bucket_size; i++)*chain[i]=-1;
 	
 	int prev, y;
-	for(i=0; i<bucket_size; i++){ //sarwsh tou eurethriou
-		y=tuples[i].key; //y=kai kala h hash value sth thesh i  
+	for(i=start; i<end; i++){ //sarwsh tou eurethriou
+		y=hash2_func( R_new->tuples[i].key,hash_size);
+
 		if(y>=hash_size || y<0){fprintf(stderr, "hash2 value does not match\n"); return 1;}
 		if(*bucket[y]==-1){ //an den exei mpei prohgoumenh timh 
 			*bucket[y]=i; //vale sthn thesh y(bucket y ths hash2) thn thesh  i 
@@ -193,20 +246,141 @@ int bucket_chain(tuple* tuples,int bucket_size, int hash_size, int** bucket, int
 	return 0;
 
 
+} 
+
+
+//XWRAEI MEXRI 5 TUPLES / THA TO ALLAKSOUME
+result* store_results(result* result_list, tuple resultR, tuple resultS ){
+	//int results=(1024*1024)/8 ; //isws na to pairnei san orisma 
+	//results-=3;
+	struct result* curr= result_list;
+	int count;
+	int size=5;//ALLAGH
+	if(result_list==NULL){
+		result_list=malloc(sizeof(result));
+		if (result_list == NULL) { fprintf(stderr, "Malloc failed \n"); return NULL;}
+		result_list->tuplesR=malloc(size* sizeof(tuple));
+		if (result_list->tuplesR == NULL) { fprintf(stderr, "Malloc failed \n"); return NULL;}
+
+		result_list->tuplesS=malloc(size* sizeof(tuple));
+		if (result_list->tuplesS == NULL) { fprintf(stderr, "Malloc failed \n"); return NULL;}
+		
+		result_list->next=NULL;
+		result_list->tuplesR[0]=resultR;
+		result_list->tuplesS[0]=resultS;
+		result_list->count=1;
+		return result_list;
+
+	}
+	else{
+		while(curr->next!=NULL)curr=curr->next;
+
+		if(curr->count<size){
+			count=curr->count;
+			curr->tuplesR[count]=resultR;
+			curr->tuplesS[count]=resultS;
+			curr->count+=1;
+			return result_list;
+		}
+		else if(curr->count==size){
+			curr->next=malloc(sizeof(result));
+			if (curr->next == NULL) { fprintf(stderr, "Malloc failed \n"); return NULL;}
+			curr->next->tuplesR=malloc(size* sizeof(tuple));
+			if (curr->next->tuplesR == NULL) { fprintf(stderr, "Malloc failed \n"); return NULL;}
+			
+			curr->next->tuplesS=malloc(size* sizeof(tuple));
+			if (curr->next->tuplesS == NULL) { fprintf(stderr, "Malloc failed \n"); return NULL;}
+			
+			
+			curr->next->tuplesR[0]=resultR;
+			curr->next->tuplesS[0]=resultS;
+
+			curr->next->count=1;
+			curr->next->next=NULL;
+			return result_list;
+
+		}
+		else{fprintf(stderr, "Count is wrong \n"); return NULL;}
+	}
 }
+
+void print_results(result* result_list){
+	int count, i, b=0;
+	result* curr=result_list;
+	printf("--RESULTS--\n");
+	if(result_list==NULL)printf("0 results found!\n");
+	while(curr!=NULL){
+		printf("\n-Bucket: %d\n", b);
+		count=curr->count;
+		for(i=0; i<count; i++){
+			printf(" Key %d Payload R %d, Payload S %d\n", curr->tuplesR[i].key, curr->tuplesR[i].payload, curr->tuplesS[i].payload);
+		}
+		curr=curr->next;
+		b++;
+	}
+}
+
+// To index kai kala einai ena flag pou mou leei se poio apo ta dyo buckets (pou exei epileksei h compare_buck) exei ginei to index
+//kalw thn sunarthsh kai sto orisma tou R vazw to relation pou exei to index enw sto orisma tou S to allo bucket
+
+result* search_results(result* result_list, relation* S_new, int startS, int endS, int** bucket, int** chain, relation* R_new, int hash_size,  int index){ //ston R exei xtistei to eurethrio 
+	int i, b,c, hash_val;//  b:bucket, c:chain
+
+
+	for(i=startS; i<endS; i++){
+
+		hash_val=hash2_func(S_new->tuples[i].key,hash_size);
+		if(*bucket[hash_val]!=-1){
+			b=*bucket[hash_val];
+			c=*chain[b];
+			if(R_new->tuples[b].key==S_new->tuples[i].key){ //an to index den einai 1 shmainei oti sthn thesh tou r exoume dwsei to s
+				if(index!=0){result_list= store_results(result_list, S_new->tuples[i],   R_new->tuples[b] );} //opote gia na apothhkeusei swsta ta apotelesmata
+																												//dinoume anapoda ta orismata 
+				else{result_list= store_results(result_list, R_new->tuples[b],  S_new->tuples[i] );}
+				//printf("Bucket row %d 	Match 	R:%d = S:%d\n",b, bucketR[b].key, bucketS[i].key );
+				while(c!=-1){ //auto deixnei an exei prohgoumeno
+					
+					if(R_new->tuples[c].key==S_new->tuples[i].key){
+						if(index!=0){result_list= store_results(result_list, S_new->tuples[i],  R_new->tuples[c] );}
+						else{result_list= store_results(result_list, R_new->tuples[c] , S_new->tuples[i] );}
+						//printf("\tChain row %d 	Match 	R:%d = S:%d\n",c,bucketR[c].key, bucketS[i].key );
+					}
+					else{
+						//printf("\tChain Keys do not match: HASH %d and R:%d != S%d\n",hash_val, bucketR[c].key, bucketS[i].key );
+					}
+					c=*chain[c];
+				}
+
+			}
+			else{
+				//printf("Bucket: Keys do not match: HASH %d and R:%d != S:%d \n",hash_val, bucketR[b].key,bucketS[i].key );
+			}
+
+		}
+		else{
+				//printf("Bucket: -- S:%d does not exist in R!\n", bucketS[i].key );
+		}
+
+	}
+
+	return result_list;
+
+} 
+
 
 
 int main(){
 	
-	int  values[10] = { 0b100100, 0b111001, 0b100001, 0b101101, 0b110100, 0b101101, 0b101001, 0b100101, 0b001101, 0b111100};
+	//int  values[10] = { 0b100100, 0b111001, 0b100001, 0b101101, 0b110100, 0b101101, 0b101001, 0b100101, 0b001101, 0b111100};
 	//int  values[10] = { 0b100100, 0b100100, 0b100100,0b100100, 0b100100, 0b100100, 0b100100,0b100100, 0b100100, 0b100100};
-	int i;
+	int values[12]={0b10000,0b10000,0b10000,0b10000,0b10000,0b10000,0b10000,0b10000,0b10000,0b10000,0b10000,0b10000 };
+	int i, total_bucketsR=0, total_bucketsS=0, hash_size, bucket_size;
 
 	tuple* rel_t;
-	rel_t=malloc(10*sizeof(tuple));
-	for(i=0; i<10; i++){
+	rel_t=malloc(12*sizeof(tuple));
+	for(i=0; i<12; i++){
 		rel_t[i].key=values[i];
-		rel_t[i].payload=10;
+		rel_t[i].payload=i;
 	}
 
 	relation* R=malloc(sizeof(relation));
@@ -217,63 +391,98 @@ int main(){
 
 
 	R->tuples=rel_t;
-	R->num_tuples=10; //allakse to 
+	R->num_tuples=12; //allakse to 
 
 	int n=3, hash_val;
-	hist_node * head = NULL;
+	hist_node * R_head = NULL;
 	psum_node* phead=NULL;
 
 	phead=NULL;
-	
-
 
 	for(i =0; i<R->num_tuples; i++){
 		hash_val= hash_func( (R->tuples[i].key), n);
 		printf("%d, %d\n", R->tuples[i].key, hash_val);
-		head=update_hist(head, hash_val);
+		R_head=update_hist(R_head, hash_val, &total_bucketsR);
 
 	}
+	printf("------TOTAL BUCKETS %d\n",total_bucketsR );
 
-	print_hist( head);
+	print_hist( R_head);
 
-	phead=create_psumlist( phead, head) ;
-	printf("\n\n");
- 	print_psum(phead);
+	phead=create_psumlist( phead, R_head) ;
+	//printf("\n\n");
+ 	//print_psum(phead);
 
  	R_new=reorder_R(phead,  R,  R_new,  n  );
- 	print_R( R);
- 	printf("\n\n");
- 	print_R(R_new);
-
- 	//proswrina tuples kai kala oi hash2 tou bucket 0
- 	int  values1[10] = {1,2,5,5,10,2,7,1,1,3};
- 	//int  values1[10] = {1,1,1,1,1,1,1,1,1,1};
- 	//int  values1[10] = {1,2,3,4,5,6,7,8,9,10};
+ 	//print_R( R);
+ 	//printf("\n\n");
+ 	//print_R(R_new);
  	
- 	
- 	//swsta apotelesmata: bucket{-1,8,5,9,-1,3,-1,6,-1,3,4} gia to prwto
- 						//chain{-1,-1,-1,2,-1,1,-1,0,7,-1}					
 
+ 	//-----------------------------------------------------
+ 	printf("-----Now for relation S\n");
+ 	//int values2[10]={0b111100, 0b111001, 0b100111, 0b101100, 0b100000, 0b111111, 0b101111, 0b000011, 0b111110, 0b110000};
+ 	
+
+ 	int values2[10]={0b10000, 0b10000, 0b10000, 0b10000, 0b10000, 0b10000, 0b10000, 0b10000, 0b10000, 0b10001};
  	for(i=0; i<10; i++){
-		rel_t[i].key=values1[i];
+		rel_t[i].key=values2[i];
 		rel_t[i].payload=10;
 	}
-	
-	 //fantazomai auta tha ginoun mesa sthn sunarthsh me thn hash2
 
-	int bucket_size=10, hash_size=11;
+	relation* S=malloc(sizeof(relation));
+	if (S == NULL) { fprintf(stderr, "Malloc failed \n"); return 1;}
+
+	relation* S_new=malloc(sizeof(relation));
+	if (S_new == NULL) { fprintf(stderr, "Malloc failed \n"); return 1;}
+
+
+	S->tuples=rel_t;
+	S->num_tuples=10; //allakse to 
+
+	hist_node* S_head = NULL;
+	psum_node* S_phead=NULL;
+
+	for(i =0; i<S->num_tuples; i++){
+		hash_val= hash_func( (S->tuples[i].key), n);
+		printf("%d, %d\n", S->tuples[i].key, hash_val);
+		S_head=update_hist(S_head, hash_val, &total_bucketsS);
+
+	}
+	//print_hist( S_head);
+
+	S_phead=create_psumlist( S_phead, S_head) ;
+	//printf("\n\n");
+ 	//print_psum(S_phead);
+
+ 	//kanw reorder kai to S
+ 	S_new=reorder_R(S_phead,  S,  S_new,  n  );
+ 	//print_R( S);
+ 	//printf("\n\n");
+ 	//print_R(S_new);
+ 	//--------------------------------------------------------------------------------------
+
+	//AUTHAIRETH DOKIMH STO PRWTO BUCKET TOU R
+
+	bucket_size=10;
+	hash_size= next_prime(bucket_size);
+	printf("Hash size: %d\n",hash_size );
+
 	int** bucket, **chain;
 	chain=(int**)malloc(bucket_size* sizeof(int*));
 	bucket=malloc(hash_size* sizeof(int*));
-	
 
-	bucket_chain( rel_t,bucket_size, hash_size  ,bucket,  chain);
+	bucket_chain(R_new, 0 , 10, hash_size, bucket, chain);
 	printf("CHAIN: {");
 	for(i=0; i<bucket_size; i++)printf(" %d",*chain[i]);
 	printf("}\nBUCKET: {");
 	for(i=0; i<hash_size; i++)printf(" %d",*bucket[i]);
-		printf("}\n");
+	printf("}\n");
+	
+	result* result_list=NULL;
+	result_list=search_results(result_list, S_new, 0, 12, bucket, chain, R_new, hash_size, 0);
+	print_results( result_list);
+	
 
-	return 0;
 
 }
