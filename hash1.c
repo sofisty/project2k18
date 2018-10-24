@@ -376,41 +376,44 @@ int main(int argc,char** argv){
 	//int values[15]={0b10001,0b11011,0b10111,0b11101,0b11100,0b10011,0b10000,0b101111, 0b10100, 0b10100,0b110101,0b101001,0b100011, 0b100110, 0b10100 };
 	//int values[13]={00000,00000,00000,00000,00000,00000,00000,00000,00000,00000,00000,00000,00000};
 
-
-	if(argc!=3){
-		printf("Wrong number of arguments.Exiting program.\n");
-		exit(-1);
-	}
-	char* R_data=malloc((strlen(argv[1])+1)*sizeof(char));
-	R_data=strcpy(R_data, argv[1]);
-
-	char* S_data=malloc((strlen(argv[2])+1)*sizeof(char));
-	S_data=strcpy(S_data, argv[2]);
-
-	
 	int i, total_bucketsR=0, total_bucketsS=0, hash_size, bucket_size;
 
 	tuple* rel_tR;
-	char buff[200];
+	char buff[500],*R_data,*S_data;
+	int lines;
+	FILE* fp;
 
-
-	FILE *fp= fopen(R_data, "r"); //Open and read binary file binfile
-	if(fp==NULL){
-	    fprintf(stderr, "Failed to open file\n");
-	    fflush(stderr);
-	    exit(1);
+	if(argc>3){
+		printf("Wrong number of arguments.Exiting program.\n");
+		exit(-1);
 	}
+	if(argc==1){
+		fp=generate_file(fp,&lines,"Rdata.txt");
+		fp=fopen("Rdata.txt","r");
+		if(fp==NULL){
+		    fprintf(stderr, "Failed to open file\n");
+		    fflush(stderr);
+		    exit(1);
+		}
+	}
+	if(argc==3){
+		R_data=malloc((strlen(argv[1])+1)*sizeof(char));
+		R_data=strcpy(R_data, argv[1]);
 
-	int lines=count_lines(fp);
-	//printf("--------------%d\n\n",lines);
+		fp= fopen(R_data, "r"); //Open and read binary file binfile
+
+		if(fp==NULL){
+		    fprintf(stderr, "Failed to open file\n");
+		    fflush(stderr);
+		    exit(1);
+		}
+		lines=count_lines(fp);
+		rewind(fp);
+	}
+	
 	rel_tR=malloc(lines*sizeof(tuple));
 
-	rewind(fp);
 	store_file(fp,buff,200,rel_tR,lines);
-
-
-
-
 	fclose(fp);
 
 	relation* R=malloc(sizeof(relation));
@@ -460,22 +463,32 @@ int main(int argc,char** argv){
  	//int values2[15]={00000,00000,00000,00000,00000,00000,00000,00000,00000,00000,00000,00000,00000,00000,00000};
  	tuple* rel_tS;
 
+ 	if(argc==1){
+		fp=generate_file(fp,&lines,"Sdata.txt");
+		fp=fopen("Sdata.txt","r");
+		if(fp==NULL){
+		    fprintf(stderr, "Failed to open file\n");
+		    fflush(stderr);
+		    exit(1);
+		}
+	}
+	if(argc==3){
+		S_data=malloc((strlen(argv[2])+1)*sizeof(char));
+		S_data=strcpy(S_data, argv[2]);
 
-	fp= fopen(S_data, "r"); //Open and read binary file binfile
-	if(fp==NULL){
-	    fprintf(stderr, "Failed to open file\n");
-	    fflush(stderr);
-	    exit(1);
+		fp= fopen(S_data, "r"); //Open and read binary file binfile
+
+		if(fp==NULL){
+		    fprintf(stderr, "Failed to open file\n");
+		    fflush(stderr);
+		    exit(1);
+		}
+		lines=count_lines(fp);
+		rewind(fp);
 	}
 
-	lines=count_lines(fp);
-	//printf("--------------%d\n\n",lines);
 	rel_tS=malloc(lines*sizeof(tuple));
-
-	rewind(fp);
 	store_file(fp,buff,200,rel_tS,lines);
-
-
 
 
 	fclose(fp);
@@ -522,9 +535,11 @@ int main(int argc,char** argv){
  	final_hash(R_head, S_head, phead, S_phead, R_new, S_new);
 
 	//----------------------------------------------------------------------------------
-
-	free(R_data);
-	free(S_data);
+ 	if(argc==3){
+ 		free(R_data);
+		free(S_data);
+ 	}
+	
 
 	free_hist(R_head);
 	free_hist(S_head);
