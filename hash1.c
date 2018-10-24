@@ -227,7 +227,7 @@ result* store_results(result* result_list, tuple resultR, tuple resultS ){
 	//results-=3;
 	struct result* curr= result_list;
 	int count;
-	int size=5;//ALLAGH
+	int size=10;//ALLAGH
 	if(result_list==NULL){
 		result_list=malloc(sizeof(result));
 		if (result_list == NULL) { fprintf(stderr, "Malloc failed \n"); return NULL;}
@@ -285,7 +285,7 @@ void print_results(result* result_list){
 		printf("\n-Bucket: %d\n", b);
 		count=curr->count;
 		for(i=0; i<count; i++){
-			printf(" Key %d Payload R %d, Payload S %d\n", curr->tuplesR[i].key, curr->tuplesR[i].payload, curr->tuplesS[i].payload);
+			printf(" Matchin Keys %d=%d Payload R %d, Payload S %d\n", curr->tuplesR[i].key, curr->tuplesS[i].key, curr->tuplesR[i].payload, curr->tuplesS[i].payload);
 		}
 		curr=curr->next;
 		b++;
@@ -295,26 +295,37 @@ void print_results(result* result_list){
 // To index kai kala einai ena flag pou mou leei se poio apo ta dyo buckets (pou exei epileksei h compare_buck) exei ginei to index
 //kalw thn sunarthsh kai sto orisma tou R vazw to relation pou exei to index enw sto orisma tou S to allo bucket
 
-result* search_results(result* result_list, relation* S_new, int startS, int endS, int** bucket, int** chain, relation* R_new, int hash_size,  int index){ //ston R exei xtistei to eurethrio 
+result* search_results(result* result_list, relation* S_new, int startS, int endS, int** bucket, int** chain, relation* R_new, int startR, int hash_size,  int index){ //ston R exei xtistei to eurethrio 
 	int i, b,c, hash_val;//  b:bucket, c:chain
-
+	int offset=startR;
 
 	for(i=startS; i<endS; i++){
-
+		//printf("mphkaaaaa\n");
 		hash_val=hash2_func(S_new->tuples[i].key,hash_size);
-		if(*bucket[hash_val]!=-1){
+		
+		
+		if(bucket[hash_val]!=-1){
+			
 			b=*bucket[hash_val];
-			c=*chain[b];
-			if(R_new->tuples[b].key==S_new->tuples[i].key){ //an to index den einai 1 shmainei oti sthn thesh tou r exoume dwsei to s
-				if(index!=0){result_list= store_results(result_list, S_new->tuples[i],   R_new->tuples[b] );} //opote gia na apothhkeusei swsta ta apotelesmata
-																												//dinoume anapoda ta orismata 
-				else{result_list= store_results(result_list, R_new->tuples[b],  S_new->tuples[i] );}
-				//printf("Bucket row %d 	Match 	R:%d = S:%d\n",b, bucketR[b].key, bucketS[i].key );
-				while(c!=-1){ //auto deixnei an exei prohgoumeno
+			//printf("B: %d\n",b );
+			if(b!=-1){
+				c=*chain[b];
+				//printf("C: %d\n",c );
+				if(R_new->tuples[b+offset].key==S_new->tuples[i].key){ //an to index den einai 1 shmainei oti sthn thesh tou r exoume dwsei to s
 					
-					if(R_new->tuples[c].key==S_new->tuples[i].key){
-						if(index!=0){result_list= store_results(result_list, S_new->tuples[i],  R_new->tuples[c] );}
-						else{result_list= store_results(result_list, R_new->tuples[c] , S_new->tuples[i] );}
+					if(index!=0){result_list= store_results(result_list, S_new->tuples[i],   R_new->tuples[b+offset] );} //opote gia na apothhkeusei swsta ta apotelesmata
+																													//dinoume anapoda ta orismata 
+					else{result_list= store_results(result_list, R_new->tuples[b+offset],  S_new->tuples[i] );}
+					//printf("Bucket row %d 	Match 	R:%d = S:%d\n",b, bucketR[b].key, bucketS[i].key );
+				}
+				else{
+					//printf("Bucket: Keys do not match: HASH %d and R:%d != S:%d \n",hash_val, bucketR[b].key,bucketS[i].key );
+				}
+				while(c!=-1){ //auto deixnei an exei prohgoumeno
+					if(R_new->tuples[c+offset].key==S_new->tuples[i].key){
+						
+						if(index!=0){result_list= store_results(result_list, S_new->tuples[i],  R_new->tuples[c+offset] );}
+						else{result_list= store_results(result_list, R_new->tuples[c+offset] , S_new->tuples[i] );}
 						//printf("\tChain row %d 	Match 	R:%d = S:%d\n",c,bucketR[c].key, bucketS[i].key );
 					}
 					else{
@@ -323,9 +334,8 @@ result* search_results(result* result_list, relation* S_new, int startS, int end
 					c=*chain[c];
 				}
 
-			}
-			else{
-				//printf("Bucket: Keys do not match: HASH %d and R:%d != S:%d \n",hash_val, bucketR[b].key,bucketS[i].key );
+				
+
 			}
 
 		}
@@ -334,6 +344,7 @@ result* search_results(result* result_list, relation* S_new, int startS, int end
 		}
 
 	}
+
 
 	return result_list;
 
@@ -358,20 +369,49 @@ void free_result_list(result* result_list){
 
 
 
-int main(){
+int main(int argc,char** argv){
 	
 	//int  values[10] = { 0b100100, 0b111001, 0b100001, 0b101101, 0b110100, 0b101101, 0b101001, 0b100101, 0b001101, 0b111100};
 	//int  values[10] = { 0b100100, 0b100100, 0b100100,0b100100, 0b100100, 0b100100, 0b100100,0b100100, 0b100100, 0b100100};
-	int values[12]={0b10001,0b10011,0b10111,0b10101,0b10001,0b10001,0b10001,0b10001,0b10001,0b10001,0b10001,0b10001 };
+	//int values[15]={0b10001,0b11011,0b10111,0b11101,0b11100,0b10011,0b10000,0b101111, 0b10100, 0b10100,0b110101,0b101001,0b100011, 0b100110, 0b10100 };
+	//int values[13]={00000,00000,00000,00000,00000,00000,00000,00000,00000,00000,00000,00000,00000};
 
+
+	if(argc!=3){
+		printf("Wrong number of arguments.Exiting program.\n");
+		exit(-1);
+	}
+	char* R_data=malloc((strlen(argv[1])+1)*sizeof(char));
+	R_data=strcpy(R_data, argv[1]);
+
+	char* S_data=malloc((strlen(argv[2])+1)*sizeof(char));
+	S_data=strcpy(S_data, argv[2]);
+
+	
 	int i, total_bucketsR=0, total_bucketsS=0, hash_size, bucket_size;
 
-	tuple* rel_t;
-	rel_t=malloc(12*sizeof(tuple));
-	for(i=0; i<12; i++){
-		rel_t[i].key=values[i];
-		rel_t[i].payload=i;
+	tuple* rel_tR;
+	char buff[200];
+
+
+	FILE *fp= fopen(R_data, "r"); //Open and read binary file binfile
+	if(fp==NULL){
+	    fprintf(stderr, "Failed to open file\n");
+	    fflush(stderr);
+	    exit(1);
 	}
+
+	int lines=count_lines(fp);
+	//printf("--------------%d\n\n",lines);
+	rel_tR=malloc(lines*sizeof(tuple));
+
+	rewind(fp);
+	store_file(fp,buff,200,rel_tR,lines);
+
+
+
+
+	fclose(fp);
 
 	relation* R=malloc(sizeof(relation));
 	if (R == NULL) { fprintf(stderr, "Malloc failed \n"); return 1;}
@@ -380,10 +420,11 @@ int main(){
 	if (R_new == NULL) { fprintf(stderr, "Malloc failed \n"); return 1;}
 
 
-	R->tuples=rel_t;
-	R->num_tuples=12; //allakse to 
+	R->tuples=rel_tR;
+	R->num_tuples=lines; //allakse to 
 
-	int n=3, hash_val;
+
+	int n=4, hash_val;
 	hist_node * R_head = NULL;
 	psum_node* phead=NULL;
 
@@ -397,15 +438,16 @@ int main(){
 	}
 	printf("------TOTAL BUCKETS %d\n",total_bucketsR );
 
-	print_hist( R_head);
+	//print_hist( R_head);
 
 	phead=create_psumlist( phead, R_head) ;
 	//printf("\n\n");
  	//print_psum(phead);
 
  	R_new=reorder_R(phead,  R,  R_new,  n  );
- 	//print_R( R);
- 	//printf("\n\n");
+ 	print_R( R);
+ 	//printf("\n\n RNEWWWW");
+
  	//print_R(R_new);
  	
 
@@ -414,11 +456,29 @@ int main(){
  	//int values2[10]={0b111100, 0b111001, 0b100111, 0b101100, 0b100000, 0b111111, 0b101111, 0b000011, 0b111110, 0b110000};
  	
 
- 	int values2[10]={0b10000, 0b10001, 0b10001, 0b10111, 0b10001, 0b10001, 0b10011, 0b10001, 0b10001, 0b10001};
- 	for(i=0; i<10; i++){
-		rel_t[i].key=values2[i];
-		rel_t[i].payload=10;
+ 	//int values2[17]={0b10100, 0b10111, 0b10100, 0b10001, 0b10000, 0b10100, 0b10111, 0b11001,  0b10000, 0b101011, 0b100110, 0b10101, 0b10011, 0b10000, 0b010101, 0b1001101, 0b10000};
+ 	//int values2[15]={00000,00000,00000,00000,00000,00000,00000,00000,00000,00000,00000,00000,00000,00000,00000};
+ 	tuple* rel_tS;
+
+
+	fp= fopen(S_data, "r"); //Open and read binary file binfile
+	if(fp==NULL){
+	    fprintf(stderr, "Failed to open file\n");
+	    fflush(stderr);
+	    exit(1);
 	}
+
+	lines=count_lines(fp);
+	//printf("--------------%d\n\n",lines);
+	rel_tS=malloc(lines*sizeof(tuple));
+
+	rewind(fp);
+	store_file(fp,buff,200,rel_tS,lines);
+
+
+
+
+	fclose(fp);
 
 	relation* S=malloc(sizeof(relation));
 	if (S == NULL) { fprintf(stderr, "Malloc failed \n"); return 1;}
@@ -427,11 +487,12 @@ int main(){
 	if (S_new == NULL) { fprintf(stderr, "Malloc failed \n"); return 1;}
 
 
-	S->tuples=rel_t;
-	S->num_tuples=10; //allakse to 
+	S->tuples=rel_tS;
+	S->num_tuples=lines; //allakse to 
 
 	hist_node* S_head = NULL;
 	psum_node* S_phead=NULL;
+
 
 	for(i =0; i<S->num_tuples; i++){
 		hash_val= hash_func( (S->tuples[i].key), n);
@@ -439,64 +500,48 @@ int main(){
 		S_head=update_hist(S_head, hash_val, &total_bucketsS);
 
 	}
-	print_hist( S_head);
+	printf("------TOTAL BUCKETS %d\n",total_bucketsS );
+
+	//print_hist( S_head);
 
 	S_phead=create_psumlist( S_phead, S_head) ;
 	//printf("\n\n");
- 	//print_psum(S_phead);
+ 	//print_psum(phead);
 
- 	//kanw reorder kai to S
  	S_new=reorder_R(S_phead,  S,  S_new,  n  );
+ 	//print_R( S);
+ 	//printf("\n\n SNEWWWW");
+
+ 	print_R(S_new);
+
  	//print_R( S);
  	//printf("\n\n");
  	//print_R(S_new);
  	//--------------------------------------------------------------------------------------
 
-	//AUTHAIRETH DOKIMH STO PRWTO BUCKET TOU R
- 	final_hash(R_head, S_head, phead, S_phead);
-	/*bucket_size=10;
-	hash_size= next_prime(bucket_size);
-	printf("Hash size: %d\n",hash_size );
-
-	int** bucket, **chain;
-	chain=(int**)malloc(bucket_size* sizeof(int*));
-	bucket=malloc(hash_size* sizeof(int*));
-
-	bucket_chain(R_new, 0 , 10, hash_size, bucket, chain);
-	printf("CHAIN: {");
-	for(i=0; i<bucket_size; i++)printf(" %d",*chain[i]);
-	printf("}\nBUCKET: {");
-	for(i=0; i<hash_size; i++)printf(" %d",*bucket[i]);
-	printf("}\n");
-	
-	result* result_list=NULL;
-	result_list=search_results(result_list, S_new, 0, 12, bucket, chain, R_new, hash_size, 0);
-	print_results( result_list);
-	*/
+ 	final_hash(R_head, S_head, phead, S_phead, R_new, S_new);
 
 	//----------------------------------------------------------------------------------
 
-	//free_bucket(hash_size, bucket); //gia kathe bucket kai chain pou ftiaxnetai 
-	//free_chain(bucket_size, chain); 
-	
-	//free_result_list( result_list);
-	
+	free(R_data);
+	free(S_data);
 
 	free_hist(R_head);
 	free_hist(S_head);
  	free_psum(phead);
  	free_psum(S_phead);
- 	free(rel_t);
+ 	free(rel_tR);
+ 	free(rel_tS);
  	free(R);
  	free(S);
  	free(R_new->tuples);
- 	free(S_new->tuples);
+    free(S_new->tuples);
 	free(R_new);
 	free(S_new);
 
-
-	//free(bucket);
-	//free(chain);
+	//SEG
+	//free(R);
+	//free(S)
 
 	
 

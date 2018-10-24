@@ -19,5 +19,7 @@ files.o: files.c files.h
 
 
 clean: 
+	$(RM) hash *.o * ~
 	$(RM) hash1 *.o * ~
 	$(RM) hash2 *.o * ~
+	$(RM) files *.o * ~
