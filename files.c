@@ -8,7 +8,7 @@ FILE* generate_file(FILE* fp,int* lines,char* filename){
 	for(i=1;i<=(*lines);i++){
 		fprintf(fp, "%d",i );
 		fprintf(fp, " ");
-		fprintf(fp, "%d", rand() %2000000);
+		fprintf(fp, "%d", rand() %20000000);
 		fprintf(fp, "\n");
 	}
 	fclose(fp);

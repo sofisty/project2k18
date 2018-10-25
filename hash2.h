@@ -22,7 +22,7 @@ int final_hash(hist_node* R_head, hist_node* S_head,psum_node* R_phead,psum_node
 //int search_offset(psum_node* phead,int hash_val);
 int search_match(hist_node** current_R,  hist_node** current_S, psum_node** current_Rp, psum_node** current_Sp );
 
-result*	join(result* result_list, int index,hist_node* curr_R, hist_node* curr_S, psum_node* curr_Rp, psum_node* curr_Sp, relation* R_new, relation* S_new);
+result* join(result* result_list, int index,hist_node* curr_R, hist_node* curr_S, psum_node* curr_Rp, psum_node* curr_Sp, relation* R_new, relation* S_new);
 
 
 

@@ -34,9 +34,6 @@ int next_prime(int value){
 }
 
 
-//EIXA KSEXASEI TELEIWS TA OFFSETS
-//H fash einai oti to chain exei antiatoixia me tis grammes san to bucket na ksekinouse apo 0
-//opote gia na anazhthsoume kati sta bucket-chain apla prosthetoume to offset tou bucket
 int bucket_chain(relation* R_new, int start, int end, int hash_size, int** bucket, int** chain){ 
 	int bucket_size=end-start;
 	int i;
@@ -202,20 +199,21 @@ result*	join(result* result_list, int index,hist_node* curr_R, hist_node* curr_S
 
 		hash_size= next_prime(curr_R->count);
 		bucket_size=buck_end-buck_start;
-		//printf(" hash_size %d bucket_size %d start %d end %d\n",hash_size,bucket_size,buck_start,buck_end );
+		printf(" hash_size %d bucket_size %d start %d end %d\n",hash_size,bucket_size,buck_start,buck_end );
 
 		chain=malloc(bucket_size* sizeof(int*));
 		bucket=malloc(hash_size* sizeof(int*));
 
 		//printf("Buck start %d end %d  %d\n",buck_start, buck_end, hash_size );
 		bucket_chain(R_new, buck_start , buck_end, hash_size, bucket, chain);
-		/*
-		printf("CHAIN: {");
+		
+		/*printf("CHAIN: {");
 		for(int i=0; i<bucket_size; i++)printf(" %d",*chain[i]);
 		printf("}\nBUCKET: {");
 		for(int i=0; i<hash_size; i++)printf(" %d",*bucket[i]);
 		printf("}\n");
 		*/
+		
 
 		result_list=search_results(result_list, S_new, curr_Sp->offset, (curr_Sp->offset+curr_S->count), bucket, chain, R_new, curr_Rp->offset, hash_size, index);
 		free_bucket_chain(bucket, chain,hash_size, bucket_size);
@@ -229,7 +227,7 @@ result*	join(result* result_list, int index,hist_node* curr_R, hist_node* curr_S
 
 		hash_size= next_prime(curr_S->count);
 		bucket_size=buck_end-buck_start;
-		//printf(" hash_size %d bucket_size %d start %d end %d\n",hash_size,bucket_size,buck_start,buck_end );
+		printf(" hash_size %d bucket_size %d start %d end %d\n",hash_size,bucket_size,buck_start,buck_end );
 
 
 		chain=malloc(bucket_size* sizeof(int*));
