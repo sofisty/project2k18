@@ -33,7 +33,6 @@ int next_prime(int value){
 	
 }
 
-
 //dhmiourgei ta bucket kai chain
 //R_new: taksinomhmeno relation pou periexei to bucket sto opoio ginetai to eurethrio
 //start, end : to offset pou ksekinaei to bucket apo to relation R_new
@@ -98,11 +97,11 @@ void free_bucket_chain(int** bucket, int** chain, int hash_size, int bucket_size
 // sygkrinei ta buckets pou dinontai kai epistrefei ena flag gia to mikrotero
 int buck_compare( hist_node* R_head, hist_node* S_head,psum_node* R_phead,psum_node* S_phead){
 	if(R_head->count>S_head->count){
-		printf("-Hash S: R= %d tuples / S= %d tuples.\n",R_head->count,S_head->count);		
+		//printf("-Hash S: R= %d tuples / S= %d tuples.\n",R_head->count,S_head->count);		
 		return 1;
 	} 
 	else{
-		printf("-Hash R: R= %d tuples / S= %d tuples.\n",R_head->count,S_head->count);		
+		//printf("-Hash R: R= %d tuples / S= %d tuples.\n",R_head->count,S_head->count);		
 		return 0;
 	} 
 }
@@ -209,7 +208,7 @@ result*	join(result* result_list, int index,hist_node* curr_R, hist_node* curr_S
 
 		hash_size= next_prime(curr_R->count);
 		bucket_size=buck_end-buck_start;
-		printf(" hash_size %d bucket_size %d start %d end %d\n",hash_size,bucket_size,buck_start,buck_end );
+		//printf(" hash_size %d bucket_size %d start %d end %d\n",hash_size,bucket_size,buck_start,buck_end );
 
 		chain=malloc(bucket_size* sizeof(int*));
 		bucket=malloc(hash_size* sizeof(int*));
@@ -237,7 +236,7 @@ result*	join(result* result_list, int index,hist_node* curr_R, hist_node* curr_S
 
 		hash_size= next_prime(curr_S->count);
 		bucket_size=buck_end-buck_start;
-		printf(" hash_size %d bucket_size %d start %d end %d\n",hash_size,bucket_size,buck_start,buck_end );
+		//printf(" hash_size %d bucket_size %d start %d end %d\n",hash_size,bucket_size,buck_start,buck_end );
 
 
 		chain=malloc(bucket_size* sizeof(int*));
@@ -266,10 +265,8 @@ result*	join(result* result_list, int index,hist_node* curr_R, hist_node* curr_S
 
 
 //Sarwnei ola ta buckets kai kalei tis sunarthseis gia th dhmiourgia twn bucket,chain kai thn anazhthsh twn apotelesmatwn 
-int final_hash(hist_node* R_head, hist_node* S_head,psum_node* R_phead,psum_node* S_phead, relation* R_new, relation* S_new){
-	
-	result* result_list=NULL;
-		
+result* final_hash(hist_node* R_head, hist_node* S_head,psum_node* R_phead,psum_node* S_phead, relation* R_new, relation* S_new){
+	result* result_list=NULL;	
 	hist_node *curr_R,*curr_S;
 	psum_node *curr_Rp,*curr_Sp;
 	curr_R=R_head; //to prwto stoixeio tou hist tou R
@@ -279,8 +276,6 @@ int final_hash(hist_node* R_head, hist_node* S_head,psum_node* R_phead,psum_node
 	curr_Sp=S_phead;
 	int match, index; //match: flag an 1:uparxei match, 0: alliws, index: 0: an sto R ginetai hash2, 1:alliws
 	
-	
-	int i;
 	
 	//gia kathe node apo tis listes hist twn relations
 	while(((curr_R)!=NULL)&&((curr_S)!=NULL)){
@@ -303,7 +298,7 @@ int final_hash(hist_node* R_head, hist_node* S_head,psum_node* R_phead,psum_node
 			//printf("NEW  curr_R->key: %d curr_S->key: %d\n",curr_R->hash_val, curr_S->hash_val );
 			
 			if(match==-1){
-				return -1;
+				return NULL;
 			}
 			else if( match==1){ //an vrethhke kapoio match , psakse gia ta apotelesmata
 				index=buck_compare( curr_R, curr_S, curr_Rp, curr_Sp);
@@ -323,10 +318,10 @@ int final_hash(hist_node* R_head, hist_node* S_head,psum_node* R_phead,psum_node
 		
 	}
 
-	print_results( result_list);
-	free_result_list( result_list);	
+	
+	
 
-	return 0;
+	return result_list;
 }
 
 

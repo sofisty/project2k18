@@ -1,4 +1,5 @@
 #include "hash1.h"
+#include "hash2.h"
 
 
 int hash_func(int value, int n){ //hash function gia thn tmhmatopoish , dimiourgia evretiriwn sta R kai S
@@ -7,7 +8,7 @@ int hash_func(int value, int n){ //hash function gia thn tmhmatopoish , dimiourg
 	return (value%l);
 }
 
-hist_node*  update_hist(hist_node* head, int hash_val, int* total_buckets){ // dimiourgei h enhmerwnei to dothen istogramma
+hist_node*  update_hist(hist_node* head, int hash_val, int* total_buckets, int* data){ // dimiourgei h enhmerwnei to dothen istogramma
 	hist_node* temp;
 	int flag=0;
 	if(head==NULL){ //dimiourgei to keno dothen istogramma
@@ -20,11 +21,12 @@ hist_node*  update_hist(hist_node* head, int hash_val, int* total_buckets){ // d
 		head->count=1;
 		head->next=NULL;
 		*total_buckets=1;
+		*data=1;
 		return head;
 	}	
-	hist_node * current = head;
-	if(current->hash_val==hash_val){ current->count+=1; return head; }//an yparxei h dotheisa hash value sto istogramma auksanw to count
-	if(current->hash_val>hash_val){// alliws einai megaliteri i timh prosthetw tin nea hash value sto istogramma 
+	hist_node * current = head; 
+	if(current->hash_val==hash_val){ current->count+=1; *data+=1; return head; }//An einai i timh mikroterh h ish tou head
+	if(current->hash_val>hash_val){// an einai mikroterh thn prosthetw prin to head 
 		temp=head;
 		head = malloc(sizeof(hist_node));
 		if (head == NULL) {
@@ -35,23 +37,24 @@ hist_node*  update_hist(hist_node* head, int hash_val, int* total_buckets){ // d
 		head->count=1;
 		head->next=temp;
 		*total_buckets+=1;
+		*data +=1;
 		return head;
 	}
 
-    while (current->next != NULL) { //an h timh yparxei hdh psaxnw pou einai(plin tis prwths timhs) kai auksanw to count
-    	if(current->next->hash_val==hash_val) { current->next->count+=1; return head; }
-    	if(current->next->hash_val<hash_val){  //an den iparxei psaxnw pou tha to prosthesw
+    while (current->next != NULL) { //an den einai mikroterh ths prwths timhs psaxnw sthn upoloiph lista thn thesh ths, me vash thn auksousa seira twn timwn
+    	if(current->next->hash_val==hash_val) { current->next->count+=1; *data+=1; return head; } //an uparxei
+    	if(current->next->hash_val<hash_val){  //an einai megaluterh h hash timh apo thn hdh apothhkeumenh proxwraw thn lista mexri na vrw kapoia h na teleiwsei h lista
     		current = current->next;
        		
     	}
-    	else{ flag=1; break;} //to current next exei megalutero value
+    	else{ flag=1; break;} //Vrhka thn prwth apothhkeumenh timh megaluterh ths hash_val, wste na thn prosthesw prin apo authn
 
         
     }
-    if(flag==1){ //kathorizw to temp ws ti telutaia timh tou istogrammatos
-    	temp=current->next;
+    if(flag==1){ 
+    	temp=current->next; //h epomenh timh auths pou tha apothhkeusw
     }
-    else{
+    else{ //den uparxei epomenh timh
     	temp=NULL;
     }
     
@@ -63,6 +66,7 @@ hist_node*  update_hist(hist_node* head, int hash_val, int* total_buckets){ // d
     current->next->count=1;
     current->next->next = temp;
     *total_buckets+=1;
+    *data+=1;
     
 
     return head;//epistrefw tin kefalh tou istogrammatos 
@@ -208,154 +212,6 @@ void print_R(relation* R){ //ektipwnei ta tuples ths relation pou dinetai
 	}
 }
 
-//----------------------------------------------------------------------------------
 
 
-result* store_results(result* result_list, result** curr_res, tuple resultR, tuple resultS ){ //apothikevei enan sindiasmo tuple sthn lista apotelesmatwn
-	struct result* curr= *curr_res;
-	int count;
-	int size=(1024*1024)/16;//arithmos eggrafwn pou xwrane sto ena bucket ths listas
-	if(result_list==NULL){//an exei dothei keni lista tote dimiourgw kainourgia lista apotelesmatwn
-		result_list=malloc(sizeof(result));
-		if (result_list == NULL) { fprintf(stderr, "Malloc failed \n"); return NULL;}
-		result_list->tuplesR=malloc(size* sizeof(tuple));
-		if (result_list->tuplesR == NULL) { fprintf(stderr, "Malloc failed \n"); return NULL;}
 
-		result_list->tuplesS=malloc(size* sizeof(tuple));
-		if (result_list->tuplesS == NULL) { fprintf(stderr, "Malloc failed \n"); return NULL;}
-		
-		result_list->next=NULL;
-		result_list->tuplesR[0]=resultR; //kai arxikopoiw thn lista apotelesmatwn me ta dothenta tuples
-		result_list->tuplesS[0]=resultS;
-		result_list->count=1; //auksanw ton arithmo eggrafwn tis listas kata 1
-		*curr_res=result_list;// krataw thn thesi pou exei ftasei h lista apotelesmatwn gia na th xrhsimopoihsw argotera
-		return result_list;//epistrefw th lista
-
-	}
-	else{//ean den einai kenh, prosthetw to apotelesma (sindiasmo tuples )sth lista
-
-		if(curr->count<size){ //an to apotelesma xwraei sto bucket pou vriskomai, to kataxwrw ekei
-			count=curr->count;
-			curr->tuplesR[count]=resultR;
-			curr->tuplesS[count]=resultS;
-			curr->count+=1;
-			*curr_res=curr;//krataw thn trexousa thesh
-			return result_list;//epistrefw th lista
-		}
-		else if(curr->count==size){// an h lista den exei xwro, desmevw xwro enos bucket akomh sth lista kai to arxikopoiw me to dothen tup
-			curr->next=malloc(sizeof(result));
-			if (curr->next == NULL) { fprintf(stderr, "Malloc failed \n"); return NULL;}
-			curr->next->tuplesR=malloc(size* sizeof(tuple));
-			if (curr->next->tuplesR == NULL) { fprintf(stderr, "Malloc failed \n"); return NULL;}
-			
-			curr->next->tuplesS=malloc(size* sizeof(tuple));
-			if (curr->next->tuplesS == NULL) { fprintf(stderr, "Malloc failed \n"); return NULL;}
-			
-			
-			curr->next->tuplesR[0]=resultR;
-			curr->next->tuplesS[0]=resultS;
-
-			curr->next->count=1; //auksanw kata ena to count tou neou bucket
-			curr->next->next=NULL;
-			*curr_res=curr->next;//krataw ti thesh pou vriskomai sth listsa
-			return result_list;//epistrefw th lista
-
-		}
-		else{fprintf(stderr, "Count is wrong \n"); return NULL;}
-	}
-}
-
-void print_results(result* result_list){ //ektypwnw th lista apotelesmatwn
-	int count, i, b=0, total=0;
-	result* curr=result_list;
-	printf("--RESULTS--\n");
-	if(result_list==NULL)printf("0 results found!\n");
-	while(curr!=NULL){
-		printf("\n-Bucket: %d\n", b);
-		count=curr->count;
-		for(i=0; i<count; i++){
-			total++;
-			printf(" Matchin Keys %d=%d Payload R %d, Payload S %d\n", curr->tuplesR[i].key, curr->tuplesS[i].key, curr->tuplesR[i].payload, curr->tuplesS[i].payload);
-		}
-		curr=curr->next;
-		b++;
-	}
-
-	printf("~~~Total results %d ~~~~~\n",total );
-}
-
-// To index  einai ena flag pou mou leei se poio apo ta dyo buckets (pou exei epileksei h compare_buck) exei ginei to hash2
-//kalw thn sunarthsh kai sto orisma tou R vazw to relation pou exei to index enw sto orisma tou S to allo bucket
-
-result* search_results(result* result_list, relation* S_new, int startS, int endS, int** bucket, int** chain, relation* R_new, int startR, int hash_size,  int index){ //ston R exei xtistei to eurethrio 
-	int i, b,c, hash_val;//  b:bucket, c:chain
-	int offset=startR;
-	result* result_cur= result_list;
-
-	for(i=startS; i<endS; i++){ //gia oles tis times pou periexei to bucket sto opoio exei ginei to bucket-chain hashing
-		hash_val=hash2_func(S_new->tuples[i].key,hash_size);
-		
-		
-		if(bucket[hash_val]!=-1){ //An to key tou relation pou den exei ginei hash2 yparxei sto relation pou einai b-c hashed
-			
-			b=*bucket[hash_val]; //h timh auth einai h teleutaia tou b-c hashed relation pou exei authn thn hash val
-		
-			if(b!=-1){
-				c=*chain[b];
-				//printf("C: %d\n",c );
-				if(R_new->tuples[b+offset].key==S_new->tuples[i].key){ //an to index den einai 1 shmainei oti sthn thesh tou r exoume dwsei to s
-					
-					if(index!=0){result_list= store_results(result_list,&result_cur, S_new->tuples[i],  R_new->tuples[b+offset] );} //opote gia na apothhkeusei swsta ta apotelesmata
-																													//dinoume anapoda ta orismata 
-					else{result_list= store_results(result_list,&result_cur, R_new->tuples[b+offset],  S_new->tuples[i] );}
-
-					//printf("Bucket row %d 	Match 	R:%d = S:%d\n",b, bucketR[b].key, bucketS[i].key );
-				}
-				else{
-					//printf("Bucket: Keys do not match: HASH %d and R:%d != S:%d \n",hash_val, bucketR[b].key,bucketS[i].key );
-				}
-				while(c!=-1){ //an de vriskomai sthn prwth-prwth kew me auth thn hash val
-					if(R_new->tuples[c+offset].key==S_new->tuples[i].key){
-						
-						if(index!=0){result_list= store_results(result_list,&result_cur, S_new->tuples[i],  R_new->tuples[c+offset] );}
-						else{result_list= store_results(result_list, &result_cur, R_new->tuples[c+offset] , S_new->tuples[i] );}
-						//printf("\tChain row %d 	Match 	R:%d = S:%d\n",c,bucketR[c].key, bucketS[i].key );
-					}
-					else{
-						//printf("\tChain Keys do not match: HASH %d and R:%d != S%d\n",hash_val, bucketR[c].key, bucketS[i].key );
-					}
-					c=*chain[c];
-				}
-
-				
-
-			}
-
-		}
-		else{
-				//printf("Bucket: -- S:%d does not exist in R!\n", bucketS[i].key );
-		}
-
-	}
-
-
-	
-	return result_list;//epistrerfw thn lista apotelesmatwn
-
-} 
-
-void free_result_list(result* result_list){ //apodesmevw thn mnhmh pou edwsa sth lista apotelesmatwn
-	result* temp= result_list;
-	result* curr=result_list;
-	while(curr!=NULL){
-		temp=curr;
-		curr=curr->next;
-		free(temp->tuplesR);
-		temp->tuplesR=NULL;
-		free(temp->tuplesS);
-		temp->tuplesS=NULL;
-		free(temp);
-		temp=NULL;
-	}
-
-}

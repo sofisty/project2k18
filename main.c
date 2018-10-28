@@ -2,16 +2,13 @@
 #include "hash1.h"
 #include "hash2.h"
 
+#define n 8
+
 int main(int argc,char** argv){
 	
-	//int  values[10] = { 0b100100, 0b111001, 0b100001, 0b101101, 0b110100, 0b101101, 0b101001, 0b100101, 0b001101, 0b111100};
-	//int  values[10] = { 0b100100, 0b100100, 0b100100,0b100100, 0b100100, 0b100100, 0b100100,0b100100, 0b100100, 0b100100};
-	//int values[15]={0b10001,0b11011,0b10111,0b11101,0b11100,0b10011,0b10000,0b101111, 0b10100, 0b10100,0b110101,0b101001,0b100011, 0b100110, 0b10100 };
-	//int values[13]={00000,00000,00000,00000,00000,00000,00000,00000,00000,00000,00000,00000,00000};
 	srand ( time(NULL) ); //arxikopoiw thn rand
-	int i, total_bucketsR=0, total_bucketsS=0;
-
 	tuple* rel_tR;
+	tuple* rel_tS;
 	char buff[500],*R_data,*S_data; //o buff einai gia thn fgets gia thn katametrhsh eggrafwn arxeiou kai mono
 	int lines;
 	FILE* fp=NULL;
@@ -20,7 +17,7 @@ int main(int argc,char** argv){
 		printf("Wrong number of arguments.Exiting program.\n");
 		exit(-1);
 	}
-	if(argc==1){ //den mou dinontai arxeia gia na xrisimopoihsw opote dimiourgw eksarxhs ta arxei pou tha xtisoun ta R kai S
+	if(argc==1){ //den mou dinontai arxeia gia na xrisimopoihsw opote dimiourgw eksarxhs ta arxeia pou tha xtisoun ta R kai S
 		fp=generate_file(fp,&lines,"Rdata.txt");
 		fp=fopen("Rdata.txt","r");
 		if(fp==NULL){
@@ -51,42 +48,13 @@ int main(int argc,char** argv){
 
 	relation* R=malloc(sizeof(relation));
 	if (R == NULL) { fprintf(stderr, "Malloc failed \n"); return 1;}
-
-	relation* R_new=malloc(sizeof(relation));
-	if (R_new == NULL) { fprintf(stderr, "Malloc failed \n"); return 1;}
-
-
 	R->tuples=rel_tR;
 	R->num_tuples=lines;
 
 
-	int n=9, hash_val;
-	hist_node * R_head = NULL;
-	psum_node* phead=NULL;
-
-	phead=NULL;
-
-	for(i =0; i<R->num_tuples; i++){ //pernaw apo ton tuplesR tis eggrafes sti domi tou relation
-		hash_val= hash_func( (R->tuples[i].key), n);
-		printf("%d, %d\n", R->tuples[i].key, hash_val);
-		R_head=update_hist(R_head, hash_val, &total_bucketsR);
-
-	}
-	printf("------TOTAL BUCKETS %d\n",total_bucketsR ); //to posous kadous tha exw to pernw apo to histogramma mou
-
-
-	phead=create_psumlist( phead, R_head) ;//dimiourgw thn psum lista
- 	R_new=reorder_R(phead,  R,  R_new,  n  );//anadiorganwnw to relation R
- 	print_R( R);
-
  	//AKOLOUTHEI AKRIVWS H IDIA DIADIKASIA GIA TO S
- 	printf("-----Now for relation S\n"); 
- 	//int values2[10]={0b111100, 0b111001, 0b100111, 0b101100, 0b100000, 0b111111, 0b101111, 0b000011, 0b111110, 0b110000};
+ 	//printf("-----Now for relation S\n"); 
  	
-
- 	//int values2[17]={0b10100, 0b10111, 0b10100, 0b10001, 0b10000, 0b10100, 0b10111, 0b11001,  0b10000, 0b101011, 0b100110, 0b10101, 0b10011, 0b10000, 0b010101, 0b1001101, 0b10000};
- 	//int values2[15]={00000,00000,00000,00000,00000,00000,00000,00000,00000,00000,00000,00000,00000,00000,00000};
- 	tuple* rel_tS;
 
  	if((argc==1) || (argc==2)){ //an exei dothei ena orisma dimiourgei to relation R, opote to S ginetai pali generate
 		fp=generate_file(fp,&lines,"Sdata.txt");
@@ -114,41 +82,24 @@ int main(int argc,char** argv){
 
 	rel_tS=malloc(lines*sizeof(tuple));
 	store_file(fp,buff,200,rel_tS,lines);
-
-
 	fclose(fp);
 
 	relation* S=malloc(sizeof(relation));
 	if (S == NULL) { fprintf(stderr, "Malloc failed \n"); return 1;}
-
-	relation* S_new=malloc(sizeof(relation));
-	if (S_new == NULL) { fprintf(stderr, "Malloc failed \n"); return 1;}
-
-
 	S->tuples=rel_tS;
-	S->num_tuples=lines; //allakse to 
+	S->num_tuples=lines; 
 
-	hist_node* S_head = NULL;
-	psum_node* S_phead=NULL;
+//----------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------
+	result* result_list=NULL;
+	result_list=RadixHashJoin(R, S);
 
+	print_results( result_list);
+	free_result_list( result_list);	
+ 	
+//---------------------------------------------------------------------------------------
 
-	for(i =0; i<S->num_tuples; i++){
-		hash_val= hash_func( (S->tuples[i].key), n);
-		printf("%d, %d\n", S->tuples[i].key, hash_val);
-		S_head=update_hist(S_head, hash_val, &total_bucketsS);
-
-	}
-	printf("------TOTAL BUCKETS %d\n",total_bucketsS );
-
-
-	S_phead=create_psumlist( S_phead, S_head) ;
- 	S_new=reorder_R(S_phead,  S,  S_new,  n  );
-
- 	print_R(S_new);
-//----------------------------------------------------------------
-
- 	final_hash(R_head, S_head, phead, S_phead, R_new, S_new); //kalw thn synarthsh pou kanei to b-c hashing kai ola ta results
-
+ 	
 	//Apodesmevw ti mnimi pou eixa desmefsei gia oles tis domes kai metavlites 
  	if(argc==3){
  		free(R_data);
@@ -158,19 +109,12 @@ int main(int argc,char** argv){
  		free(R_data);
  	}
 	
-
-	free_hist(R_head);
-	free_hist(S_head);
- 	free_psum(phead);
- 	free_psum(S_phead);
+	
  	free(rel_tR);
  	free(rel_tS);
  	free(R);
  	free(S);
- 	free(R_new->tuples);
-    free(S_new->tuples);
-	free(R_new);
-	free(S_new);
+ 
 
 	return 0;
 }

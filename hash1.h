@@ -39,7 +39,7 @@ typedef struct result {
 } result;
 
 int hash_func(int value, int n);
-hist_node*  update_hist(hist_node* head, int hash_val, int* total_buckets);
+hist_node*  update_hist(hist_node* head, int hash_val, int* total_buckets, int* data);
 void print_hist(hist_node*  head);
 void free_hist(hist_node* head);
 
@@ -53,12 +53,6 @@ relation* reorder_R(psum_node* phead, relation* R, relation* R_new, int n  );
 void print_R(relation* R);
 
 
-
-//result* search_results(result* result_list,tuple* bucketS, int bucketS_size, int** bucket, int** chain, tuple* bucketR, int hash_size, int bucketR_size); //TA DUO RELATION ARXH KAI TELOS KAI TWN DUO
-result* search_results(result* result_list, relation* S_new, int startS, int endS, int** bucket, int** chain, relation* R_new, int startR, int hash_size,  int index);
-result* store_results(result* result_list, result** curr, tuple resultR, tuple resultS );
-void print_results(result* result_list);
-void free_result_list(result* result_list);
 
 
 #endif
