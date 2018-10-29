@@ -1,15 +1,16 @@
 #include "files.h"
 #include "hash1.h"
 #include "hash2.h"
+#include "testing.h"
 
 #define n 8
 
 int main(int argc,char** argv){
-	
+
 	srand ( time(NULL) ); //arxikopoiw thn rand
 	tuple* rel_tR;
 	tuple* rel_tS;
-	char buff[500],*R_data,*S_data; //o buff einai gia thn fgets gia thn katametrhsh eggrafwn arxeiou kai mono
+	char buff[500],answer,*R_data,*S_data; //o buff einai gia thn fgets gia thn katametrhsh eggrafwn arxeiou kai mono
 	int lines,num_results;
 	FILE* fp=NULL;
 
@@ -17,6 +18,15 @@ int main(int argc,char** argv){
 		printf("Wrong number of arguments.Exiting program.\n");
 		exit(-1);
 	}
+
+	printf("Would you like to run some tests before running the program? Y/N\n");
+	scanf("  %c", &answer);
+	if((answer=='Y')||(answer=='y')){
+		printf("Running some tests.Please wait...\n");
+		testing();
+		printf("Testing is completed.Check the directory for the result files.\n\n;");
+	} 
+
 	if(argc==1){ //den mou dinontai arxeia gia na xrisimopoihsw opote dimiourgw eksarxhs ta arxeia pou tha xtisoun ta R kai S
 		fp=generate_file(fp,&lines,"Rdata.txt");
 		fp=fopen("Rdata.txt","r");

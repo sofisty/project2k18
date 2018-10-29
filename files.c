@@ -104,3 +104,19 @@ FILE* generate_file3(FILE* fp,int* lines,char* filename){ //dimiourgei ena arxei
 	return fp; //epistrefei ton filepointer
 
 }
+
+FILE* generate_file4(FILE* fp,int* lines,char* filename){ //dimiourgei ena arxeio me antistoixia (rowid, key) = (i,i)
+	int i,key;
+	*lines=rand() % 200000+ 1000; //exei metaksi 1000 kai 200000 eggrafwn
+
+	fp=fopen(filename,"w"); //graffei sto arxeio eggrafes ths morfhs [row_id    value]
+	for(i=1;i<=(*lines);i++){
+		fprintf(fp, "%d",i);
+		fprintf(fp, " ");
+		fprintf(fp, "%d", i);
+		fprintf(fp, "\n");
+	}
+	fclose(fp);
+	return fp; //epistrefei ton filepointer
+
+}

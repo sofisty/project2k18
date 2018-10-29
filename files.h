@@ -18,5 +18,6 @@ int store_file(FILE* fp,char* buff,int buff_size,tuple* rel_t,int lines);
 FILE* generate_file1(FILE* fp,int* lines,char* filename);
 FILE* generate_file2(FILE* fp,int* lines,char* filename);
 FILE* generate_file3(FILE* fp,int* lines,char* filename);
+FILE* generate_file4(FILE* fp,int* lines,char* filename);
 
 #endif
