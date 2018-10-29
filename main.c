@@ -10,7 +10,7 @@ int main(int argc,char** argv){
 	tuple* rel_tR;
 	tuple* rel_tS;
 	char buff[500],*R_data,*S_data; //o buff einai gia thn fgets gia thn katametrhsh eggrafwn arxeiou kai mono
-	int lines;
+	int lines,num_results;
 	FILE* fp=NULL;
 
 	if(argc>3){
@@ -94,7 +94,7 @@ int main(int argc,char** argv){
 	result* result_list=NULL;
 	result_list=RadixHashJoin(R, S);
 
-	print_results( result_list);
+	print_results( result_list,&num_results);
 	free_result_list( result_list);	
  	
 //---------------------------------------------------------------------------------------

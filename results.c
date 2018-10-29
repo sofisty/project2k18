@@ -58,7 +58,7 @@ result* store_results(result* result_list, result** curr_res, tuple resultR, tup
 	}
 }
 
-void print_results(result* result_list){ //ektypwnw th lista apotelesmatwn
+void print_results(result* result_list, int* resfortest){ //ektypwnw th lista apotelesmatwn
 	int count, i, b=0, total=0;
 	result* curr=result_list;
 	printf("--RESULTS--\n");
@@ -73,7 +73,7 @@ void print_results(result* result_list){ //ektypwnw th lista apotelesmatwn
 		curr=curr->next;
 		b++;
 	}
-
+	*resfortest=total;
 	printf("~~~Total results %d ~~~~~\n",total );
 }
 
