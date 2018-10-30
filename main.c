@@ -24,7 +24,7 @@ int main(int argc,char** argv){
 	if((answer=='Y')||(answer=='y')){
 		printf("Running some tests.Please wait...\n");
 		testing();
-		printf("Testing is completed.Check the directory for the result files.\n\n;");
+		printf("Testing is completed.Check the directory for the result files.\n\n");
 	} 
 
 	if(argc==1){ //den mou dinontai arxeia gia na xrisimopoihsw opote dimiourgw eksarxhs ta arxeia pou tha xtisoun ta R kai S
@@ -60,6 +60,7 @@ int main(int argc,char** argv){
 	if (R == NULL) { fprintf(stderr, "Malloc failed \n"); return 1;}
 	R->tuples=rel_tR;
 	R->num_tuples=lines;
+
 
 
  	//AKOLOUTHEI AKRIVWS H IDIA DIADIKASIA GIA TO S
@@ -98,6 +99,7 @@ int main(int argc,char** argv){
 	if (S == NULL) { fprintf(stderr, "Malloc failed \n"); return 1;}
 	S->tuples=rel_tS;
 	S->num_tuples=lines; 
+
 
 //----------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------

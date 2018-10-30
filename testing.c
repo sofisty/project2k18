@@ -17,7 +17,7 @@ FILE* store_test_res(result* result_list, FILE* fp, char* filename, int* resfort
 		count=curr->count;
 		for(i=0; i<count; i++){
 			total++;
-			fprintf(fp," Matchin Keys %d=%d Payload R %d, Payload S %d\n", curr->tuplesR[i].key, curr->tuplesS[i].key, curr->tuplesR[i].payload, curr->tuplesS[i].payload);
+			//fprintf(fp," Matchin Keys %d=%d Payload R %d, Payload S %d\n", curr->tuplesR[i].key, curr->tuplesS[i].key, curr->tuplesR[i].payload, curr->tuplesS[i].payload);
 		}
 		curr=curr->next;
 		b++;
@@ -52,7 +52,7 @@ FILE* testing(void){
 	fclose(fp);
 
 	relation* R=malloc(sizeof(relation));
-	if (R == NULL) { fprintf(stderr, "Malloc failed \n"); return 1;}
+	if (R == NULL) { fprintf(stderr, "Malloc failed \n"); return NULL;}
 	R->tuples=rel_tR;
 	R->num_tuples=lines;
 
@@ -74,7 +74,7 @@ FILE* testing(void){
 	fclose(fp);
 
 	relation* S=malloc(sizeof(relation));
-	if (S == NULL) { fprintf(stderr, "Malloc failed \n"); return 1;}
+	if (S == NULL) { fprintf(stderr, "Malloc failed \n"); return NULL;}
 	S->tuples=rel_tS;
 	S->num_tuples=lines; 
 
@@ -119,7 +119,7 @@ FILE* testing(void){
 	fclose(fp);
 
 	R=malloc(sizeof(relation));
-	if (R == NULL) { fprintf(stderr, "Malloc failed \n"); return 1;}
+	if (R == NULL) { fprintf(stderr, "Malloc failed \n"); return NULL;}
 	R->tuples=rel_tR;
 	R->num_tuples=lines;
 
@@ -141,7 +141,7 @@ FILE* testing(void){
 	fclose(fp);
 
 	S=malloc(sizeof(relation));
-	if (S == NULL) { fprintf(stderr, "Malloc failed \n"); return 1;}
+	if (S == NULL) { fprintf(stderr, "Malloc failed \n"); return NULL;}
 	S->tuples=rel_tS;
 	S->num_tuples=lines; 
 
@@ -187,10 +187,10 @@ FILE* testing(void){
 	fclose(fp);
 
 	R=malloc(sizeof(relation));
-	if (R == NULL) { fprintf(stderr, "Malloc failed \n"); return 1;}
+	if (R == NULL) { fprintf(stderr, "Malloc failed \n"); return NULL;}
 	R->tuples=rel_tR;
 	R->num_tuples=lines;
-
+	
 
  	//AKOLOUTHEI AKRIVWS H IDIA DIADIKASIA GIA TO S
  	//printf("-----Now for relation S\n"); 
@@ -212,6 +212,8 @@ FILE* testing(void){
 	if (S == NULL) { fprintf(stderr, "Malloc failed \n"); return 1;}
 	S->tuples=rel_tS;
 	S->num_tuples=lines; 
+
+
 
 //----------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------

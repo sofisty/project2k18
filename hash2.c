@@ -197,7 +197,7 @@ int search_match(hist_node** current_R,  hist_node** current_S, psum_node** curr
 
 
 //KALEI TA BUCKET CHAIN KAI THN ANAZHTHSH TWN APOTELESMATWN GIA TIS 2 PERIPTWSEIS R:HASH2 H S:HASH2
-result*	join(result* result_list, int index,hist_node* curr_R, hist_node* curr_S, psum_node* curr_Rp, psum_node* curr_Sp, relation* R_new, relation* S_new){
+result*	join( result** head, result* curr_res, int index,hist_node* curr_R, hist_node* curr_S, psum_node* curr_Rp, psum_node* curr_Sp, relation* R_new, relation* S_new){
 	int buck_start, buck_end;
 	int hash_size,bucket_size;
 	int** bucket=NULL, **chain=NULL;
@@ -224,7 +224,7 @@ result*	join(result* result_list, int index,hist_node* curr_R, hist_node* curr_S
 		*/
 		
 		//ftiaxnei thn lista me tous buffers
-		result_list=search_results(result_list, S_new, curr_Sp->offset, (curr_Sp->offset+curr_S->count), bucket, chain, R_new, curr_Rp->offset, hash_size, index);
+		curr_res=search_results(head,curr_res, S_new, curr_Sp->offset, (curr_Sp->offset+curr_S->count), bucket, chain, R_new, curr_Rp->offset, hash_size, index);
 		free_bucket_chain(bucket, chain,hash_size, bucket_size);
 
 		
@@ -250,7 +250,7 @@ result*	join(result* result_list, int index,hist_node* curr_R, hist_node* curr_S
 		printf("}\n");
 		*/
 
-		result_list=search_results(result_list, R_new, curr_Rp->offset, (curr_Rp->offset+curr_R->count), bucket, chain, S_new, curr_Sp->offset, hash_size, index);
+		curr_res=search_results(head, curr_res, R_new, curr_Rp->offset, (curr_Rp->offset+curr_R->count), bucket, chain, S_new, curr_Sp->offset, hash_size, index);
 		free_bucket_chain(bucket, chain,hash_size, bucket_size);
 	}
 	else{
@@ -260,13 +260,14 @@ result*	join(result* result_list, int index,hist_node* curr_R, hist_node* curr_S
 
 	free(bucket);
 	free(chain);
-	return result_list;
+	return curr_res;
 }
 
 
 //Sarwnei ola ta buckets kai kalei tis sunarthseis gia th dhmiourgia twn bucket,chain kai thn anazhthsh twn apotelesmatwn 
 result* final_hash(hist_node* R_head, hist_node* S_head,psum_node* R_phead,psum_node* S_phead, relation* R_new, relation* S_new){
-	result* result_list=NULL;	
+	result* result_list=NULL;
+	result* curr_res=result_list;	
 	hist_node *curr_R,*curr_S;
 	psum_node *curr_Rp,*curr_Sp;
 	curr_R=R_head; //to prwto stoixeio tou hist tou R
@@ -283,7 +284,7 @@ result* final_hash(hist_node* R_head, hist_node* S_head,psum_node* R_phead,psum_
 		if(curr_R->hash_val==curr_S->hash_val){ //an ta hash_values einai idia
 			//printf("MATCH %d %d\n",curr_R->hash_val,curr_S->hash_val);
 			index=buck_compare( curr_R, curr_S, curr_Rp, curr_Sp); //vres se poio relation tha ginei to hash
-			result_list=join(result_list,  index, curr_R, curr_S, curr_Rp, curr_Sp, R_new, S_new); //epestrepse ta apotelesmata
+			curr_res=join(&result_list ,curr_res, index, curr_R, curr_S, curr_Rp, curr_Sp, R_new, S_new); //epestrepse ta apotelesmata
 			 
 			//proxwra kai ta 2 hist ston epomeno komvo
 			curr_R=curr_R->next;
@@ -302,7 +303,7 @@ result* final_hash(hist_node* R_head, hist_node* S_head,psum_node* R_phead,psum_
 			}
 			else if( match==1){ //an vrethhke kapoio match , psakse gia ta apotelesmata
 				index=buck_compare( curr_R, curr_S, curr_Rp, curr_Sp);
-				result_list=join(result_list,  index, curr_R, curr_S, curr_Rp, curr_Sp, R_new, S_new);
+				curr_res=join(&result_list,curr_res,  index, curr_R, curr_S, curr_Rp, curr_Sp, R_new, S_new);
 
 				curr_R=curr_R->next;
 				curr_Rp=curr_Rp->next;
@@ -318,7 +319,7 @@ result* final_hash(hist_node* R_head, hist_node* S_head,psum_node* R_phead,psum_
 		
 	}
 
-	
+	int num_results=0;
 	
 
 	return result_list;
