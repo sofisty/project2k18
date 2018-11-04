@@ -2,11 +2,12 @@
 
 
 #define n 8
+#define size ((1024*1024)/16) //arithmos eggrafwn pou xwrane sto ena bucket ths listas 
 
-result* store_results( result** head,result* curr_res, tuple resultR, tuple resultS ){ //apothikevei enan sindiasmo tuple sthn lista apotelesmatwn
+result* store_results( result** head,result* curr_res, tuple resultR, tuple resultS ){ //apothikevei enan sindiasmo tuples sthn lista apotelesmatwn
 	
 	int count;
-	int size=(1024*1024)/16;//arithmos eggrafwn pou xwrane sto ena bucket ths listas
+	
 	//printf("SIZE %d\n",size );
 
 	
@@ -37,7 +38,7 @@ result* store_results( result** head,result* curr_res, tuple resultR, tuple resu
 			curr_res->tuplesR[count]=resultR;
 			curr_res->tuplesS[count]=resultS;
 			curr_res->count+=1;
-			//krataw thn trexousa thesh
+			//epistrefw thn trexousa thesh
 			return curr_res;
 
 		}
@@ -56,7 +57,7 @@ result* store_results( result** head,result* curr_res, tuple resultR, tuple resu
 
 			curr_res->next->count=1; //auksanw kata ena to count tou neou bucket
 			curr_res->next->next=NULL;
-			//krataw ti thesh pou vriskomai sth listsa
+			//epistrefw ti thesh pou vriskomai sth listsa
 			return curr_res->next;//epistrefw th lista
 
 		}
@@ -83,7 +84,7 @@ void print_results(result* result_list, int* resfortest){ //ektypwnw th lista ap
 	printf("~~~Total results %d ~~~~~\n",total );
 }
 
-// To index  einai ena flag pou mou leei se poio apo ta dyo buckets (pou exei epileksei h compare_buck) exei ginei to hash2
+// To index  einai ena flag pou deixnei se poio apo ta dyo buckets (pou exei epileksei h compare_buck) exei ginei to hash2
 //kalw thn sunarthsh kai sto orisma tou R vazw to relation pou exei to index enw sto orisma tou S to allo bucket
 
 result* search_results(result** head,result* curr_res, relation* S_new, int startS, int endS, int** bucket, int** chain, relation* R_new, int startR, int hash_size,  int index){ //ston R exei xtistei to eurethrio 
@@ -91,29 +92,30 @@ result* search_results(result** head,result* curr_res, relation* S_new, int star
 	int offset=startR;
 	
 
-	for(i=startS; i<endS; i++){ //gia oles tis times pou periexei to bucket sto opoio exei ginei to bucket-chain hashing
+	for(i=startS; i<endS; i++){ //gia oles tis times pou periexei to bucket sto opoio den exei ginei to index bucket-chain
 		hash_val=hash2_func(S_new->tuples[i].key,hash_size);
 		
 		
 		if(*bucket[hash_val]!=-1){ //An to key tou relation pou den exei ginei hash2 yparxei sto relation pou einai b-c hashed
 			
-			b=*bucket[hash_val]; //h timh auth einai h teleutaia tou b-c hashed relation pou exei authn thn hash val
+			b=*bucket[hash_val]; //o prwtos deikths gia thn epomenh eggrafh apo ton bucket ston chain pinaka
 		
-			if(b!=-1){
-				c=*chain[b];
+			if(b!=-1){ 
+				c=*chain[b]; //o epomenos deikths tou chain
 				//printf("C: %d\n",c );
-				if(R_new->tuples[b+offset].key==S_new->tuples[i].key){ //an to index den einai 1 shmainei oti sthn thesh tou r exoume dwsei to s
+				if(R_new->tuples[b+offset].key==S_new->tuples[i].key){ //an uparxei match timwn
 					
-					if(index!=0){curr_res= store_results(head,curr_res, S_new->tuples[i],  R_new->tuples[b+offset] );} //opote gia na apothhkeusei swsta ta apotelesmata
-																													//dinoume anapoda ta orismata 
-					else{curr_res= store_results(head,curr_res, R_new->tuples[b+offset],  S_new->tuples[i] );}
-
+					if(index!=0){curr_res= store_results(head,curr_res, S_new->tuples[i],  R_new->tuples[b+offset] );} //apothhkeuei ta tuples
+																													
+					else{curr_res= store_results(head,curr_res, R_new->tuples[b+offset],  S_new->tuples[i] );}//an to index den einai 1 shmainei oti sthn thesh tou r exoume dwsei to s
+																											//opote gia na apothhkeusei swsta ta apotelesmata
+																											//dinoume anapoda ta orismata 
 					//printf("Bucket row %d 	Match 	R:%d = S:%d\n",b, bucketR[b].key, bucketS[i].key );
 				}
 				else{
 					//printf("Bucket: Keys do not match: HASH %d and R:%d != S:%d \n",hash_val, bucketR[b].key,bucketS[i].key );
 				}
-				while(c!=-1){ //an de vriskomai sthn prwth-prwth kew me auth thn hash val
+				while(c!=-1){ //oso uparxoun eggrafes apo thn alysida tou chain kai o deikths den einai-1
 					if(R_new->tuples[c+offset].key==S_new->tuples[i].key){
 						if(index!=0){curr_res= store_results(head,curr_res, S_new->tuples[i],  R_new->tuples[c+offset] );}
 						else{curr_res= store_results(head,curr_res, R_new->tuples[c+offset] , S_new->tuples[i] );}
@@ -122,7 +124,7 @@ result* search_results(result** head,result* curr_res, relation* S_new, int star
 					else{
 						//printf("\tChain Keys do not match: HASH %d and R:%d != S%d\n",hash_val, bucketR[c].key, bucketS[i].key );
 					}
-					c=*chain[c];
+					c=*chain[c]; //enhmerwsh deikth me to periexomeno tou chain
 				}
 
 				

@@ -192,7 +192,7 @@ int search_match(hist_node** current_R,  hist_node** current_S, psum_node** curr
 		return match;
 	}
 
-
+	return -1;
 }
 
 
@@ -319,7 +319,7 @@ result* final_hash(hist_node* R_head, hist_node* S_head,psum_node* R_phead,psum_
 		
 	}
 
-	int num_results=0;
+
 	
 
 	return result_list;

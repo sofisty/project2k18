@@ -33,7 +33,7 @@ FILE* testing(void){
 	srand ( time(NULL) ); //arxikopoiw thn rand
 	tuple* rel_tR;
 	tuple* rel_tS;
-	char buff[500],*R_data,*S_data; //o buff einai gia thn fgets gia thn katametrhsh eggrafwn arxeiou kai mono
+	char buff[500]; //o buff einai gia thn fgets gia thn katametrhsh eggrafwn arxeiou kai mono
 	int lines,num_results;
 	FILE* fp=NULL;
 
@@ -209,7 +209,7 @@ FILE* testing(void){
 	fclose(fp);
 
 	S=malloc(sizeof(relation));
-	if (S == NULL) { fprintf(stderr, "Malloc failed \n"); return 1;}
+	if (S == NULL) { fprintf(stderr, "Malloc failed \n"); return NULL;}
 	S->tuples=rel_tS;
 	S->num_tuples=lines; 
 
