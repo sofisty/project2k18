@@ -2,11 +2,11 @@
 
 
 #define n 8
-#define size ((1024*1024)/16) //arithmos eggrafwn pou xwrane sto ena bucket ths listas 
+#define size ((1024*1024)/24-1) //arithmos eggrafwn pou xwrane sto ena bucket ths listas 
 
 result* store_results( result** head,result* curr_res, tuple resultR, tuple resultS ){ //apothikevei enan sindiasmo tuples sthn lista apotelesmatwn
 	
-	int count;
+	int count,index;
 	
 	//printf("SIZE %d\n",size );
 
@@ -14,15 +14,13 @@ result* store_results( result** head,result* curr_res, tuple resultR, tuple resu
 	if( curr_res==NULL){//an exei dothei keni lista tote dimiourgw kainourgia lista apotelesmatwn
 		 curr_res=malloc(sizeof(result));
 		if (curr_res == NULL) { fprintf(stderr, "Malloc failed \n"); return NULL;}
-		 curr_res->tuplesR=malloc(size* sizeof(tuple));
-		if (curr_res->tuplesR == NULL) { fprintf(stderr, "Malloc failed \n"); return NULL;}
-
-		curr_res->tuplesS=malloc(size* sizeof(tuple));
-		if (curr_res->tuplesS == NULL) { fprintf(stderr, "Malloc failed \n"); return NULL;}
+		curr_res->matches=malloc(size*3* sizeof(int32_t));
+		if (curr_res->matches== NULL) { fprintf(stderr, "Malloc failed \n"); return NULL;}
 		
 		curr_res->next=NULL;
-		curr_res->tuplesR[0]=resultR; //kai arxikopoiw thn lista apotelesmatwn me ta dothenta tuples
-		curr_res->tuplesS[0]=resultS;
+		curr_res->matches[0]=resultR.payload; //kai arxikopoiw thn lista apotelesmatwn me ta dothenta tuples
+		curr_res->matches[1]=resultS.payload;
+		curr_res->matches[2]=resultR.key;
 		curr_res->count=1; //auksanw ton arithmo eggrafwn tis listas kata 1
 		// krataw thn thesi pou exei ftasei h lista apotelesmatwn gia na th xrhsimopoihsw argotera
 		*head=curr_res;
@@ -35,25 +33,26 @@ result* store_results( result** head,result* curr_res, tuple resultR, tuple resu
 				//printf("woo hoo\n");
 			
 			count=curr_res->count;
-			curr_res->tuplesR[count]=resultR;
-			curr_res->tuplesS[count]=resultS;
+			index=count*3;
+			curr_res->matches[index]=resultR.payload; //kai arxikopoiw thn lista apotelesmatwn me ta dothenta tuples
+			curr_res->matches[index+1]=resultS.payload;
+			curr_res->matches[index+2]=resultR.key;
 			curr_res->count+=1;
 			//epistrefw thn trexousa thesh
 			return curr_res;
 
 		}
 		else if(curr_res->count==size){// an h lista den exei xwro, desmevw xwro enos bucket akomh sth lista kai to arxikopoiw me to dothen tup
+			 
 			curr_res->next=malloc(sizeof(result));
 			if (curr_res->next == NULL) { fprintf(stderr, "Malloc failed \n"); return NULL;}
-			curr_res->next->tuplesR=malloc(size* sizeof(tuple));
-			if (curr_res->next->tuplesR == NULL) { fprintf(stderr, "Malloc failed \n"); return NULL;}
-			
-			curr_res->next->tuplesS=malloc(size* sizeof(tuple));
-			if (curr_res->next->tuplesS == NULL) { fprintf(stderr, "Malloc failed \n"); return NULL;}
+			curr_res->next->matches=malloc(size*3* sizeof(int32_t));
+			if (curr_res->next->matches== NULL) { fprintf(stderr, "Malloc failed \n"); return NULL;}
 			
 			
-			curr_res->next->tuplesR[0]=resultR;
-			curr_res->next->tuplesS[0]=resultS;
+			curr_res->next->matches[0]=resultR.payload; //kai arxikopoiw thn lista apotelesmatwn me ta dothenta tuples
+			curr_res->next->matches[1]=resultS.payload;
+			curr_res->next->matches[2]=resultR.key;
 
 			curr_res->next->count=1; //auksanw kata ena to count tou neou bucket
 			curr_res->next->next=NULL;
@@ -66,7 +65,7 @@ result* store_results( result** head,result* curr_res, tuple resultR, tuple resu
 }
 
 void print_results(result* result_list, int* resfortest){ //ektypwnw th lista apotelesmatwn
-	int count, i, b=0, total=0;
+	int count, i, index, b=0, total=0;
 	result* curr=result_list;
 	printf("--RESULTS--\n");
 	if(result_list==NULL)printf("0 results found!\n");
@@ -75,7 +74,8 @@ void print_results(result* result_list, int* resfortest){ //ektypwnw th lista ap
 		count=curr->count;
 		for(i=0; i<count; i++){
 			total++;
-			//printf(" Matchin Keys %d=%d Payload R %d, Payload S %d\n", curr->tuplesR[i].key, curr->tuplesS[i].key, curr->tuplesR[i].payload, curr->tuplesS[i].payload);
+			index=3*i;
+			printf(" Matchin Keys %d=%d Payload R %d, Payload S %d\n", curr->matches[index+2], curr->matches[index+2], curr->matches[index],curr->matches[index+1]);
 		}
 		curr=curr->next;
 		b++;
@@ -150,10 +150,8 @@ void free_result_list(result* result_list){ //apodesmevw thn mnhmh pou edwsa sth
 	while(curr!=NULL){
 		temp=curr;
 		curr=curr->next;
-		free(temp->tuplesR);
-		temp->tuplesR=NULL;
-		free(temp->tuplesS);
-		temp->tuplesS=NULL;
+		free(temp->matches);
+		temp->matches=NULL;
 		free(temp);
 		temp=NULL;
 	}

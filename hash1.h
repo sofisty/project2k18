@@ -32,8 +32,7 @@ typedef struct psum_node {
 } psum_node;
 
 typedef struct result {
-	tuple* tuplesR;
-    tuple* tuplesS;
+	int32_t *matches;
 	struct result* next;
     int count;
 } result;

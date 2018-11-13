@@ -6,18 +6,19 @@
 #define n 8
 
 FILE* store_test_res(result* result_list, FILE* fp, char* filename, int* resfortest){ //apothikevw th lista apotelesmatwn
-	int count, i, b=0, total=0;
+	int count, i,index, b=0, total=0;
 	result* curr=result_list;
 
 	fp=fopen(filename,"w"); //graffei sto arxeio eggrafes ths morfhs [row_id    value]
 	fprintf(fp,"--RESULTS--\n");
 	if(result_list==NULL) fprintf(fp,"0 results found!\n");
 	while(curr!=NULL){
-		fprintf(fp,"\n-Bucket: %d\n", b);
+		//fprintf(fp,"\n-Bucket: %d\n", b);
 		count=curr->count;
 		for(i=0; i<count; i++){
 			total++;
-			//fprintf(fp," Matchin Keys %d=%d Payload R %d, Payload S %d\n", curr->tuplesR[i].key, curr->tuplesS[i].key, curr->tuplesR[i].payload, curr->tuplesS[i].payload);
+			index=i*3;
+			//fprintf(fp," Matchin Keys %d=%d Payload R %d, Payload S %d\n", curr->matches[index+2], curr->matches[index+2], curr->matches[index],curr->matches[index+1]);
 		}
 		curr=curr->next;
 		b++;
