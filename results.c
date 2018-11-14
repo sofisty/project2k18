@@ -2,10 +2,10 @@
 
 
 #define n 8
-#define size ((1024*1024)/24-1) //arithmos eggrafwn pou xwrane sto ena bucket ths listas 
+#define size ((1024*1024)/16) //arithmos eggrafwn pou xwrane sto ena bucket ths listas 
 
 result* store_results( result** head,result* curr_res, tuple resultR, tuple resultS ){ //apothikevei enan sindiasmo tuples sthn lista apotelesmatwn
-	
+
 	int count,index;
 	
 	//printf("SIZE %d\n",size );
@@ -14,7 +14,7 @@ result* store_results( result** head,result* curr_res, tuple resultR, tuple resu
 	if( curr_res==NULL){//an exei dothei keni lista tote dimiourgw kainourgia lista apotelesmatwn
 		 curr_res=malloc(sizeof(result));
 		if (curr_res == NULL) { fprintf(stderr, "Malloc failed \n"); return NULL;}
-		curr_res->matches=malloc(size*3* sizeof(int32_t));
+		curr_res->matches=malloc(size*3* sizeof(uint64_t));
 		if (curr_res->matches== NULL) { fprintf(stderr, "Malloc failed \n"); return NULL;}
 		
 		curr_res->next=NULL;
@@ -46,7 +46,7 @@ result* store_results( result** head,result* curr_res, tuple resultR, tuple resu
 			 
 			curr_res->next=malloc(sizeof(result));
 			if (curr_res->next == NULL) { fprintf(stderr, "Malloc failed \n"); return NULL;}
-			curr_res->next->matches=malloc(size*3* sizeof(int32_t));
+			curr_res->next->matches=malloc(size*3* sizeof(uint64_t));
 			if (curr_res->next->matches== NULL) { fprintf(stderr, "Malloc failed \n"); return NULL;}
 			
 			
@@ -65,7 +65,7 @@ result* store_results( result** head,result* curr_res, tuple resultR, tuple resu
 }
 
 void print_results(result* result_list, int* resfortest){ //ektypwnw th lista apotelesmatwn
-	int count, i, index, b=0, total=0;
+	int count, i, b=0, total=0;//,index
 	result* curr=result_list;
 	printf("--RESULTS--\n");
 	if(result_list==NULL)printf("0 results found!\n");
@@ -74,8 +74,8 @@ void print_results(result* result_list, int* resfortest){ //ektypwnw th lista ap
 		count=curr->count;
 		for(i=0; i<count; i++){
 			total++;
-			index=3*i;
-			printf(" Matchin Keys %d=%d Payload R %d, Payload S %d\n", curr->matches[index+2], curr->matches[index+2], curr->matches[index],curr->matches[index+1]);
+			//index=3*i;
+			//printf(" Matchin Keys %d=%d Payload R %d, Payload S %d\n", curr->matches[index+2], curr->matches[index+2], curr->matches[index],curr->matches[index+1]);
 		}
 		curr=curr->next;
 		b++;
@@ -83,6 +83,7 @@ void print_results(result* result_list, int* resfortest){ //ektypwnw th lista ap
 	*resfortest=total;
 	printf("~~~Total results %d ~~~~~\n",total );
 }
+
 
 // To index  einai ena flag pou deixnei se poio apo ta dyo buckets (pou exei epileksei h compare_buck) exei ginei to hash2
 //kalw thn sunarthsh kai sto orisma tou R vazw to relation pou exei to index enw sto orisma tou S to allo bucket
@@ -159,59 +160,67 @@ void free_result_list(result* result_list){ //apodesmevw thn mnhmh pou edwsa sth
 }
 
 
+
 result* RadixHashJoin(relation *R, relation *S){
-	int i, total_bucketsR=0, total_bucketsS=0, data=0;
+	int i;
 	result* result_list=NULL;
 
 	relation* R_new=malloc(sizeof(relation));
 	if (R_new == NULL) { fprintf(stderr, "Malloc failed \n"); return NULL;}
 
-	int hash_val;
-	hist_node * R_head = NULL;
-	psum_node* phead=NULL;
-
-	phead=NULL;
-
-	for(i =0; i<R->num_tuples; i++){ //pernaw apo ton tuplesR tis eggrafes sti domi tou relation
-		hash_val= hash_func( (R->tuples[i].key), n);
-		//printf("%d, %d\n", R->tuples[i].key, hash_val);
-		R_head=update_hist(R_head, hash_val, &total_bucketsR, &data);
-
-	}
+	hist_node * R_head;
+	R_head=malloc(256* sizeof(hist_node));
+	if (R_head == NULL) { fprintf(stderr, "Malloc failed \n"); return NULL;}
 	
-	//printf("------TOTAL BUCKETS %d with %d data\n",total_bucketsR, data ); // posous kadous tha exw to pernw apo to histogramma mou
 
-	phead=create_psumlist( phead, R_head) ;//dimiourgw thn psum lista
+	psum_node* phead;
+	phead=malloc(256* sizeof(psum_node));
+	if (phead == NULL) { fprintf(stderr, "Malloc failed \n"); return NULL;}
+
+	for(i=0; i<256; i++){ R_head[i].count=0; }
+	R_head=update_hist(R_head, R, n);
+	
+	phead=update_psumlist(phead,R_head);	
+	
  	R_new=reorder_R(phead,  R,  R_new,  n  );//anadiorganwnw to relation R
- 	//print_R( R);
 
+
+ 	//print_R( R);
+ 	
  	relation* S_new=malloc(sizeof(relation));
 	if (S_new == NULL) { fprintf(stderr, "Malloc failed \n"); return NULL;}
 
-	hist_node* S_head = NULL;
-	psum_node* S_phead=NULL;
+	hist_node* S_head;
+	S_head=malloc(256* sizeof(hist_node));
+	if (S_head == NULL) { fprintf(stderr, "Malloc failed \n"); return NULL;}
+	
+
+	psum_node* S_phead;
+	S_phead=malloc(256* sizeof(psum_node));
+	if (S_phead == NULL) { fprintf(stderr, "Malloc failed \n"); return NULL;}
 
 
-	for(i =0; i<S->num_tuples; i++){
-		hash_val= hash_func( (S->tuples[i].key), n);
-		//printf("%d, %d\n", S->tuples[i].key, hash_val);
-		S_head=update_hist(S_head, hash_val, &total_bucketsS, &data);
+	for(i=0; i<256; i++){ S_head[i].count=0; }
+	S_head=update_hist(S_head, S, n);
+	
+	S_phead=update_psumlist(S_phead,S_head);	
+	
+ 	S_new=reorder_R(S_phead,  S,  S_new,  n  );//anadiorganwnw to relation R
 
-	}
-	//printf("------TOTAL BUCKETS %d with data %d \n",total_bucketsS, data );
-
-	S_phead=create_psumlist( S_phead, S_head) ;
- 	S_new=reorder_R(S_phead,  S,  S_new,  n  );
-
-
+ 	
  	result_list= final_hash(R_head, S_head, phead, S_phead, R_new, S_new); //kalw thn synarthsh pou kanei to b-c hashing kai ola ta results
 
- 	free_hist(R_head);
-	free_hist(S_head);
- 	free_psum(phead);
- 	free_psum(S_phead);
+ 	//free(R_head);
+ 
+	//free(S_head);
 
- 	free(R_new->tuples);
+ 	//free(phead);
+ 
+ 	//free(S_phead);
+ 	
+
+ 	//free(R_new->tuples);
+    
     free(S_new->tuples);
 	free(R_new);
 	free(S_new);
