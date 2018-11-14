@@ -7,7 +7,7 @@ int hash_func(uint64_t value, int n){ //hash function gia thn tmhmatopoish , dim
 	int last8;
    	
    	last8 = value & ((1L<<n)-1);
-	if(last8>=256){
+	if(last8>=256 || last8<0){
 		fprintf(stderr, "Wrong hash value %d\n",last8 );
 		return -1;
 	}
