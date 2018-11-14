@@ -4,13 +4,15 @@
 
 
 int hash_func(uint64_t value, int n){ //hash function gia thn tmhmatopoish , dimiourgia evretiriwn sta R kai S	
-	int l=1;
-	//uint64_t r= value & ((1L<<n)-1);
-    //printf("old %ld new %ld \n",value, r);
-   // printf("%ld\n", (value<<1L)>>n );
-	for(int i =0; i<n; i++) l*=2;
-	//printf("%ld \n",value );
-	return (value%l);
+	int last8;
+   	
+   	last8 = value & ((1L<<n)-1);
+	if(last8>=256){
+		fprintf(stderr, "Wrong hash value %d\n",last8 );
+		return -1;
+	}
+	
+	return last8;
 }
 
 
