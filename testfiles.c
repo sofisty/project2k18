@@ -83,6 +83,7 @@ infoNode* create_InfoMap(RelFiles* relList, infoNode* infoMap, int numOffiles){
     //desmeuei mnhmh gia pointers se uint64
     //den eimai sigourh an einai auto to swsto
     infoMap[i].addr=malloc(numOfcol * sizeof(uint64_t *));
+    if(infoMap[i].addr==NULL){ fprintf(stderr, "Malloc failed \n"); return NULL;}
    
     //gia kathe sthlh
     for(j=0; j<numOfcol; j++){ 
@@ -121,32 +122,48 @@ void print_InfoMap(infoNode* infoMap, int numOffiles){
   } 
 }
 
-int main(int argc, char* argv[]) {
-  int i =0, numOffiles=0;
-  char file[250];
+//DEN KSERW AN EINAI O ARITHMOS SUGRISHS UINT64
+int* filter(char oper, infoNode* infoMap, int rel, int col, uint64_t value){
+  int numOftuples= infoMap[rel].tuples;
+  uint64_t* ptr=infoMap[rel].addr[col];
+  int i, j=0;
+  int* filterRowIds=malloc(numOftuples* sizeof(int));
+  if(filterRowIds==NULL){ fprintf(stderr, "Malloc failed \n"); return NULL;}
+
+  switch(oper) {
+    case '=' :
+      for(i=0; i<numOftuples; i++){
+        if(*ptr==value){
+          filterRowIds[j]=i;
+          j++;
+        }
+        ptr++;
+      }
+      break;
+    case '<' :
+      printf("gia <\n");
+      for(i=0; i<numOftuples; i++){
+        if(*ptr<value){
+          filterRowIds[j]=i;
+          j++;
+        }
+        ptr++;
+      }
+      break;
+    case '>' :
+    printf("gia >\n");
+      for(i=0; i<numOftuples; i++){
+        if(*ptr>value){
+          filterRowIds[j]=i;
+          j++;
+        }
+        ptr++;
+      }
+      break;
  
-  
-  RelFiles* relList=NULL;
-  RelFiles* relCurr=relList;
-  infoNode* infoMap=NULL;
+   }
 
-  while(1){
-  	printf("Enter file: \n");
-  
-  
-  	if(	scanf("%s",file)==-1) break;
-  	numOffiles+=1;
+  filterRowIds[j]=-1; 
+  return filterRowIds;
 
-  	printf("%s\n",file );
-    relCurr=add_Relation(&relList, relCurr, file);
-
-    
-  }
-  print_RelFiles( relList);
-  printf("total files %d\n",numOffiles );
-  
-  infoMap=create_InfoMap(relList,  infoMap, numOffiles);
-  print_InfoMap( infoMap, numOffiles);
- 
-   return 0;
 }

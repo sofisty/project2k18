@@ -3,11 +3,43 @@
 #include "hash2.h"
 #include "testing.h"
 
+#include "testfiles.h"
+
 #define n 8
 
 int main(int argc,char** argv){
+	int i =0, numOffiles=0;
+	char file[250];
+	int* rowIds;
+ 
+  
+	RelFiles* relList=NULL;
+	RelFiles* relCurr=relList;
+	infoNode* infoMap=NULL;
 
-	srand ( time(NULL) ); //arxikopoiw thn rand
+	while(1){
+		printf("Enter file: \n");
+
+
+		if(	scanf("%s",file)==-1) break;
+		numOffiles+=1;
+
+		printf("%s\n",file );
+	relCurr=add_Relation(&relList, relCurr, file);
+
+
+	}
+	print_RelFiles( relList);
+	printf("total files %d\n",numOffiles );
+
+	infoMap=create_InfoMap(relList,  infoMap, numOffiles);
+	print_InfoMap( infoMap, numOffiles);
+
+	rowIds=filter('>', infoMap, 0, 0, 4635);
+
+	i=0;
+	while(rowIds[i]!=-1){printf("%d\n",rowIds[i] ); i++;}
+	/*srand ( time(NULL) ); //arxikopoiw thn rand
 	tuple* rel_tR;
 	tuple* rel_tS;
 	char buff[500],answer,*R_data,*S_data; //o buff einai gia thn fgets gia thn katametrhsh eggrafwn arxeiou kai mono
@@ -127,6 +159,6 @@ int main(int argc,char** argv){
  	free(R);
  	free(S);
  
-
+*/
 	return 0;
 }
