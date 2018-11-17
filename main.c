@@ -4,11 +4,12 @@
 #include "testing.h"
 
 #include "testfiles.h"
+#include"query.h"
 
 #define n 8
 
 int main(int argc,char** argv){
-	int i =0, numOffiles=0;
+	/*int i =0, numOffiles=0;
 	char file[250];
 	int* rowIds;
  
@@ -39,7 +40,9 @@ int main(int argc,char** argv){
 
 	i=0;
 	while(rowIds[i]!=-1){printf("%d\n",rowIds[i] ); i++;}
-	/*srand ( time(NULL) ); //arxikopoiw thn rand
+	
+
+	srand ( time(NULL) ); //arxikopoiw thn rand
 	tuple* rel_tR;
 	tuple* rel_tS;
 	char buff[500],answer,*R_data,*S_data; //o buff einai gia thn fgets gia thn katametrhsh eggrafwn arxeiou kai mono
@@ -160,5 +163,25 @@ int main(int argc,char** argv){
  	free(S);
  
 */
+
+	char buff[400];
+	int num_batches,i;
+	batch* b=NULL;
+	long int offset=0, prev_offset=0;
+
+	FILE* fp=fopen("sm.work","r"); //anoigei to arxeio eperwthsewn
+	num_batches=count_batches(fp); //kai metraei posa batches eperwthsewn exei
+	printf("This file has %d batches of queries.\n",num_batches );
+	rewind(fp);
+	i=0;
+	for(i=0;i<num_batches;i++){
+		b=store_batch(fp,&offset,&prev_offset,buff,400,b);
+		//print_batch(b);		
+		prev_offset=offset;
+		//free_batch(b);
+	}
+
+	fclose(fp);
+
 	return 0;
 }

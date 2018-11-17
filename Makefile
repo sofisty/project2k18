@@ -3,9 +3,11 @@ CFLAGS  = -g3 -Wall
 LIBS += -lm
 
 
-rhj:  main.o results.o hash1.o hash2.o files.o testing.o testfiles.o
-	$(CC) $(CFLAGS) -o rhj main.o results.o hash1.o hash2.o files.o testing.o testfiles.o $(LIBS)
+rhj:  main.o results.o hash1.o hash2.o files.o testing.o testfiles.o query.o
+	$(CC) $(CFLAGS) -o rhj main.o results.o hash1.o hash2.o files.o testing.o testfiles.o query.o $(LIBS)
 
+query.o:  query.c query.h
+	$(CC) $(CFLAGS) -c query.c
 
 hash1.o:  hash1.c hash1.h 
 	$(CC) $(CFLAGS) -c hash1.c
