@@ -6,11 +6,12 @@
 #include <string.h>
 #include <math.h>
 #include <time.h>
+#include <stdint.h>
 
 typedef struct pred{
 	int* cols;// ean exw 0.1=1.22 tote apothikevetai [0,1,-1,1,2,2] to -1 diaxwrizei ta columns
 	int op; // i sxesh metaksi twn cols h col-val
-	int val; // ean prokeitai gia filtro
+	uint64_t val; // ean prokeitai gia filtro
 	int isFilter;
 	int isSelfjoin;
 	struct pred* next;
@@ -37,7 +38,7 @@ int count_batches(FILE* fp);
 
 batch* store_batch(FILE* fp,long int* offset,long int* prev_offset,char* buff, int buff_size, batch* b);
 query* store_query(char* qstr, query* q);
-void store_pred(char* pred_str, pred* p, pred* prev);
+void store_pred(char* pred_str, pred* p);
 void store_proj(char* proj_str, query* q);
 
 void reorder_preds(query* q);

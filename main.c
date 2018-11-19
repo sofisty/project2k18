@@ -9,10 +9,13 @@
 #define n 8
 
 int main(int argc,char** argv){
-	/*int i =0, numOffiles=0;
-	char file[250];
+	int i =0, numOffiles=0, num_batches;
+	char file[250], buff[400];
 	int* rowIds;
- 
+	batch* b=NULL;
+	long int offset=0, prev_offset=0;
+ 	
+ 	/*
   
 	RelFiles* relList=NULL;
 	RelFiles* relCurr=relList;
@@ -41,7 +44,7 @@ int main(int argc,char** argv){
 	i=0;
 	while(rowIds[i]!=-1){printf("%d\n",rowIds[i] ); i++;}
 	
-
+	
 	srand ( time(NULL) ); //arxikopoiw thn rand
 	tuple* rel_tR;
 	tuple* rel_tS;
@@ -164,10 +167,7 @@ int main(int argc,char** argv){
  
 */
 
-	char buff[400];
-	int num_batches,i;
-	batch* b=NULL;
-	long int offset=0, prev_offset=0;
+
 
 	FILE* fp=fopen("sm.work","r"); //anoigei to arxeio eperwthsewn
 	num_batches=count_batches(fp); //kai metraei posa batches eperwthsewn exei
@@ -176,9 +176,9 @@ int main(int argc,char** argv){
 	i=0;
 	for(i=0;i<num_batches;i++){
 		b=store_batch(fp,&offset,&prev_offset,buff,400,b);
-		//print_batch(b);		
+		print_batch(b);		
 		prev_offset=offset;
-		//free_batch(b);
+		free_batch(b);
 	}
 
 	fclose(fp);

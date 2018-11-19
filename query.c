@@ -61,7 +61,7 @@ int count_rels(char* rels){
 }
 
 //apothikevei ena pred sth thesh pou prepei sth lista predicates tou query
-void store_pred(char* pred_str, pred* p, pred* prev){
+void store_pred(char* pred_str, pred* p){
 	int i,dots=0, index,rel1,rel2;
 	char *token, *predicate, delim[]="><=";
 	
@@ -135,7 +135,7 @@ void store_pred(char* pred_str, pred* p, pred* prev){
 		p->cols[index]=-1; //diaxwrhstiko twn columns
 	}
 	else {
-		p->val=atoi(token);
+		p->val=(uint64_t)atoi(token);
 		p->isFilter=1;
 	}
 
@@ -146,8 +146,6 @@ void store_pred(char* pred_str, pred* p, pred* prev){
 	else if(pred_str[i]=='<') p->op=2;
 	else p->op=3;
 
-	if(prev!=NULL) prev->next=p;
-	//else printf("This is the first predicate of this query!\n");
 	p->next=NULL;
 
 	free(predicate);
@@ -209,7 +207,22 @@ void store_proj(char* proj_str, query* q){
 //taksinomw ti lista twn kathgorhmatwn me auto to tropo |filters|selfjoins|rest of predicates...
 void reorder_preds(query* q){
 	pred* head=q->preds;
-	pred *temp, *prev, *endFilters, *curr;
+	pred *temp, *prev, *curr;
+	curr=head;
+	prev=curr;
+
+	//Vazw ta selfjoins sthn arxh ths listas
+	while(curr!=NULL){
+		if((curr->isSelfjoin)&&(curr!=head)){
+			prev->next=curr->next;
+			temp=head;
+			head=curr;
+			head->next=temp;
+		} 
+		prev=curr;
+		curr=curr->next;
+	}
+	q->preds=head;
 	curr=head;
 	prev=curr;
 	//Vazw ta filtra sthn arxh ths listas
@@ -225,26 +238,6 @@ void reorder_preds(query* q){
 	}
 	//Vazw ta selfjoins amesws meta ta filtra sth lista
 	q->preds=head;
-	curr=head;
-	prev=curr;
-	while((curr->isFilter)){
-		prev=curr;
-		curr=curr->next;
-	} 
-	endFilters=curr;
-	curr=endFilters;
-	while(curr!=NULL){
-		if(curr->isSelfjoin){
-			prev->next=curr->next;
-			temp=endFilters;
-			endFilters=curr;
-			endFilters->next=temp;
-
-		}
-		prev=curr;
-		curr=curr->next;
-	}
-	print_query(*q);
 }
 
 void print_query(query q){
@@ -270,7 +263,7 @@ void print_query(query q){
 		if(curr->op==1) printf("> ");
 		else if(curr->op==2) printf("< ");
 		else printf("= ");
-		if (curr->isFilter) printf("%d", curr->val);
+		if (curr->isFilter) printf("%ld", curr->val);
 		else {
 			printf("%d.",curr->cols[i]);
 			i++;
@@ -314,6 +307,7 @@ int count_batches(FILE* fp){
 query* store_query(char* qstr, query* q){
 	int i=0,num_preds,num_rels;
 	char *token, *rels, *preds, *projs;
+	pred *curr, *head, *prev;
 
 	q=malloc(sizeof(query));
 	if (q== NULL) {
@@ -387,13 +381,12 @@ query* store_query(char* qstr, query* q){
 	//printf("%s\n", preds );
 	num_preds=count_preds(preds);
 
-	q->preds=malloc(num_preds*sizeof(pred));
-	i=0;
+	q->preds=malloc(sizeof(pred));
 	if (q->preds == NULL) {
 	    fprintf(stderr, "Malloc failed \n"); 
 	    exit(-1);
 	}
-
+	i=0;
 	//spaw ola ta kathgorhmata kai ta kratw ksexwrista
 	char *predicates[num_preds];
 	token= strtok(preds,"&"); //apothikevw ta relations pou xrhsimopoiei to query sth domi
@@ -426,13 +419,30 @@ query* store_query(char* qstr, query* q){
 		//printf("%s\n", predicates[i] );
 
 	}
-
+	head=q->preds;
+	curr=head;
+	prev=curr;
 	for(i=0;i<num_preds;i++){
 		//printf("%s\n",predicates[i]);
-		if(i==0) store_pred(predicates[i],&(q->preds[i]),NULL);
-		else store_pred(predicates[i],&(q->preds[i]),&(q->preds[i-1]));
+		if(i==0){
+			store_pred(predicates[i],curr);
+			prev=curr;
+			curr=curr->next;
+		} 
+		else{
+			curr=malloc(sizeof(pred));
+			if (curr== NULL) {
+			    fprintf(stderr, "Malloc failed \n"); 
+			    exit(-1);
+			}
+			store_pred(predicates[i],curr);
+			prev->next=curr;
+			prev=curr;
+			curr=curr->next;
+		} 
 
 	}
+	q->preds=head;
 
 	//PROJECTIONS
 	store_proj(projs, q);	
@@ -478,7 +488,6 @@ batch* store_batch(FILE* fp,long int* offset,long int* prev_offset,char* buff, i
 		if(strcmp(buff,"F\n")!=0){
 			b->q_arr[i]=store_query(buff,b->q_arr[i]);
 			reorder_preds(b->q_arr[i]);
-			//print_query(*(b->q_arr[i]));
 			i++;
 		}
 		else{
@@ -504,7 +513,7 @@ void free_query(query* q){
 	pred* temp;
 	pred* currp=q->preds;
 
-	while((currp!=NULL)&&(currp->next!=NULL)){
+	while((currp!=NULL)){
 		temp=currp;
 		currp=currp->next;
 		free(temp->cols);
