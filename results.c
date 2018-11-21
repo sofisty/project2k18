@@ -145,6 +145,38 @@ result* search_results(result** head,result* curr_res, relation* S_new, int star
 
 } 
 
+uint64_t** resToRowIds(result* result_list){
+	int numOftups, index,i;
+
+	//desmevw mnimi gia ton diasdiastato 
+	uint64_t** rowIds=malloc(2*sizeof(uint64_t*));
+	if (rowIds== NULL) { 
+		fprintf(stderr, "Malloc failed \n"); 
+		exit(-1);
+	}
+	numOftups=result_list->count;
+
+	//desmevw mnhmh ggia tous monous pinakes row ids
+	rowIds[0]=malloc(numOftups*sizeof(uint64_t));
+	if (rowIds[0]== NULL) { 
+		fprintf(stderr, "Malloc failed \n"); 
+		exit(-1);
+	}
+	rowIds[1]=malloc(numOftups*sizeof(uint64_t));
+	if (rowIds[1]== NULL) { 
+		fprintf(stderr, "Malloc failed \n"); 
+		exit(-1);
+	}
+
+	for(i=0;i<numOftups;i++){
+		index=i*3;
+		rowIds[0][i]=result_list->matches[index];
+		rowIds[1][i]=result_list->matches[index+1];
+	}
+
+	return rowIds;
+}
+
 void free_result_list(result* result_list){ //apodesmevw thn mnhmh pou edwsa sth lista apotelesmatwn
 	result* temp= result_list;
 	result* curr=result_list;
