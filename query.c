@@ -105,8 +105,8 @@ void store_pred(char* pred_str, pred* p){
 		p->cols[index]=-1; //diaxwrhstiko twn columns
 		index++;
 	}
-	else {
-		p->val=atoi(token);
+	else { //an einai anapoda grammeno to fitro
+		p->val=(uint64_t)atoi(token);
 		p->isFilter=1;
 	}
 

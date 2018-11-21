@@ -33,18 +33,21 @@ void print_RelFiles(RelFiles* relList);
 infoNode* create_InfoMap(RelFiles* relList, infoNode* infoMap, int numOffiles );
 void print_InfoMap(infoNode* infoMap, int numOffiles);
 
-interm_node* filter(interm_node* interm,char oper, infoNode* infoMap, int rel, int indexOfrel, int col, uint64_t value, int numOfrels);
+interm_node* filter(interm_node* interm,int oper, infoNode* infoMap, int rel, int indexOfrel, int col, uint64_t value, int numOfrels);
+interm_node* self_join(interm_node* interm, infoNode* infoMap, int rel, int indexOfrel, int col1, int col2, int numOfrels);
 
 
 interm_node* store_interm_data(interm_node* interm ,int* rowIds, int indexOfrel, int numOfrows, int numOfrels);
 
 
-interm_node* update_intermFilter(interm_node* interm, int* rowIds, int indexOfrel, int numOfrows,int numOfrels);
+interm_node* update_intermFilSjoin(interm_node* interm, int* rowIds, int indexOfrel, int numOfrows,int numOfrels);
 
 uint64_t return_value(infoNode* infoMap, int rel ,int col, int tuple);
 
-int* filterFromInterm(interm_node* interm, char oper, uint64_t value,  int rel, int indexOfrel, int col,infoNode* infoMap, int* filterRowIds, int* numOfrows);
-int* filterFromRel(char oper,uint64_t value,uint64_t* ptr, int numOftuples,int* filterRowIds, int* numOfrows);
+int* filterFromInterm(interm_node* interm, int oper, uint64_t value,  int rel, int indexOfrel, int col,infoNode* infoMap, int* filterRowIds, int* numOfrows);
+int* filterFromRel(int oper,uint64_t value,uint64_t* ptr, int numOftuples,int* filterRowIds, int* numOfrows);
+int* selfjoinFromRel(uint64_t* ptr1, uint64_t* ptr2, int numOftuples, int* sjoinRowIds, int* numOfrows);
+int* selfjoinFromInterm(interm_node* interm, int rel, int indexOfrel, int col1, int col2, infoNode* infoMap,int* sjoinRowIds, int* numOfrows);
 
 
 

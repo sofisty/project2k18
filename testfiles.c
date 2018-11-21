@@ -138,7 +138,7 @@ interm_node* store_interm_data(interm_node* interm ,int* rowIds, int indexOfrel,
 }
 
 
-interm_node* update_intermFilter(interm_node* interm, int* rowIds, int indexOfrel, int numOfrows,int numOfrels){
+interm_node* update_intermFilSjoin(interm_node* interm, int* rowIds, int indexOfrel, int numOfrows,int numOfrels){
   int i,j;
   int* temp;
   
@@ -157,7 +157,7 @@ interm_node* update_intermFilter(interm_node* interm, int* rowIds, int indexOfre
   }
   else{
     i=indexOfrel;
-    if(interm->rowIds[i]==NULL){
+    if(interm->numOfrows[i]==-1){
       interm=store_interm_data(interm,  rowIds, indexOfrel, numOfrows, ((interm->numOfrels)+1) ); 
       return interm;
     }
@@ -185,138 +185,187 @@ uint64_t return_value(infoNode* infoMap, int rel ,int col, int tuple){
 }
 
 
-
-int* filterFromInterm(interm_node* interm, char oper, uint64_t value,  int rel, int indexOfrel, int col,infoNode* infoMap, int* filterRowIds, int* numOfrows){
+int* filterFromInterm(interm_node* interm, int oper, uint64_t value,  int rel, int indexOfrel, int col,infoNode* infoMap, int* filterRowIds, int* numOfrows){
 
   int j=0, i=0;
   int tuple;
   uint64_t key;
-  switch(oper) {
-    case '=' :
-      for(i=0; i<interm->numOfrows[indexOfrel]; i++){
-        tuple=interm->rowIds[indexOfrel][i];
-        key=return_value(infoMap, rel ,col, tuple);
-        if(key==value){
-          filterRowIds[j]=tuple;
-          //printf("Tuple %d\n",tuple );
-          j++;
-         }
-        
-      }
-     
-      break;
-    case '<' :
-      printf("gia <\n");
-      for(i=0; i<interm->numOfrows[indexOfrel]; i++){
-        tuple=interm->rowIds[indexOfrel][i];
-        key=return_value(infoMap, rel ,col, tuple);
-        if(key<value){
-          filterRowIds[j]=tuple;
-          //printf("Tuple %d\n",tuple );
-          j++;
-         }
-        
-      }
-      break;
-    case '>' :
-    printf("gia >\n");
-      for(i=0; i<interm->numOfrows[indexOfrel]; i++){
-        tuple=interm->rowIds[indexOfrel][i];
-        key=return_value(infoMap, rel ,col, tuple);
-        if(key>value){
-          filterRowIds[j]=tuple;
-          //printf("Tuple %d\n",tuple );
-          j++;
-         }
-        
-      }
-      break;
-    
+
+  if(oper==3){
+    for(i=0; i<interm->numOfrows[indexOfrel]; i++){
+      tuple=interm->rowIds[indexOfrel][i];
+      key=return_value(infoMap, rel ,col, tuple);
+      if(key==value){
+        filterRowIds[j]=tuple;
+        //printf("Tuple %d\n",tuple );
+        j++;
+      }      
+    }
   }
+  else if(oper==2){
+    //printf("gia <\n");
+    for(i=0; i<interm->numOfrows[indexOfrel]; i++){
+      tuple=interm->rowIds[indexOfrel][i];
+      key=return_value(infoMap, rel ,col, tuple);
+      if(key<value){
+        filterRowIds[j]=tuple;
+        //printf("Tuple %d\n",tuple );
+        j++;
+      }      
+    }
+  }
+  else{
+  //printf("gia >\n");
+    for(i=0; i<interm->numOfrows[indexOfrel]; i++){
+      tuple=interm->rowIds[indexOfrel][i];
+      key=return_value(infoMap, rel ,col, tuple);
+      if(key>value){
+        filterRowIds[j]=tuple;
+        //printf("Tuple %d\n",tuple );
+        j++;
+      }      
+    } 
+  }
+
   *numOfrows=j;
   if(j==0)return NULL;
   return filterRowIds;
 }
 
+int* selfjoinFromInterm(interm_node* interm, int rel, int indexOfrel, int col1, int col2, infoNode* infoMap,int* sjoinRowIds, int* numOfrows){
+  int j=0, i=0;
+  int tuple;
+  uint64_t key1, key2;
 
-int* filterFromRel(char oper,uint64_t value,uint64_t* ptr, int numOftuples,int* filterRowIds, int* numOfrows){
-  int j=0,  i=0;
-  switch(oper) {
-    case '=' :
-      for(i=0; i<numOftuples; i++){
-        if(*ptr==value){
-          filterRowIds[j]=i;
-          j++;
-        }
-        ptr++;
-      }
-      break;
-    case '<' :
-      printf("gia <\n");
-      for(i=0; i<numOftuples; i++){
-        if(*ptr<value){
-          filterRowIds[j]=i;
-          j++;
-        }
-        ptr++;
-      }
-      break;
-    case '>' :
-    printf("gia >\n");
-      for(i=0; i<numOftuples; i++){
-        if(*ptr>value){
-          filterRowIds[j]=i;
-          j++;
-        }
-        ptr++;
-      }
-      break;
+  for(i=0; i<interm->numOfrows[indexOfrel]; i++){
+    tuple=interm->rowIds[indexOfrel][i];
+    key1=return_value(infoMap, rel ,col1, tuple);
+    key2=return_value(infoMap, rel, col2, tuple);
 
+    if(key1==key2){
+      sjoinRowIds[j]=tuple;
+      //printf("Tuple %d\n",tuple );
+      j++;
+    }    
   }
+  *numOfrows=j;
+  if(j==0)return NULL;
+  return sjoinRowIds;
+}
+
+int* filterFromRel(int oper,uint64_t value,uint64_t* ptr, int numOftuples,int* filterRowIds, int* numOfrows){
+  int j=0,  i=0;
+
+  if(oper==3){
+    for(i=0; i<numOftuples; i++){
+      if(*ptr==value){
+        filterRowIds[j]=i;
+        j++;
+      }
+      ptr++;
+    }
+  }
+  else if(oper==2){
+    //printf("gia <\n");
+    for(i=0; i<numOftuples; i++){
+      if(*ptr<value){
+        filterRowIds[j]=i;
+        j++;
+      }
+      ptr++;
+    }
+  }
+  else{
+  //printf("gia >\n");
+    for(i=0; i<numOftuples; i++){
+      if(*ptr>value){
+        filterRowIds[j]=i;
+        j++;
+      }
+      ptr++;
+    }
+  }
+
   *numOfrows=j;
    if(j==0)return NULL;
   return filterRowIds;
 }
 
+int* selfjoinFromRel(uint64_t* ptr1, uint64_t* ptr2, int numOftuples, int* sjoinRowIds, int* numOfrows){
+  int i, j=0;
+  for(i=0; i<numOftuples; i++){
+    if(*ptr1==*ptr2){
+      sjoinRowIds[j]=i;
+      j++;
+    }
+    ptr1++;
+    ptr2++;
+  }
+  *numOfrows=j;
+   //printf(" numofrows %d\n",j );
+  if(j==0)return NULL; //den iparxoun koina stoixeia metaksi twn columns
+  return sjoinRowIds;
+}
 
-interm_node* filter(interm_node* interm,char oper, infoNode* infoMap, int rel, int indexOfrel, int col, uint64_t value, int numOfrels){
-  
+interm_node* self_join(interm_node* interm, infoNode* infoMap, int rel, int indexOfrel, int col1, int col2, int numOfrels){
   int numOftuples= infoMap[rel].tuples;
   
-  uint64_t* ptr;
+  uint64_t* ptr1, *ptr2;
+  int numOfrows;  
+  int* sjoinRowIds=malloc(numOftuples* sizeof(int));
+  if(sjoinRowIds==NULL){fprintf(stderr, "Malloc failed \n"); return NULL;}
 
-  int numOfrows, posOfrel;
-  
-  int* filterRowIds=malloc(numOftuples* sizeof(int));
- 
-  if(filterRowIds==NULL){ fprintf(stderr, "Malloc failed \n"); return NULL;}
   if(interm!=NULL){
-
-    if(interm->numOfrows[indexOfrel]!=-1){
-     
-      filterRowIds= filterFromInterm( interm, oper,value, rel, indexOfrel, col, infoMap, filterRowIds, &numOfrows);
-
+    if(interm->numOfrows[indexOfrel]!=-1){     
+      sjoinRowIds= selfjoinFromInterm( interm, rel, indexOfrel, col1, col2, infoMap, sjoinRowIds, &numOfrows);
     }
      else{
-      ptr=(uint64_t*)infoMap[rel].addr[col];
-      filterRowIds= filterFromRel( oper,value, ptr, numOftuples, filterRowIds, &numOfrows);
-
-
+      ptr1=(uint64_t*)infoMap[rel].addr[col1];
+      ptr2=(uint64_t*)infoMap[rel].addr[col2];
+      sjoinRowIds= selfjoinFromRel( ptr1, ptr2, numOftuples, sjoinRowIds, &numOfrows);
     }
     
   }
   else{
-
-    ptr=(uint64_t*)infoMap[rel].addr[col];
-
-    filterRowIds= filterFromRel( oper,value, ptr, numOftuples, filterRowIds, &numOfrows);
-  
+    ptr1=(uint64_t*)infoMap[rel].addr[col1];
+    ptr2=(uint64_t*)infoMap[rel].addr[col2];
+    sjoinRowIds= selfjoinFromRel( ptr1, ptr2, numOftuples, sjoinRowIds, &numOfrows);  
   }
   
+  interm=update_intermFilSjoin( interm, sjoinRowIds,  indexOfrel,  numOfrows,numOfrels);  
+
+  free(sjoinRowIds);
+  return interm;
 
 
-  interm=update_intermFilter( interm, filterRowIds,  indexOfrel,  numOfrows,numOfrels);
+
+}
+
+interm_node* filter(interm_node* interm,int oper, infoNode* infoMap, int rel, int indexOfrel, int col, uint64_t value, int numOfrels){
   
+  int numOftuples= infoMap[rel].tuples;
+  
+  uint64_t* ptr;
+  int numOfrows;
+  int* filterRowIds=malloc(numOftuples* sizeof(int)); 
+  if(filterRowIds==NULL){fprintf(stderr, "Malloc failed \n"); return NULL;}
+
+  if(interm!=NULL){
+    if(interm->numOfrows[indexOfrel]!=-1){     
+      filterRowIds= filterFromInterm( interm, oper,value, rel, indexOfrel, col, infoMap, filterRowIds, &numOfrows);
+    }
+     else{
+      ptr=(uint64_t*)infoMap[rel].addr[col];
+      filterRowIds= filterFromRel( oper,value, ptr, numOftuples, filterRowIds, &numOfrows);
+    }
+    
+  }
+  else{
+    ptr=(uint64_t*)infoMap[rel].addr[col];
+    filterRowIds= filterFromRel( oper,value, ptr, numOftuples, filterRowIds, &numOfrows);  
+  }
+  
+  interm=update_intermFilSjoin( interm, filterRowIds,  indexOfrel,  numOfrows,numOfrels);  
 
   free(filterRowIds);
   return interm;
