@@ -67,24 +67,27 @@ int main(int argc,char** argv){
 	interm_node* interm=NULL;
 
 
-	interm=filter(interm,'>', infoMap, 1, 0, 9477);
+	interm=filter(interm,'>', infoMap, 1, 1, 0, 9477,3);
 	//dinei 650 apotel
 	
-	interm=filter(interm,'>', infoMap, 0, 1, 100000000000);
+	interm=filter(interm,'>', infoMap, 0,0, 1, 100000000000,3);
 	// 0 apot
 
-	interm=filter(interm,'>', infoMap, 0, 1, 100000000000);
+	interm=filter(interm,'>', infoMap, 0,0, 1, 100000000000,3);
 	//ksana 0
 
-	interm=filter(interm, '=', infoMap, 1,0, 9501);
+	interm=filter(interm, '=', infoMap, 1,1,0, 9501,3);
 	//dinei 1
 
-	interm=filter(interm,'>', infoMap, 0, 0, 1000);
+	interm=filter(interm,'>', infoMap, 0,0, 0, 1000,3);
 	//pali 0
 
-	interm=filter(interm, '<', infoMap, 2,1, 1000);
+	interm=filter(interm, '<', infoMap,2, 2,1, 1000,3);
 	//dinei 2292
-
 	
+	for(int i=0; i<3; i++){
+		printf("rel %d : numOfrows: %d\n",i, interm->numOfrows[i] );
+		
+	}
 	return 0;
 }

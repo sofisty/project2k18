@@ -120,143 +120,55 @@ void print_InfoMap(infoNode* infoMap, int numOffiles){
   } 
 }
 
+interm_node* store_interm_data(interm_node* interm ,int* rowIds, int indexOfrel, int numOfrows, int numOfrels){
+  int i=indexOfrel;
+  if(rowIds==NULL){
+    interm->rowIds[i]=NULL;
 
-//##########  GIA ARGOTERA  ##############
-//THEWRW OTI APOTHHKEYONTAI TA PRAGMATIKA RELATIONS
-//TOY STYL OTI OTAN TO FILTRO LEEI 0.1>100 1.2<10.000 KAI TA RELATIONS EINAI TO 1 4
-//TO INTERMEDIATE KAI TO FILTER PAIRNOUN TO 1 KAI 4 
+  }
+  else{
+    interm->rowIds[i]=malloc(numOfrows* sizeof(int));
+    if(interm->rowIds[i]==NULL){fprintf(stderr, "Malloc failed \n"); return NULL;}
+    memcpy(interm->rowIds[i], rowIds, numOfrows* sizeof(int));
+  }
 
-
-//kanei update gia 1 relation
-interm_node* store_interm_data(interm_node* interm, int posOfrel, int numOfrows, int rel, int* rowIds,int numOfrels){
-  interm->rels[posOfrel]=rel;
+  interm->numOfrows[i]=numOfrows;
   interm->numOfrels=numOfrels;
-  interm->numOfrows=numOfrows;
-  interm->rowIds=malloc(sizeof(int*));
-  if(interm->rowIds==NULL){ fprintf(stderr, "Malloc failed \n"); return NULL;}
-  //twra apla exei mono ena int*
-  
-  if(rowIds==NULL){ //ama den exei apotelesmata
-      interm->rowIds[0]=NULL;
-  }
-  else{
-    interm->rowIds[0]=malloc(numOfrows* sizeof(int));
-    if(interm->rowIds[0]==NULL){ fprintf(stderr, "Malloc failed \n"); return NULL;}
-    //epeidh to rowIds pou pairnei san orisma einai enas pinakas osa tuples exei to relation
-    //edw antigrafontai mono oi numOfrows grammes, dhladh oi theseis pou krataei ta apotelesmata kai oxi ta upoloipa poy einai skoupidia
-    memcpy(interm->rowIds[0], rowIds, numOfrows * sizeof(int));   
-  } 
   return interm;
-
 }
 
 
-interm_node* update_intermFilter(interm_node** interm_header, int* rowIds, int rel, int numOfrows, interm_node* new){
-  int  flag=0;
-  interm_node* interm=*interm_header;
-  interm_node* curr, *prev;
-
-  //H prwth eisagwgh node, dhmiourgia tou header
-  if(*interm_header==NULL){
-   
-    new->rels= malloc(sizeof(int));
-    //den kserw an xreiazetai to malloc
-    if(new->rels==NULL){fprintf(stderr, "Malloc failed \n"); return NULL;}
-    
-    new= store_interm_data(new, 0, numOfrows, rel, rowIds, 1);
-    new->next=NULL;
-    
-    *interm_header=new;
-   
-    return *interm_header;    
+interm_node* update_intermFilter(interm_node* interm, int* rowIds, int indexOfrel, int numOfrows,int numOfrels){
+  int i,j;
+  int* temp;
+  
+  if(interm==NULL){
+    interm=malloc(sizeof(interm_node));
+    if(interm==NULL){fprintf(stderr, "Malloc failed \n"); return NULL;}
+    interm->rowIds=malloc(numOfrels* sizeof(int*));
+    if(interm->rowIds==NULL){fprintf(stderr, "Malloc failed \n"); return NULL;}
+    for(j=0; j<numOfrels; j++)interm->rowIds[j]=NULL;
+    interm->numOfrows=malloc(numOfrels* sizeof(int));
+    if(interm->numOfrows==NULL){fprintf(stderr, "Malloc failed \n"); return NULL;}
+    for(j=0; j<numOfrels; j++)interm->numOfrows[j]=-1;
+    interm=store_interm_data(interm,  rowIds, indexOfrel, numOfrows, 1); 
+    return interm;   
    
   }
-  //An uparxei hdh ena node
   else{
-    curr=*interm_header;
-    
-    //1. eksetazoume an uparxei hdh to relation 
-    //   pou shmaine oti prepei na to diagrapsoume kai na valoume to kainourgio sthn swsth thesh
-    
-    //PRWTA GIA TON HEADER    
-    if(interm->rels[0]==rel){
-     // printf("VRHKA IDIO RELATION UPDATE HEADER\n");
-     
-      new->next=(*interm_header)->next;
-      new->rels= malloc(sizeof(int));
-      if(new->rels==NULL){fprintf(stderr, "Malloc failed \n"); return NULL;}
-      new =store_interm_data(new, 0, numOfrows, rel, rowIds,1);
-        
-      *interm_header=new;
-
-      //svhnoume to palio
-      free_intermNode(curr);
-      
-      printf("------------------------------------\n");
-      print_interm(*interm_header);
-      return *interm_header;
-
+    i=indexOfrel;
+    if(interm->rowIds[i]==NULL){
+      interm=store_interm_data(interm,  rowIds, indexOfrel, numOfrows, ((interm->numOfrels)+1) ); 
+      return interm;
     }
-    //psaxnoume an uparxei to relation sta upoloipa nodes
     else{
-      // an uparxei to relation se kapoia allh thesh to svhnoume   
-      prev=interm;
-      curr=interm;
-      while(curr!=NULL){
-        if(curr->rels[0]==rel){
-          flag=1;
-          break;
-        }
-        prev=curr;
-        curr=curr->next;
-      }
-      if(flag==1){
-        prev->next=curr->next;
-        free_intermNode(curr);
-      }
-
-      //eksetazoume an prepei na mpei prin apo ton head
-      if(interm->numOfrows>numOfrows){
-     
-       //printf("HEADER > NUMOFROWS\n");
-      
-        new->next=interm;
-        new->rels= malloc(sizeof(int));
-        if(new->rels==NULL){fprintf(stderr, "Malloc failed \n"); return NULL;}
-        new =store_interm_data(new, 0, numOfrows, rel, rowIds,1);
-      
-        *interm_header=new;
-       
-        printf("------------------------------------\n");
-        print_interm(*interm_header);
-
-        return *interm_header;
-       }
-      
-      //anazhtame sta upoloipa nodes thn thesh tou me vash to numOfrows 
-      
-      curr=interm->next;
-      prev=interm;
-      while(curr!=NULL){
-        if(curr->numOfrows>numOfrows)break;
-        prev=curr;
-        curr=curr->next;
-      }
-     
-      new->rels= malloc(sizeof(int));
-      if(new->rels==NULL){fprintf(stderr, "Malloc failed \n"); return NULL;}
-      new =store_interm_data(new, 0, numOfrows, rel, rowIds,1);
-
-      new->next=curr;
-      prev->next=new;
-
-      printf("------------------------------------\n");
-      print_interm(*interm_header);
-
-      return *interm_header;
-   
-    }   
+      temp=interm->rowIds[i];
+      free(temp);
+      interm->rowIds[i]=NULL;
     
+      interm=store_interm_data(interm,  rowIds, indexOfrel, numOfrows, interm->numOfrels ); 
+      return interm;
+    }
 
   }
   
@@ -264,40 +176,6 @@ interm_node* update_intermFilter(interm_node** interm_header, int* rowIds, int r
 
 }
 
-void print_interm(interm_node* interm){
-  interm_node* curr=interm;
-  while(curr!=NULL){
-    printf("-%d\n",curr->numOfrows );
-    curr=curr->next;
-  }
-
-}
-
-void free_intermNode(interm_node* interm){
-  free(interm->rels);
-  if(interm->rowIds!=NULL){
-    free(interm->rowIds);
-  }
-  free(interm);
-}
-
-interm_node* search_interm(int rel, interm_node* interm, int* posOfrel){
-  int i;
-  while(interm!=NULL){
-    for(i=0;i<interm->numOfrels; i++){
-      if(rel==interm->rels[i]){
-        *posOfrel=i;
-         return interm;
-      }
-
-     
-    }
-   
-    interm=interm->next;
-  }
-
-  return NULL;
-}
 
 uint64_t return_value(infoNode* infoMap, int rel ,int col, int tuple){
   
@@ -306,14 +184,17 @@ uint64_t return_value(infoNode* infoMap, int rel ,int col, int tuple){
   return *ptr;
 }
 
-int* filterFromInterm(interm_node* curr_interm, char oper, uint64_t value,  int rel, int col,infoNode* infoMap, int* filterRowIds, int* numOfrows){
+
+
+int* filterFromInterm(interm_node* interm, char oper, uint64_t value,  int rel, int indexOfrel, int col,infoNode* infoMap, int* filterRowIds, int* numOfrows){
+
   int j=0, i=0;
   int tuple;
   uint64_t key;
   switch(oper) {
     case '=' :
-      for(i=0; i<curr_interm->numOfrows; i++){
-        tuple=curr_interm->rowIds[0][i];
+      for(i=0; i<interm->numOfrows[indexOfrel]; i++){
+        tuple=interm->rowIds[indexOfrel][i];
         key=return_value(infoMap, rel ,col, tuple);
         if(key==value){
           filterRowIds[j]=tuple;
@@ -326,8 +207,8 @@ int* filterFromInterm(interm_node* curr_interm, char oper, uint64_t value,  int 
       break;
     case '<' :
       printf("gia <\n");
-      for(i=0; i<curr_interm->numOfrows; i++){
-        tuple=curr_interm->rowIds[0][i];
+      for(i=0; i<interm->numOfrows[indexOfrel]; i++){
+        tuple=interm->rowIds[indexOfrel][i];
         key=return_value(infoMap, rel ,col, tuple);
         if(key<value){
           filterRowIds[j]=tuple;
@@ -339,8 +220,8 @@ int* filterFromInterm(interm_node* curr_interm, char oper, uint64_t value,  int 
       break;
     case '>' :
     printf("gia >\n");
-      for(i=0; i<curr_interm->numOfrows; i++){
-        tuple=curr_interm->rowIds[0][i];
+      for(i=0; i<interm->numOfrows[indexOfrel]; i++){
+        tuple=interm->rowIds[indexOfrel][i];
         key=return_value(infoMap, rel ,col, tuple);
         if(key>value){
           filterRowIds[j]=tuple;
@@ -353,9 +234,10 @@ int* filterFromInterm(interm_node* curr_interm, char oper, uint64_t value,  int 
     
   }
   *numOfrows=j;
-  printf(" numofrows %d\n",j );
+  if(j==0)return NULL;
   return filterRowIds;
 }
+
 
 int* filterFromRel(char oper,uint64_t value,uint64_t* ptr, int numOftuples,int* filterRowIds, int* numOfrows){
   int j=0,  i=0;
@@ -392,15 +274,12 @@ int* filterFromRel(char oper,uint64_t value,uint64_t* ptr, int numOftuples,int* 
 
   }
   *numOfrows=j;
-   printf(" numofrows %d\n",j );
    if(j==0)return NULL;
   return filterRowIds;
 }
 
 
-interm_node* filter(interm_node* interm,char oper, infoNode* infoMap, int rel, int col, uint64_t value){
-  interm_node* curr_interm;
-  interm_node* new;
+interm_node* filter(interm_node* interm,char oper, infoNode* infoMap, int rel, int indexOfrel, int col, uint64_t value, int numOfrels){
   
   int numOftuples= infoMap[rel].tuples;
   
@@ -412,15 +291,16 @@ interm_node* filter(interm_node* interm,char oper, infoNode* infoMap, int rel, i
  
   if(filterRowIds==NULL){ fprintf(stderr, "Malloc failed \n"); return NULL;}
   if(interm!=NULL){
-    curr_interm=search_interm(rel, interm, &posOfrel);
-    if(curr_interm!=NULL){
+
+    if(interm->numOfrows[indexOfrel]!=-1){
      
-      filterRowIds= filterFromInterm( curr_interm, oper,value, rel, col, infoMap, filterRowIds, &numOfrows);
+      filterRowIds= filterFromInterm( interm, oper,value, rel, indexOfrel, col, infoMap, filterRowIds, &numOfrows);
 
     }
      else{
       ptr=(uint64_t*)infoMap[rel].addr[col];
       filterRowIds= filterFromRel( oper,value, ptr, numOftuples, filterRowIds, &numOfrows);
+
 
     }
     
@@ -430,13 +310,13 @@ interm_node* filter(interm_node* interm,char oper, infoNode* infoMap, int rel, i
     ptr=(uint64_t*)infoMap[rel].addr[col];
 
     filterRowIds= filterFromRel( oper,value, ptr, numOftuples, filterRowIds, &numOfrows);
+  
   }
   
 
 
-  new=malloc(sizeof(interm_node));
-  if(new==NULL){ fprintf(stderr, "Malloc failed \n"); return NULL;}
-  interm=update_intermFilter( &interm, filterRowIds, rel, numOfrows, new); 
+  interm=update_intermFilter( interm, filterRowIds,  indexOfrel,  numOfrows,numOfrels);
+  
 
   free(filterRowIds);
   return interm;
