@@ -13,6 +13,59 @@ int* real_RowIds(interm_node* interm, int* rowIds, int numOfrows, int updateRel,
   return newRowIds;
 }
 
+relation* relFromMap(infoNode* infoMap, int rel, int col){
+  int i, numOftuples;
+  uint64_t* ptr;
+
+  numOftuples= infoMap[rel].tuples;
+
+  relation* r=malloc(sizeof(relation));
+  if(r==NULL){fprintf(stderr, "Malloc failed \n"); return NULL;}
+
+  r->num_tuples=(uint64_t)numOftuples;
+  r->tuples=malloc(numOftuples*sizeof(tuple));
+  if(r->tuples==NULL){fprintf(stderr, "Malloc failed \n"); return NULL;}
+
+  ptr=(uint64_t*)infoMap[rel].addr[col];
+
+  for(i=0; i<numOftuples; i++){
+    r->tuples[i].payload=(uint64_t)i;
+    r->tuples[i].key=*ptr;
+    ptr++;
+  }
+  if(r==NULL) return NULL;
+
+  return r;
+}
+
+relation* relFromInterm(interm_node* interm, int rel, int col, int indexOfrel, infoNode* infoMap){
+
+  int tuple, numOftuples,i;
+  uint64_t key;
+
+  numOftuples=interm->numOfrows[indexOfrel];
+
+  relation* r=malloc(sizeof(relation));
+  if(r==NULL){fprintf(stderr, "Malloc failed \n"); return NULL;}
+
+  r->num_tuples=(uint64_t)numOftuples;
+  r->tuples=malloc(numOftuples*sizeof(tuple));
+  if(r->tuples==NULL){fprintf(stderr, "Malloc failed \n"); return NULL;}
+
+  for(i=0; i<numOftuples; i++){
+    tuple=interm->rowIds[indexOfrel][i];
+    key=return_value(infoMap, rel ,col, tuple);
+
+    r->tuples[i].payload=(uint64_t)i;
+    r->tuples[i].key=key;
+  } 
+
+  if(r==NULL) return NULL;
+
+  return r; 
+}
+
+
 
 joinHistory* add_nodeHistory(int indexOfrel, joinHistory* joinHist, int numOfrels){
 	int i; 
