@@ -3,8 +3,10 @@
 #include "hash2.h"
 #include "testing.h"
 
+
 #include "testfiles.h"
 #include"query.h"
+#include "join.h"
 
 #define n 8
 
@@ -70,21 +72,38 @@ int main(int argc,char** argv){
 	interm=filter(interm,1, infoMap, 1,0, 0, 9477,1);
 	//dinei 650 apotel
 	
-	interm=filter(interm,1, infoMap, 0, 1,1, 100000000000,2);
+	//interm=filter(interm,1, infoMap, 0, 1,1, 100000000000,2);
 	// 0 apot
 
-	interm=filter(interm, 1, infoMap, 0, 1, 1, 100000000000,2);
+	//interm=filter(interm, 1, infoMap, 0, 1, 1, 100000000000,2);
 	//ksana 0
 
-	interm=filter(interm, 3, infoMap, 1, 0, 0, 9501, 2);
+	//interm=filter(interm, 3, infoMap, 1, 0, 0, 9501, 2);
 	//dinei 1
 
-	interm=filter(interm,1, infoMap, 0, 1, 0, 1000, 2);
+	//interm=filter(interm,1, infoMap, 0, 1, 0, 1000, 2);
 	//pali 0
 
-	interm=filter(interm, 2, infoMap, 2, 2, 1, 1000, 3);
+	//interm=filter(interm, 2, infoMap, 2, 2, 1, 1000, 3);
 	//dinei 2292
 
+	int rowIds[100], *newRowIds;
+	for(i=0; i<100; i++)rowIds[i]=i;
+
+	newRowIds= real_RowIds(interm, rowIds, 100, 0, newRowIds);
+
+	for(i=0; i<100; i++){
+		printf("%d\n", newRowIds[i]);
+	}
+
+	joinHistory* joinHist=NULL;
+	joinHist= add_nodeHistory(1, joinHist, 3);
+	joinHist= add_nodeHistory(0, joinHist, 3);
+
+	while(joinHist!=NULL){
+		for(i=0; i<3; i++)printf("%d\n",joinHist->rels[i] );
+		joinHist=joinHist->next;
+	}
 	
 	return 0;
 }
