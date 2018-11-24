@@ -8,6 +8,8 @@
 #include <stdint.h>
 
 
+
+
 typedef struct tuple {
 	uint64_t key;
 	uint64_t payload;
@@ -15,7 +17,7 @@ typedef struct tuple {
 
 typedef struct relation {
 	tuple *tuples;
-	int num_tuples;
+	uint64_t num_tuples;
 } relation;
 
 
@@ -47,7 +49,6 @@ void print_psum(psum_node * psum);
 
 relation* reorder_R(psum_node* phead, relation* R, relation* R_new, int n  );
 void print_R(relation* R);
-void free_R(relation* R);
 
 
 

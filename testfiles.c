@@ -177,21 +177,6 @@ interm_node* update_interm(interm_node* interm, uint64_t* rowIds, int indexOfrel
 }
 
 
-void statusOfinterm(interm_node* interm){
-  int i, j;
-
-  if(interm!=NULL){
-    for(i=0; i<interm->numOfrels; i++){
-      printf(">> Rel %d with rowIds: \n",i );
-      for(j=0; j<interm->numOfrows[i]; j++){
-        printf(" %ld|",interm->rowIds[i][j] );
-      }
-      printf("Total matches: %d\n",interm->numOfrows[i] );
-      printf("--------------------------------------\n");
-    }
-  }
-}
-
 uint64_t return_value(infoNode* infoMap, int rel ,int col, int tuple){
   
   uint64_t * ptr=(uint64_t*)infoMap[rel].addr[col];
@@ -385,4 +370,19 @@ interm_node* filter(interm_node* interm,int oper, infoNode* infoMap, int rel, in
   free(filterRowIds);
   return interm;
 
+}
+
+void statusOfinterm(interm_node* interm){
+  int i, j;
+
+  if(interm!=NULL){
+    for(i=0; i<interm->numOfrels; i++){
+      printf(">> Rel %d with rowIds: \n",i );
+      for(j=0; j<interm->numOfrows[i]; j++){
+        printf(" %ld|",interm->rowIds[i][j] );
+      }
+      printf("Total matches: %d\n",interm->numOfrows[i] );
+      printf("--------------------------------------\n");
+    }
+  }
 }

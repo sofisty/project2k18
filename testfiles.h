@@ -9,7 +9,7 @@
 #include <fcntl.h>
 #include <stdint.h>
 
-#include "results.h"
+#include "hash1.h"
 
 typedef struct RelFiles {
 	char file[250];
@@ -41,7 +41,6 @@ interm_node* store_interm_data(interm_node* interm ,uint64_t* rowIds, int indexO
 
 
 interm_node* update_interm(interm_node* interm, uint64_t* rowIds, int indexOfrel, int numOfrows,int numOfrels);
-void statusOfinterm(interm_node* interm);
 
 uint64_t return_value(infoNode* infoMap, int rel ,int col, int tuple);
 
@@ -50,6 +49,6 @@ uint64_t* filterFromRel(int oper,uint64_t value,uint64_t* ptr, int numOftuples,u
 uint64_t* selfjoinFromRel(uint64_t* ptr1, uint64_t* ptr2, int numOftuples, uint64_t* sjoinRowIds, int* numOfrows);
 uint64_t* selfjoinFromInterm(interm_node* interm, int rel, int indexOfrel, int col1, int col2, infoNode* infoMap,uint64_t* sjoinRowIds, int* numOfrows);
 
-
+void statusOfinterm(interm_node* interm);
 
 #endif
