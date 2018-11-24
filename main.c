@@ -68,8 +68,10 @@ int main(int argc,char** argv){
 
 	interm_node* interm=NULL;
 
+	//relation* rel=relFromMap(infoMap,1,0);
+	//print_R(rel);
 
-	interm=filter(interm,1, infoMap, 1,0, 0, 9477,1);
+	//interm=filter(interm,1, infoMap, 1,0, 0, 9477,1);
 	//dinei 650 apotel
 	
 	//interm=filter(interm,1, infoMap, 0, 1,1, 100000000000,2);
@@ -87,23 +89,27 @@ int main(int argc,char** argv){
 	//interm=filter(interm, 2, infoMap, 2, 2, 1, 1000, 3);
 	//dinei 2292
 
-	int rowIds[100], *newRowIds;
-	for(i=0; i<100; i++)rowIds[i]=i;
+	//int rowIds[100], *newRowIds;
+	//for(i=0; i<100; i++)rowIds[i]=i;
 
-	newRowIds= real_RowIds(interm, rowIds, 100, 0, newRowIds);
+	//newRowIds= real_RowIds(interm, rowIds, 100, 0, newRowIds);
 
-	for(i=0; i<100; i++){
-		printf("%d\n", newRowIds[i]);
-	}
+	//relation* rel=relFromInterm(interm, 1, 0, 0,infoMap);
+	//print_R(rel);
+
+	//for(i=0; i<100; i++){
+		//printf("%d\n", newRowIds[i]);
+	//}
 
 	joinHistory* joinHist=NULL;
-	joinHist= add_nodeHistory(1, joinHist, 3);
-	joinHist= add_nodeHistory(0, joinHist, 3);
+	interm=join2(interm,infoMap,&joinHist,0,0,1,1,0,0,3);
+	//joinHist= add_nodeHistory(1, joinHist, 3);
+	//joinHist= add_nodeHistory(0, joinHist, 3);
 
-	while(joinHist!=NULL){
-		for(i=0; i<3; i++)printf("%d\n",joinHist->rels[i] );
-		joinHist=joinHist->next;
-	}
+	//while(joinHist!=NULL){
+		//for(i=0; i<3; i++)printf("%d\n",joinHist->rels[i] );
+		//joinHist=joinHist->next;
+	//}
 	
 	return 0;
 }

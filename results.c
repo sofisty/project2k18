@@ -2,7 +2,7 @@
 
 
 #define n 8
-#define size ((1024*1024)/16) //arithmos eggrafwn pou xwrane sto ena bucket ths listas 
+#define size 1000 //arithmos eggrafwn pou xwrane sto ena bucket ths listas 
 
 result* store_results( result** head,result* curr_res, tuple resultR, tuple resultS ){ //apothikevei enan sindiasmo tuples sthn lista apotelesmatwn
 
@@ -65,17 +65,18 @@ result* store_results( result** head,result* curr_res, tuple resultR, tuple resu
 }
 
 void print_results(result* result_list, int* resfortest){ //ektypwnw th lista apotelesmatwn
-	int count, i, b=0, total=0;//,index
+	int count, i, b=0, total=0,index;
 	result* curr=result_list;
 	printf("--RESULTS--\n");
 	if(result_list==NULL)printf("0 results found!\n");
 	while(curr!=NULL){
 		//printf("\n-Bucket: %d\n", b);
+
 		count=curr->count;
 		for(i=0; i<count; i++){
 			total++;
-			//index=3*i;
-			//printf(" Matchin Keys %d=%d Payload R %d, Payload S %d\n", curr->matches[index+2], curr->matches[index+2], curr->matches[index],curr->matches[index+1]);
+			index=3*i;
+			printf(" Matchin Keys %ld=%ld Payload R %ld, Payload S %ld\n", curr->matches[index+2], curr->matches[index+2], curr->matches[index],curr->matches[index+1]);
 		}
 		curr=curr->next;
 		b++;
@@ -145,35 +146,49 @@ result* search_results(result** head,result* curr_res, relation* S_new, int star
 
 } 
 
-uint64_t** resToRowIds(result* result_list){
-	int numOftups, index,i;
-
+uint64_t** resToRowIds(result* result_list, int* numOfr){
+	int  index,i;
+	int numOfrows=0;
 	//desmevw mnimi gia ton diasdiastato 
 	uint64_t** rowIds=malloc(2*sizeof(uint64_t*));
 	if (rowIds== NULL) { 
 		fprintf(stderr, "Malloc failed \n"); 
 		exit(-1);
 	}
-	numOftups=result_list->count;
+	result* curr=result_list;
+	while(curr!=NULL){
+		numOfrows+=curr->count;
+		curr=curr->next;
+		
+	}	
 
 	//desmevw mnhmh ggia tous monous pinakes row ids
-	rowIds[0]=malloc(numOftups*sizeof(uint64_t));
+	rowIds[0]=malloc(numOfrows*sizeof(uint64_t));
 	if (rowIds[0]== NULL) { 
 		fprintf(stderr, "Malloc failed \n"); 
 		exit(-1);
 	}
-	rowIds[1]=malloc(numOftups*sizeof(uint64_t));
+	rowIds[1]=malloc(numOfrows*sizeof(uint64_t));
 	if (rowIds[1]== NULL) { 
 		fprintf(stderr, "Malloc failed \n"); 
 		exit(-1);
 	}
 
-	for(i=0;i<numOftups;i++){
-		index=i*3;
-		rowIds[0][i]=result_list->matches[index];
-		rowIds[1][i]=result_list->matches[index+1];
-	}
+	curr=result_list;
+	int j=0;
+	while(curr!=NULL){
 
+		for(i=0; i<curr->count; i++){
+			index=i*3;
+			rowIds[0][j]=result_list->matches[index];
+			rowIds[1][j]=result_list->matches[index+1];
+			j++;
+		}
+		
+		curr=curr->next;
+
+	}	
+	*numOfr=numOfrows;
 	return rowIds;
 }
 
