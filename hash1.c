@@ -90,10 +90,17 @@ void print_R(relation* R){ //ektipwnei ta tuples ths relation pou dinetai
 	int i, h, size=R->num_tuples;
 	printf("Relation num_tuples: %d\n",size );
 	for(i=0; i<size; i++){
-		printf(" [%d]-> %ld\n with hash_val %d \n",i, R->tuples[i].key, h=hash_func(R->tuples[i].key, 8) );
+		printf(" [%d]->  key %ld , payload %ld \n",i, R->tuples[i].key,R->tuples[i].payload );
 	}
 }
 
+void free_R(relation* R){
+	if(R!=NULL){
+	free(R->tuples);
+	free(R);
+	}
+	
 
+}
 
 
