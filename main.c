@@ -68,10 +68,8 @@ int main(int argc,char** argv){
 
 	interm_node* interm=NULL;
 
-	//relation* rel=relFromMap(infoMap,1,0);
-	//print_R(rel);
 
-	//interm=filter(interm,1, infoMap, 1,0, 0, 9477,1);
+	interm=filter(interm,1, infoMap, 1,1, 0, 9477,3);
 	//dinei 650 apotel
 	
 	//interm=filter(interm,1, infoMap, 0, 1,1, 100000000000,2);
@@ -94,22 +92,17 @@ int main(int argc,char** argv){
 
 	//newRowIds= real_RowIds(interm, rowIds, 100, 0, newRowIds);
 
-	//relation* rel=relFromInterm(interm, 1, 0, 0,infoMap);
-	//print_R(rel);
-
-	//for(i=0; i<100; i++){
-		//printf("%d\n", newRowIds[i]);
-	//}
-
+	/*for(i=0; i<100; i++){
+		printf("%d\n", newRowIds[i]);
+	}*/
+	  result* result_list=NULL;
 	joinHistory* joinHist=NULL;
-	interm=join2(interm,infoMap,&joinHist,0,0,1,1,0,0,3);
 	//joinHist= add_nodeHistory(1, joinHist, 3);
 	//joinHist= add_nodeHistory(0, joinHist, 3);
 
-	//while(joinHist!=NULL){
-		//for(i=0; i<3; i++)printf("%d\n",joinHist->rels[i] );
-		//joinHist=joinHist->next;
-	//}
-	
+	//rel1, ind1, rel2, ind2, col1,col2 
+	interm= join2( interm, infoMap, &joinHist,0,0, 1,1, 1,0, 3);
+
+
 	return 0;
 }
