@@ -120,16 +120,16 @@ void print_InfoMap(infoNode* infoMap, int numOffiles){
   } 
 }
 
-interm_node* store_interm_data(interm_node* interm ,uint64_t* rowIds, int indexOfrel, int numOfrows, int numOfrels){
+interm_node* store_interm_data(interm_node* interm ,int* rowIds, int indexOfrel, int numOfrows, int numOfrels){
   int i=indexOfrel;
   if(rowIds==NULL){
     interm->rowIds[i]=NULL;
 
   }
   else{
-    interm->rowIds[i]=malloc(numOfrows* sizeof(uint64_t));
+    interm->rowIds[i]=malloc(numOfrows* sizeof(int));
     if(interm->rowIds[i]==NULL){fprintf(stderr, "Malloc failed \n"); return NULL;}
-    memcpy(interm->rowIds[i], rowIds, numOfrows* sizeof(uint64_t));
+    memcpy(interm->rowIds[i], rowIds, numOfrows* sizeof(int));
   }
 
   interm->numOfrows[i]=numOfrows;
@@ -138,27 +138,27 @@ interm_node* store_interm_data(interm_node* interm ,uint64_t* rowIds, int indexO
 }
 
 
-interm_node* update_interm(interm_node* interm, uint64_t* rowIds, int indexOfrel, int numOfrows,int numOfrels){
+interm_node* update_intermFilSjoin(interm_node* interm, int* rowIds, int indexOfrel, int numOfrows,int numOfrels){
   int i,j;
-  uint64_t* temp;
+  int* temp;
   
   if(interm==NULL){
     interm=malloc(sizeof(interm_node));
     if(interm==NULL){fprintf(stderr, "Malloc failed \n"); return NULL;}
-    interm->rowIds=malloc(numOfrels* sizeof(uint64_t*));
+    interm->rowIds=malloc(numOfrels* sizeof(int*));
     if(interm->rowIds==NULL){fprintf(stderr, "Malloc failed \n"); return NULL;}
     for(j=0; j<numOfrels; j++)interm->rowIds[j]=NULL;
-    interm->numOfrows=malloc(numOfrels* sizeof(uint64_t));
+    interm->numOfrows=malloc(numOfrels* sizeof(int));
     if(interm->numOfrows==NULL){fprintf(stderr, "Malloc failed \n"); return NULL;}
     for(j=0; j<numOfrels; j++)interm->numOfrows[j]=-1;
-    interm=store_interm_data(interm,  rowIds, indexOfrel, numOfrows, numOfrels); 
+    interm=store_interm_data(interm,  rowIds, indexOfrel, numOfrows, 1); 
     return interm;   
    
   }
   else{
     i=indexOfrel;
     if(interm->numOfrows[i]==-1){
-      interm=store_interm_data(interm,  rowIds, indexOfrel, numOfrows, numOfrels); 
+      interm=store_interm_data(interm,  rowIds, indexOfrel, numOfrows, ((interm->numOfrels)+1) ); 
       return interm;
     }
     else{
@@ -166,7 +166,7 @@ interm_node* update_interm(interm_node* interm, uint64_t* rowIds, int indexOfrel
       free(temp);
       interm->rowIds[i]=NULL;
     
-      interm=store_interm_data(interm,  rowIds, indexOfrel, numOfrows, numOfrels ); 
+      interm=store_interm_data(interm,  rowIds, indexOfrel, numOfrows, interm->numOfrels ); 
       return interm;
     }
 
@@ -185,10 +185,10 @@ uint64_t return_value(infoNode* infoMap, int rel ,int col, int tuple){
 }
 
 
-uint64_t* filterFromInterm(interm_node* interm, int oper, uint64_t value,  int rel, int indexOfrel, int col,infoNode* infoMap, uint64_t* filterRowIds, int* numOfrows){
+int* filterFromInterm(interm_node* interm, int oper, uint64_t value,  int rel, int indexOfrel, int col,infoNode* infoMap, int* filterRowIds, int* numOfrows){
 
   int j=0, i=0;
-  uint64_t tuple;
+  int tuple;
   uint64_t key;
 
   if(oper==3){
@@ -232,9 +232,9 @@ uint64_t* filterFromInterm(interm_node* interm, int oper, uint64_t value,  int r
   return filterRowIds;
 }
 
-uint64_t* selfjoinFromInterm(interm_node* interm, int rel, int indexOfrel, int col1, int col2, infoNode* infoMap,uint64_t* sjoinRowIds, int* numOfrows){
+int* selfjoinFromInterm(interm_node* interm, int rel, int indexOfrel, int col1, int col2, infoNode* infoMap,int* sjoinRowIds, int* numOfrows){
   int j=0, i=0;
-  uint64_t tuple;
+  int tuple;
   uint64_t key1, key2;
 
   for(i=0; i<interm->numOfrows[indexOfrel]; i++){
@@ -253,13 +253,13 @@ uint64_t* selfjoinFromInterm(interm_node* interm, int rel, int indexOfrel, int c
   return sjoinRowIds;
 }
 
-uint64_t* filterFromRel(int oper,uint64_t value,uint64_t* ptr, int numOftuples,uint64_t* filterRowIds, int* numOfrows){
+int* filterFromRel(int oper,uint64_t value,uint64_t* ptr, int numOftuples,int* filterRowIds, int* numOfrows){
   int j=0,  i=0;
 
   if(oper==3){
     for(i=0; i<numOftuples; i++){
       if(*ptr==value){
-        filterRowIds[j]=(uint64_t)i;
+        filterRowIds[j]=i;
         j++;
       }
       ptr++;
@@ -269,7 +269,7 @@ uint64_t* filterFromRel(int oper,uint64_t value,uint64_t* ptr, int numOftuples,u
     //printf("gia <\n");
     for(i=0; i<numOftuples; i++){
       if(*ptr<value){
-        filterRowIds[j]=(uint64_t)i;
+        filterRowIds[j]=i;
         j++;
       }
       ptr++;
@@ -279,7 +279,7 @@ uint64_t* filterFromRel(int oper,uint64_t value,uint64_t* ptr, int numOftuples,u
   //printf("gia >\n");
     for(i=0; i<numOftuples; i++){
       if(*ptr>value){
-        filterRowIds[j]=(uint64_t)i;
+        filterRowIds[j]=i;
         j++;
       }
       ptr++;
@@ -291,11 +291,11 @@ uint64_t* filterFromRel(int oper,uint64_t value,uint64_t* ptr, int numOftuples,u
   return filterRowIds;
 }
 
-uint64_t* selfjoinFromRel(uint64_t* ptr1, uint64_t* ptr2, int numOftuples, uint64_t* sjoinRowIds, int* numOfrows){
+int* selfjoinFromRel(uint64_t* ptr1, uint64_t* ptr2, int numOftuples, int* sjoinRowIds, int* numOfrows){
   int i, j=0;
   for(i=0; i<numOftuples; i++){
     if(*ptr1==*ptr2){
-      sjoinRowIds[j]=(uint64_t)i;
+      sjoinRowIds[j]=i;
       j++;
     }
     ptr1++;
@@ -312,7 +312,7 @@ interm_node* self_join(interm_node* interm, infoNode* infoMap, int rel, int inde
   
   uint64_t* ptr1, *ptr2;
   int numOfrows;  
-  uint64_t* sjoinRowIds=malloc(numOftuples* sizeof(uint64_t));
+  int* sjoinRowIds=malloc(numOftuples* sizeof(int));
   if(sjoinRowIds==NULL){fprintf(stderr, "Malloc failed \n"); return NULL;}
 
   if(interm!=NULL){
@@ -332,7 +332,7 @@ interm_node* self_join(interm_node* interm, infoNode* infoMap, int rel, int inde
     sjoinRowIds= selfjoinFromRel( ptr1, ptr2, numOftuples, sjoinRowIds, &numOfrows);  
   }
   
-  interm=update_interm( interm, sjoinRowIds,  indexOfrel,  numOfrows,numOfrels);  
+  interm=update_intermFilSjoin( interm, sjoinRowIds,  indexOfrel,  numOfrows,numOfrels);  
 
   free(sjoinRowIds);
   return interm;
@@ -347,7 +347,7 @@ interm_node* filter(interm_node* interm,int oper, infoNode* infoMap, int rel, in
   
   uint64_t* ptr;
   int numOfrows;
-  uint64_t* filterRowIds=malloc(numOftuples* sizeof(uint64_t)); 
+  int* filterRowIds=malloc(numOftuples* sizeof(int)); 
   if(filterRowIds==NULL){fprintf(stderr, "Malloc failed \n"); return NULL;}
 
   if(interm!=NULL){
@@ -365,24 +365,9 @@ interm_node* filter(interm_node* interm,int oper, infoNode* infoMap, int rel, in
     filterRowIds= filterFromRel( oper,value, ptr, numOftuples, filterRowIds, &numOfrows);  
   }
   
-  interm=update_interm( interm, filterRowIds,  indexOfrel,  numOfrows,numOfrels);  
+  interm=update_intermFilSjoin( interm, filterRowIds,  indexOfrel,  numOfrows,numOfrels);  
 
   free(filterRowIds);
   return interm;
 
-}
-
-void statusOfinterm(interm_node* interm){
-  int i, j;
-
-  if(interm!=NULL){
-    for(i=0; i<interm->numOfrels; i++){
-      printf(">> Rel %d with rowIds: \n",i );
-      for(j=0; j<interm->numOfrows[i]; j++){
-        printf(" %ld|",interm->rowIds[i][j] );
-      }
-      printf("Total matches: %d\n",interm->numOfrows[i] );
-      printf("--------------------------------------\n");
-    }
-  }
 }
