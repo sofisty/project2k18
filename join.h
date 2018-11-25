@@ -17,8 +17,11 @@ relation* relFromInterm(interm_node* interm, int rel, int col, int indexOfrel, i
 
 joinHistory* add_nodeHistory(int indexOfrel, joinHistory* joinHist, int numOfrels);
 joinHistory* update_nodeHistory(int indexOfrel, joinHistory* joinHist);
+int print_joinHist(joinHistory* joinHist, int numOfrels);
+joinHistory* delete_nodeHistory(int indexOfrel, joinHistory** joinHist);
+joinHistory* merge_nodeHistory(int indexOfrel1, int indexOfrel2, joinHistory* new, joinHistory** joinHist);
 
-interm_node* exec_join(interm_node* interm, infoNode* infoMap, int  rel1,int  indexOfrel1,int rel2,int indexOfrel2, int col1, int col2, int numOfrels);
+int exec_join(interm_node* interm, infoNode* infoMap, int  rel1,int  indexOfrel1,int rel2,int indexOfrel2, int col1, int col2, int numOfrels, uint64_t** rowIds1, uint64_t** rowIds2, int* numOfrows);
 interm_node* join2(interm_node* interm, infoNode* infoMap, joinHistory** joinHist,int rel1,int indexOfrel1,int rel2,int indexOfrel2, int col1, int col2, int numOfrels);
 
 #endif

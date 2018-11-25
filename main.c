@@ -69,7 +69,7 @@ int main(int argc,char** argv){
 	interm_node* interm=NULL;
 
 
-	interm=filter(interm,1, infoMap, 1,1, 0, 9477,3);
+	interm=filter(interm,1, infoMap, 1,1, 0, 9477,10);
 	//dinei 650 apotel
 	
 	//interm=filter(interm,1, infoMap, 0, 1,1, 100000000000,2);
@@ -101,7 +101,33 @@ int main(int argc,char** argv){
 	//joinHist= add_nodeHistory(0, joinHist, 3);
 
 	//rel1, ind1, rel2, ind2, col1,col2 
-	interm= join2( interm, infoMap, &joinHist,0,0, 1,1, 1,0, 3);
+	printf("####### join 1 #################\n");
+	interm= join2( interm, infoMap, &joinHist,0,0, 1,1, 1,0, 10);
+	print_joinHist(joinHist, 10);
+	 //print_joinHist( joinHist, 3);
+	printf("####### join 2 #################\n");
+	interm= join2( interm, infoMap, &joinHist,3,3, 2,2, 1,0, 10);
+	  print_joinHist(joinHist, 10);
+	
+	printf("####### join 3 #################\n");
+	interm= join2( interm, infoMap, &joinHist,4,4, 5,5, 1,0, 10);
+	  print_joinHist(joinHist, 10);
+	
+	printf("####### join 4 #################\n");
+	interm= join2( interm, infoMap, &joinHist,6,6, 7,7, 1,0, 10);
+	  print_joinHist(joinHist, 10);
+	
+	printf("####### join 5 #################\n");
+	interm= join2( interm, infoMap, &joinHist,0,0, 7,7, 1,0, 10);
+	  print_joinHist(joinHist, 10);
+	
+	printf("####### join  6#################\n");
+	interm= join2( interm, infoMap, &joinHist,3,3, 4,4, 1,0, 10);
+	print_joinHist(joinHist, 10);
+
+
+
+
 
 
 	return 0;

@@ -49,6 +49,7 @@ void print_psum(psum_node * psum);
 
 relation* reorder_R(psum_node* phead, relation* R, relation* R_new, int n  );
 void print_R(relation* R);
+void free_R(relation* R);
 
 
 

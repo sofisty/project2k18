@@ -95,5 +95,8 @@ void print_R(relation* R){ //ektipwnei ta tuples ths relation pou dinetai
 }
 
 
-
+void free_R(relation* R){
+	free(R->tuples);
+	free(R);
+}
 

@@ -378,10 +378,15 @@ void statusOfinterm(interm_node* interm){
   if(interm!=NULL){
     for(i=0; i<interm->numOfrels; i++){
       printf(">> Rel %d with rowIds: \n",i );
-      for(j=0; j<interm->numOfrows[i]; j++){
-        printf(" %ld|",interm->rowIds[i][j] );
+     if(interm->rowIds[i]==NULL){
+          printf("NULL |");
       }
-      printf("Total matches: %d\n",interm->numOfrows[i] );
+      else{
+        for(j=0; j<interm->numOfrows[i]; j++){
+             printf(" %ld|",interm->rowIds[i][j] );  
+        }
+      }
+      printf("\nTotal matches: %d\n",interm->numOfrows[i] );
       printf("--------------------------------------\n");
     }
   }
