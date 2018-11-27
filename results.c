@@ -2,7 +2,7 @@
 
 
 #define n 8
-#define size 1000 //arithmos eggrafwn pou xwrane sto ena bucket ths listas 
+#define size (((1024*1024)/24)-1) //arithmos eggrafwn pou xwrane sto ena bucket ths listas 
 
 result* store_results( result** head,result* curr_res, tuple resultR, tuple resultS ){ //apothikevei enan sindiasmo tuples sthn lista apotelesmatwn
 
@@ -76,7 +76,7 @@ void print_results(result* result_list, int* resfortest){ //ektypwnw th lista ap
 		for(i=0; i<count; i++){
 			total++;
 			index=3*i;
-			printf(" Matchin Keys %ld=%ld Payload R %ld, Payload S %ld\n", curr->matches[index+2], curr->matches[index+2], curr->matches[index],curr->matches[index+1]);
+			//printf(" Matchin Keys %ld=%ld Payload R %ld, Payload S %ld\n", curr->matches[index+2], curr->matches[index+2], curr->matches[index],curr->matches[index+1]);
 		}
 		curr=curr->next;
 		b++;
@@ -180,8 +180,10 @@ uint64_t** resToRowIds(result* result_list, int* numOfr){
 
 		for(i=0; i<curr->count; i++){
 			index=i*3;
+
 			rowIds[0][j]=result_list->matches[index];
 			rowIds[1][j]=result_list->matches[index+1];
+
 			j++;
 		}
 		

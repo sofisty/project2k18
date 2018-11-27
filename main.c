@@ -65,10 +65,37 @@ int main(int argc,char** argv){
 	fclose(fp);
 
 */
+	interm_node* interm=NULL;
+	result* result_list=NULL;
+	joinHistory* joinHist=NULL;
+
+	//3 0 1|0.2=1.0&0.1=2.0&0.2>3499|1.2 0.1
+	interm=filter(interm,1, infoMap, 3,0, 2, 3499,4);
+
+	printf("####### join 1 #################\n");
+	interm= join2( interm, infoMap, &joinHist,3,0, 0,1, 2,0, 4);
+	print_joinHist(joinHist, 4);
+
+	/*printf("####### join 2 #################\n");
+	interm= join2( interm, infoMap, &joinHist,3,0, 1,2, 1,0, 4);
+	print_joinHist(joinHist, 4);
+	*/
+
+	uint64_t sum1=0 , sum2=0;
+	for(int i=0; i<interm->numOfrows[0]; i++ ){
+		sum1+=return_value( infoMap, 3 ,1, interm->rowIds[0][i]);
+	}
+	printf(" SUM1 %ld \n", sum1);
+
+	printf("numOfrows %d \n",interm->numOfrows[1] );
+	for(int i=0; i<interm->numOfrows[1]; i++ ){
+		sum2+=return_value( infoMap, 0 ,2, interm->rowIds[1][i]);
+	}
+	printf(" SUM2 %ld \n", sum2);
+	/*
+
 
 	interm_node* interm=NULL;
-
-
 	interm=filter(interm,1, infoMap, 1,1, 0, 9477,10);
 	//dinei 650 apotel
 	
@@ -95,12 +122,14 @@ int main(int argc,char** argv){
 	/*for(i=0; i<100; i++){
 		printf("%d\n", newRowIds[i]);
 	}*/
-	  result* result_list=NULL;
-	joinHistory* joinHist=NULL;
+
+
 	//joinHist= add_nodeHistory(1, joinHist, 3);
 	//joinHist= add_nodeHistory(0, joinHist, 3);
 
 	//rel1, ind1, rel2, ind2, col1,col2 
+	
+/*
 	printf("####### join 1 #################\n");
 	interm= join2( interm, infoMap, &joinHist,0,0, 1,1, 1,0, 10);
 	print_joinHist(joinHist, 10);
@@ -124,11 +153,6 @@ int main(int argc,char** argv){
 	printf("####### join  6#################\n");
 	interm= join2( interm, infoMap, &joinHist,3,3, 4,4, 1,0, 10);
 	print_joinHist(joinHist, 10);
-
-
-
-
-
-
+*/
 	return 0;
 }

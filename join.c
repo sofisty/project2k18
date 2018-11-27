@@ -7,7 +7,9 @@ uint64_t* real_RowIds(interm_node* interm, uint64_t* rowIds, int numOfrows, int 
   if(newRowIds==NULL){fprintf(stderr, "Malloc failed \n"); return NULL;}
   for(i=0; i<numOfrows; i++){
     j=rowIds[i];
+    
     newRowIds[i]=interm->rowIds[updateRel][j];
+    //printf("NEW ROW IDS %ld \n", newRowIds[i]);
 
   }
 
@@ -110,7 +112,7 @@ joinHistory* add_nodeHistory(int indexOfrel, joinHistory* joinHist, int numOfrel
 	
 }
 
-int exec_join(interm_node* interm, infoNode* infoMap, int  rel1,int  indexOfrel1,int rel2,int indexOfrel2, int col1, int col2, int numOfrels, uint64_t** rowIds1, uint64_t** rowIds2, int* numOfres){
+uint64_t **  exec_join(interm_node* interm, infoNode* infoMap, int  rel1,int  indexOfrel1,int rel2,int indexOfrel2, int col1, int col2, int numOfrels, uint64_t** rowIds1, uint64_t** rowIds2, int* numOfres){
   int numOfrows;
   uint64_t ** rowIds, *newRowIds1=NULL, *newRowIds2=NULL;
   relation *relation1=NULL, *relation2=NULL;
@@ -123,7 +125,10 @@ int exec_join(interm_node* interm, infoNode* infoMap, int  rel1,int  indexOfrel1
     
 
     result_list=RadixHashJoin(relation1, relation2);
+    print_results(result_list, &numOfrows);
     //print_results(result_list, &resfortest);
+    
+
     rowIds=resToRowIds( result_list, &numOfrows);
     *numOfres=numOfrows;
     printf("total matches %d\n",numOfrows );
@@ -149,6 +154,10 @@ int exec_join(interm_node* interm, infoNode* infoMap, int  rel1,int  indexOfrel1
       //print_R(relation2);
 
       result_list=RadixHashJoin(relation1, relation2);
+       print_results(result_list, &numOfrows);
+      
+
+
       rowIds=resToRowIds( result_list, &numOfrows);
       *numOfres=numOfrows;
       printf("RETURN FROM RHJ: total matches %d\n",numOfrows);
@@ -214,6 +223,7 @@ int exec_join(interm_node* interm, infoNode* infoMap, int  rel1,int  indexOfrel1
     }
 
    }
+   free_result_list( result_list);
    return 0;
 }
 
@@ -300,11 +310,12 @@ int print_joinHist(joinHistory* joinHist, int numOfrels){
 
 
 //kane kati me to flag
-interm_node* join2(interm_node* interm, infoNode* infoMap, joinHistory** joinHist,int  rel1,int  indexOfrel1,int rel2,int indexOfrel2, int col1, int col2, int numOfrels){
+interm_node* join2(interm_node* interm, infoNode* infoMap, joinHistory** joinHist, int  rel1,int  indexOfrel1,int rel2,int indexOfrel2, int col1, int col2, int numOfrels){
    
-  int hold1=-1, hold2=-1, to_add1, to_add2, resfortest, numOfrows, i;
+  int hold1=-1, hold2=-1, to_add1, to_add2, resfortest, numOfrows=0, i;
   joinHistory* currHist1, *currHist2, *new;
-  uint64_t* temp, rowIds1, rowIds2;
+  joinHistory* curr;
+  uint64_t* temp, *rowIds1, *rowIds2, **updateIds;
   currHist1=*joinHist;
   currHist2=*joinHist;
 
@@ -317,15 +328,14 @@ interm_node* join2(interm_node* interm, infoNode* infoMap, joinHistory** joinHis
     currHist2=currHist2->next;
   }
 
-
     //if(curr1==curr2 && !NULL) eidiko selfjoin{
 
 
     //}
 
 
-  exec_join( interm, infoMap,  rel1, indexOfrel1, rel2, indexOfrel2, col1, col2,  numOfrels, &rowIds1, &rowIds2, &numOfrows);
-  joinHistory* curr;
+  updateIds=exec_join( interm, infoMap,  rel1, indexOfrel1, rel2, indexOfrel2, col1, col2,  numOfrels, &rowIds1, &rowIds2, &numOfrows);
+  
   interm= update_interm(interm, rowIds1, indexOfrel1, numOfrows,  numOfrels);
   interm=update_interm( interm, rowIds2, indexOfrel2,  numOfrows, numOfrels);
   //statusOfinterm(interm);
@@ -347,9 +357,13 @@ interm_node* join2(interm_node* interm, infoNode* infoMap, joinHistory** joinHis
 
   //to 1 exei kai alla sto history kai to 2 prostithetai
   if(currHist1!=NULL && currHist2==NULL) {
+   
     for(i=0; i<numOfrels; i++) {
        if( (currHist1->rels[i])==1 && i!=indexOfrel1){
-        temp= real_RowIds( interm, rowIds1, numOfrows, i, temp);
+        
+        temp= real_RowIds( interm, updateIds[0], numOfrows, i, temp);
+
+        //for(int j=0; j<numOfrows; j++)printf(" j: %d= %ld, numOfrows %d\n",j,temp[j], numOfrows );
         interm= update_interm(interm, temp, i, numOfrows,  numOfrels);
       }
       
@@ -360,7 +374,7 @@ interm_node* join2(interm_node* interm, infoNode* infoMap, joinHistory** joinHis
   else if(currHist1==NULL && currHist2!=NULL){
     for(i=0; i<numOfrels; i++) {
        if( (currHist2->rels[i])==1 && i!=indexOfrel2){
-        temp= real_RowIds( interm, rowIds2, numOfrows, i, temp);
+        temp= real_RowIds( interm, updateIds[1], numOfrows, i, temp);
         interm= update_interm(interm, temp, i, numOfrows,  numOfrels);
       }
       
@@ -384,7 +398,7 @@ interm_node* join2(interm_node* interm, infoNode* infoMap, joinHistory** joinHis
 
    for(i=0; i<numOfrels; i++) {
        if( (currHist1->rels[i])==1 && i!=indexOfrel1){
-        temp= real_RowIds( interm, rowIds1, numOfrows, i, temp);
+        temp= real_RowIds( interm, updateIds[0], numOfrows, i, temp);
         interm= update_interm(interm, temp, i, numOfrows,  numOfrels);
         new->rels[i]=1;
       }
@@ -392,7 +406,7 @@ interm_node* join2(interm_node* interm, infoNode* infoMap, joinHistory** joinHis
     }
     for(i=0; i<numOfrels; i++) {
        if( (currHist2->rels[i])==1 && i!=indexOfrel2){
-        temp= real_RowIds( interm, rowIds2, numOfrows, i, temp);
+        temp= real_RowIds( interm, updateIds[1], numOfrows, i, temp);
         interm= update_interm(interm, temp, i, numOfrows,  numOfrels);
         new->rels[i]=1;
       }
