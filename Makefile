@@ -32,4 +32,5 @@ join.o: join.c join.h
 
 
 clean: 
-	$(RM) rhj *.o * ~
+	-rm -f *.o 
+	-rm -f rhj

@@ -525,7 +525,7 @@ void execute_batch(batch* b, int num_loadedrels, infoNode* infoMap){
 		interm_node* interm=NULL;
 		joinHistory* joinHist=NULL;
 		interm=execute_query(interm, &joinHist, b->q_arr[i], infoMap, num_loadedrels);
-		print_joinHist(joinHist, num_loadedrels);
+		//print_joinHist(joinHist, num_loadedrels);
 	}
 }
 
@@ -633,6 +633,7 @@ interm_node* execute_query(interm_node* interm, joinHistory** joinHist, query* q
 		curr=curr->next;
 	}
 	proj_sums(interm,q, InfoMap);
+	
 	return interm;
 }
 
@@ -686,17 +687,18 @@ void free_batch(batch *b){
 void proj_sums(interm_node* interm, query* q, infoNode* infoMap){
   uint64_t sum;
   int i,index=0,j=0,rel,rel_ind,col;
-
+  printf("---SUMS---\n");
   while(j<q->num_projs){
   	sum=0;
     rel_ind=q->projs[index];
     rel=q->rels[rel_ind];
     col=q->projs[index+1];
     index+=3; //prospernaw kai to -1 sto telos tou projection
-    for(i=0; i<interm->numOfrows[rel]; i++ ){
+    for(i=0; i<interm->numOfrows[rel_ind]; i++ ){
 	    sum+=return_value( infoMap, rel ,col, interm->rowIds[rel_ind][i]);
 	}
-	printf("%ld ",sum);
+	printf("-%ld\n",sum);
 	j++;
   }
+  printf("----------\n");
 }

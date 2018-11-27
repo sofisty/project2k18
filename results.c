@@ -7,9 +7,8 @@
 result* store_results( result** head,result* curr_res, tuple resultR, tuple resultS ){ //apothikevei enan sindiasmo tuples sthn lista apotelesmatwn
 
 	int count,index;
-	
-	//printf("SIZE %d\n",size );
 
+	//printf("SIZE %d\n",size );
 	
 	if( curr_res==NULL){//an exei dothei keni lista tote dimiourgw kainourgia lista apotelesmatwn
 		 curr_res=malloc(sizeof(result));
@@ -36,10 +35,13 @@ result* store_results( result** head,result* curr_res, tuple resultR, tuple resu
 			index=count*3;
 			curr_res->matches[index]=resultR.payload; //kai arxikopoiw thn lista apotelesmatwn me ta dothenta tuples
 			curr_res->matches[index+1]=resultS.payload;
+			
 			curr_res->matches[index+2]=resultR.key;
 			curr_res->count+=1;
 			//epistrefw thn trexousa thesh
+			
 			return curr_res;
+
 
 		}
 		else if(curr_res->count==size){// an h lista den exei xwro, desmevw xwro enos bucket akomh sth lista kai to arxikopoiw me to dothen tup
@@ -50,13 +52,14 @@ result* store_results( result** head,result* curr_res, tuple resultR, tuple resu
 			if (curr_res->next->matches== NULL) { fprintf(stderr, "Malloc failed \n"); return NULL;}
 			
 			
+			
 			curr_res->next->matches[0]=resultR.payload; //kai arxikopoiw thn lista apotelesmatwn me ta dothenta tuples
 			curr_res->next->matches[1]=resultS.payload;
 			curr_res->next->matches[2]=resultR.key;
 
 			curr_res->next->count=1; //auksanw kata ena to count tou neou bucket
 			curr_res->next->next=NULL;
-			//epistrefw ti thesh pou vriskomai sth listsa
+			
 			return curr_res->next;//epistrefw th lista
 
 		}
@@ -177,13 +180,13 @@ uint64_t** resToRowIds(result* result_list, int* numOfr){
 	curr=result_list;
 	int j=0;
 	while(curr!=NULL){
-
+		//printf("%d count\n",curr->count );
 		for(i=0; i<curr->count; i++){
 			index=i*3;
 
-			rowIds[0][j]=result_list->matches[index];
-			rowIds[1][j]=result_list->matches[index+1];
-
+			rowIds[0][j]=curr->matches[index];
+			rowIds[1][j]=curr->matches[index+1];
+			
 			j++;
 		}
 		
@@ -191,6 +194,7 @@ uint64_t** resToRowIds(result* result_list, int* numOfr){
 
 	}	
 	*numOfr=numOfrows;
+	//printf("numOfrows %d\n",numOfrows );
 	return rowIds;
 }
 
