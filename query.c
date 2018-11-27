@@ -512,7 +512,7 @@ void execute_workload(char* filename, int num_loadedrels, infoNode* infoMap){
 		execute_batch(b, num_loadedrels, infoMap);		
 		prev_offset=offset;
 		free_batch(b);
-		exit(0);
+		//exit(0);
 	}
 	fclose(fp);
 	printf("Workload %s is done.\n", filename);
