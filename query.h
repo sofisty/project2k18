@@ -53,6 +53,7 @@ void execute_workload(char* filename, int num_loadedrels, infoNode* infoMap);
 void execute_batch(batch* b, int num_loadedrels, infoNode* infoMap);
 interm_node* execute_query(interm_node* interm, joinHistory** joinHist, query* q, infoNode* InfoMap, int numOfrels);
 interm_node* execute_pred(interm_node* interm, joinHistory** joinHist,pred* p,int* rels, int num_loadedrels, infoNode* infoMap);
+void proj_sums(interm_node* interm, query* q, infoNode* infoMap);
 
 void free_batch(batch* b);
 void free_query(query* q);

@@ -512,6 +512,7 @@ void execute_workload(char* filename, int num_loadedrels, infoNode* infoMap){
 		execute_batch(b, num_loadedrels, infoMap);		
 		prev_offset=offset;
 		free_batch(b);
+		exit(0);
 	}
 	fclose(fp);
 	printf("Workload %s is done.\n", filename);
@@ -631,6 +632,7 @@ interm_node* execute_query(interm_node* interm, joinHistory** joinHist, query* q
 		interm=execute_pred(interm, joinHist, curr, q->rels, num_loadedrels, InfoMap);
 		curr=curr->next;
 	}
+	proj_sums(interm,q, InfoMap);
 	return interm;
 }
 
@@ -679,4 +681,22 @@ void free_batch(batch *b){
 	curr->q_arr=NULL;
 	free(curr);
 	curr=NULL;
+}
+
+void proj_sums(interm_node* interm, query* q, infoNode* infoMap){
+  uint64_t sum;
+  int i,index=0,j=0,rel,rel_ind,col;
+
+  while(j<q->num_projs){
+  	sum=0;
+    rel_ind=q->projs[index];
+    rel=q->rels[rel_ind];
+    col=q->projs[index+1];
+    index+=3; //prospernaw kai to -1 sto telos tou projection
+    for(i=0; i<interm->numOfrows[rel]; i++ ){
+	    sum+=return_value( infoMap, rel ,col, interm->rowIds[rel_ind][i]);
+	}
+	printf("%ld ",sum);
+	j++;
+  }
 }
