@@ -243,11 +243,8 @@ void reorder_preds(query* q){
 void print_query(query q){
 	int i,j;
 	printf("The query uses the relations: \n");
-	for(i=0;i<q.num_rels;i++){
-		if(q.rels[i]!=-1){
-			printf("%d  ",q.rels[i]);
-		}
-	}
+	for(i=0;i<q.num_rels;i++)	printf("%d  ",q.rels[i]);
+
 	printf("\n\n");
 	printf("The following predicates must be implemented: \n");
 	pred* curr=q.preds;
@@ -497,6 +494,146 @@ batch* store_batch(FILE* fp,long int* offset,long int* prev_offset,char* buff, i
 	}
 	return b;
 }
+
+void execute_workload(char* filename, int num_loadedrels, infoNode* infoMap){
+	int i=0, num_batches;
+	char buff[400];
+	batch* b=NULL;
+	long int offset=0, prev_offset=0;
+
+	FILE* fp=fopen(filename,"r"); //anoigei to arxeio eperwthsewn
+	num_batches=count_batches(fp); //kai metraei posa batches eperwthsewn exei
+	printf("This file has %d batches of queries.\n",num_batches );
+	rewind(fp);
+	i=0;
+	for(i=0;i<num_batches;i++){
+		b=store_batch(fp,&offset,&prev_offset,buff,400,b);
+		//print_batch(b);
+		execute_batch(b, num_loadedrels, infoMap);		
+		prev_offset=offset;
+		free_batch(b);
+	}
+	fclose(fp);
+	printf("Workload %s is done.\n", filename);
+}
+
+//ektelei mia omada eperwthsewn
+void execute_batch(batch* b, int num_loadedrels, infoNode* infoMap){
+	int i;
+	for(i=0;i<b->num_queries;i++){
+		interm_node* interm=NULL;
+		joinHistory* joinHist=NULL;
+		interm=execute_query(interm, &joinHist, b->q_arr[i], infoMap, num_loadedrels);
+		print_joinHist(joinHist, num_loadedrels);
+	}
+}
+
+//ektelei ena kathgorhma enos query
+interm_node* execute_pred(interm_node* interm, joinHistory** joinHist,pred* p,int* rels, int num_loadedrels, infoNode* infoMap){
+	int i=0,j=0,index;
+
+	if(p->isFilter){
+		int col,rel,indexOfrel;
+		char cols[3]; //den pistevw na exei parapanw apo 999 sthles
+		index=p->cols[i];
+		rel=rels[index];
+		i++;
+		while(p->cols[i]!=-1){
+			cols[j]=p->cols[i] +'0';
+			j++;
+			i++;
+		}
+		cols[j]='\0';
+		sscanf(cols, "%d", &col);
+
+		indexOfrel=index;
+
+		//ektelw to filtro
+		interm=filter(interm, p->op, infoMap, rel, indexOfrel, col, p->val, num_loadedrels);
+	}
+	else if(p->isSelfjoin){
+		int col1,col2,rel,indexOfrel;
+		char cols[3]; //den pistevw na exei parapanw apo 999 sthles
+		index=p->cols[i];
+		rel=rels[index];
+		i++;
+		while(p->cols[i]!=-1){
+			cols[j]=p->cols[i] +'0';
+			j++;
+			i++;
+		}
+		cols[j]='\0';
+		sscanf(cols, "%d", &col1);
+		i+=2;//afou einai to idio relation prospernaw kai to deutero relation
+		j=0;
+		while(p->cols[i]!=-1){
+			cols[j]=p->cols[i] +'0';
+			j++;
+			i++;
+		}
+		cols[j]='\0';
+		sscanf(cols, "%d", &col2);
+
+		indexOfrel=index;
+		//ektelw to filtro
+		interm=self_join(interm, infoMap, rel, indexOfrel, col1, col2, num_loadedrels);
+
+	}
+	else{
+		int col1,col2,rel1,rel2,indexOfrel1,indexOfrel2;
+		char cols1[3],cols2[3]; //den pistevw na exei parapanw apo 999 sthles
+		index=p->cols[i];
+		rel1=rels[index];
+		indexOfrel1=index;
+		i++;
+		while(p->cols[i]!=-1){
+			cols1[j]=p->cols[i] +'0';
+			j++;
+			i++;
+		}
+		cols1[j]='\0';
+		sscanf(cols1, "%d", &col1);
+		i++;
+		j=0;
+		index=p->cols[i];
+		rel2=rels[index];
+		indexOfrel2=index;
+
+		i++;
+		while(p->cols[i]!=-1){
+			cols2[j]=p->cols[i] +'0';
+			j++;
+			i++;
+		}
+		cols2[j]='\0';
+		sscanf(cols2, "%d", &col2);
+
+		//ektelw to join
+		interm=join2(interm, infoMap, joinHist, rel1, indexOfrel1, rel2, indexOfrel2, col1, col2, num_loadedrels);
+		//print_joinHist(*joinHist, num_loadedrels);
+	}
+	return interm;		
+}
+
+//ektelei wna query
+interm_node* execute_query(interm_node* interm, joinHistory** joinHist, query* q, infoNode* InfoMap, int num_loadedrels){
+	int i;
+	pred* curr;
+	
+	for(i=0;i<q->num_rels;i++){
+		if(q->rels[i]>num_loadedrels-1){
+			//fprintf(stderr, "The query has relations not included in the info map.Returning NULL\n");
+			return NULL;
+		}
+	}
+	curr=q->preds;
+	while(curr!=NULL){
+		interm=execute_pred(interm, joinHist, curr, q->rels, num_loadedrels, InfoMap);
+		curr=curr->next;
+	}
+	return interm;
+}
+
 
 void print_batch(batch* b){
 	int i;

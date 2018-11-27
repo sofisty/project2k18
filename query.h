@@ -8,6 +8,9 @@
 #include <time.h>
 #include <stdint.h>
 
+#include "testfiles.h"
+#include "join.h"
+
 typedef struct pred{
 	int* cols;// ean exw 0.1=1.22 tote apothikevetai [0,1,-1,1,2,2] to -1 diaxwrizei ta columns
 	int op; // i sxesh metaksi twn cols h col-val
@@ -45,6 +48,11 @@ void reorder_preds(query* q);
 
 void print_query(query q);
 void print_batch(batch* b);
+
+void execute_workload(char* filename, int num_loadedrels, infoNode* infoMap);
+void execute_batch(batch* b, int num_loadedrels, infoNode* infoMap);
+interm_node* execute_query(interm_node* interm, joinHistory** joinHist, query* q, infoNode* InfoMap, int numOfrels);
+interm_node* execute_pred(interm_node* interm, joinHistory** joinHist,pred* p,int* rels, int num_loadedrels, infoNode* infoMap);
 
 void free_batch(batch* b);
 void free_query(query* q);
