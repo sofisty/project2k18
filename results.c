@@ -3,7 +3,7 @@
 
 #define n 8
 #define size (((1024*1024)/24)-1) //arithmos eggrafwn pou xwrane sto ena bucket ths listas 
-
+//#define size 2000000000
 result* store_results( result** head,result* curr_res, tuple resultR, tuple resultS ){ //apothikevei enan sindiasmo tuples sthn lista apotelesmatwn
 
 	int count,index;

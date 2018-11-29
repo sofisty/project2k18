@@ -6,7 +6,8 @@
 
 
 typedef struct joinHistory{
-	char* rels;
+	int numOfrels;
+	int** rels;
 	struct joinHistory* next;
 }joinHistory;
 
@@ -15,9 +16,11 @@ uint64_t* real_RowIds(interm_node* interm, uint64_t* rowIds, int numOfrows, int 
 relation* relFromMap(infoNode* infoMap, int rel, int col);
 relation* relFromInterm(interm_node* interm, int rel, int col, int indexOfrel, infoNode* infoMap);
 
-joinHistory* add_nodeHistory(int indexOfrel, joinHistory* joinHist, int numOfrels);
-joinHistory* update_nodeHistory(int indexOfrel, joinHistory* joinHist);
-int print_joinHist(joinHistory* joinHist, int numOfrels);
+joinHistory* add_nodeHistory(int indexOfrel, int joinedRel, joinHistory* joinHist, int numOfrels);
+joinHistory* update_nodeHistory(int indexOfrel, int joinedRel, joinHistory* joinHist);
+int print_joinHist(joinHistory* joinHist);
+int find_join(joinHistory* joinHist, int indexOfrel1, int indexOfrel2);
+
 joinHistory* delete_nodeHistory(int indexOfrel, joinHistory** joinHist);
 joinHistory* merge_nodeHistory(int indexOfrel1, int indexOfrel2, joinHistory* new, joinHistory** joinHist);
 

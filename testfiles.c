@@ -361,6 +361,7 @@ interm_node* filter(interm_node* interm,int oper, infoNode* infoMap, int rel, in
     
   }
   else{
+  	//printf("FILTRO APO REL\n");
     ptr=(uint64_t*)infoMap[rel].addr[col];
     filterRowIds= filterFromRel( oper,value, ptr, numOftuples, filterRowIds, &numOfrows);  
   }
@@ -382,6 +383,7 @@ void statusOfinterm(interm_node* interm){
           printf("NULL |");
       }
       else{
+      	//for(j=0; j<10; j++){
         for(j=0; j<interm->numOfrows[i]; j++){
              printf(" %ld|",interm->rowIds[i][j] );  
         }

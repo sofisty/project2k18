@@ -500,6 +500,7 @@ void execute_workload(char* filename, int num_loadedrels, infoNode* infoMap){
 	char buff[400];
 	batch* b=NULL;
 	long int offset=0, prev_offset=0;
+	int numquery=0;
 
 	FILE* fp=fopen(filename,"r"); //anoigei to arxeio eperwthsewn
 	num_batches=count_batches(fp); //kai metraei posa batches eperwthsewn exei
@@ -509,7 +510,7 @@ void execute_workload(char* filename, int num_loadedrels, infoNode* infoMap){
 	for(i=0;i<num_batches;i++){
 		b=store_batch(fp,&offset,&prev_offset,buff,400,b);
 		//print_batch(b);
-		execute_batch(b, num_loadedrels, infoMap);		
+		execute_batch(b, num_loadedrels, infoMap, &numquery);		
 		prev_offset=offset;
 		free_batch(b);
 		//exit(0);
@@ -519,14 +520,18 @@ void execute_workload(char* filename, int num_loadedrels, infoNode* infoMap){
 }
 
 //ektelei mia omada eperwthsewn
-void execute_batch(batch* b, int num_loadedrels, infoNode* infoMap){
+void execute_batch(batch* b, int num_loadedrels, infoNode* infoMap ,int* numquery){
 	int i;
+	int count=*numquery;
 	for(i=0;i<b->num_queries;i++){
 		interm_node* interm=NULL;
 		joinHistory* joinHist=NULL;
+		printf("**********QUERY %d *************\n",count );
 		interm=execute_query(interm, &joinHist, b->q_arr[i], infoMap, num_loadedrels);
+		count++;
 		//print_joinHist(joinHist, num_loadedrels);
 	}
+	*numquery=count;
 }
 
 //ektelei ena kathgorhma enos query
