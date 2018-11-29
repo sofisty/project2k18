@@ -242,19 +242,33 @@ uint64_t **  exec_join(interm_node* interm, infoNode* infoMap, int  rel1,int  in
 }
 
 joinHistory* delete_nodeHistory(int indexOfrel, joinHistory** joinHist){
+  int i, numOfrels;
   joinHistory* hist=*joinHist, *prev=*joinHist, *temp;
-  if(hist->rels[indexOfrel]==1){
-    temp=hist;
+  if(hist==NULL){fprintf(stderr, "Join Hist does not exits\n"); return NULL;}
+  numOfrels=hist->numOfrels;
+  if(hist->rels[indexOfrel]!=NULL){
     *joinHist=hist->next;
+    temp=hist;
+    
+    for(i=0; i<numOfrels; i++){
+    	if(temp->rels[i]!=NULL) free(temp->rels[i]);
+    }
     free(temp);
+    
     return *joinHist;
   }
   hist=hist->next;
   while(hist!=NULL){
-    if(hist->rels[indexOfrel]==1){
+    if(hist->rels[indexOfrel]!=NULL){
+       prev->next=hist->next;
       temp=hist;
-      prev->next=hist->next;
+      
+      for(i=0; i<numOfrels; i++){
+    	if(temp->rels[i]!=NULL) free(temp->rels[i]);
+      }
+     
       free(temp);
+
       return *joinHist;
     }
     prev=hist;
@@ -270,7 +284,6 @@ joinHistory* delete_nodeHistory(int indexOfrel, joinHistory** joinHist){
 joinHistory* merge_nodeHistory(int indexOfrel1, int indexOfrel2, joinHistory* new, joinHistory** joinHist){
   joinHistory* temp;
   *joinHist= delete_nodeHistory( indexOfrel1, joinHist);
-
   
   *joinHist=delete_nodeHistory(indexOfrel2, joinHist);
 
@@ -372,11 +385,10 @@ joinHistory* update_nodeHistory(int indexOfrel, int joinedRel, joinHistory* join
 
 int print_joinHist(joinHistory* joinHist){
   int numOfrels=joinHist->numOfrels, i,j;
-  printf("NUm of relsssssss %d \n",numOfrels );
   if(joinHist==NULL){printf("Empty joinHistory \n"); return 0;}
   printf("---Join History---: \n");
   while(joinHist!=NULL){
-    for(i =0 ;i<numOfrels; i++){   	
+    for(i=0; i<numOfrels; i++){   	
       j=0;
       if(joinHist->rels[i]!=NULL){
        	printf(">Relation %d joined with : ",i );
@@ -410,7 +422,7 @@ int find_join(joinHistory* joinHist, int indexOfrel1, int indexOfrel2){
 
 interm_node* join2(interm_node* interm, infoNode* infoMap, joinHistory** joinHist, int  rel1,int  indexOfrel1,int rel2,int indexOfrel2, int col1, int col2, int numOfrels){
    
-  int hold1=-1, hold2=-1, to_add1, to_add2, resfortest, numOfrows=0, i;
+  int hold1=-1, hold2=-1, to_add, resfortest, numOfrows=0, i, j;
   joinHistory* currHist1, *currHist2, *new;
   joinHistory* curr;
   uint64_t* temp, *rowIds1, *rowIds2, **updateIds;
@@ -481,7 +493,7 @@ interm_node* join2(interm_node* interm, infoNode* infoMap, joinHistory** joinHis
       curr=update_nodeHistory(indexOfrel2,indexOfrel1, curr);
     
     }   
-     print_joinHist(*joinHist);
+    // print_joinHist(*joinHist);
     return interm;
   }
 
@@ -502,7 +514,7 @@ interm_node* join2(interm_node* interm, infoNode* infoMap, joinHistory** joinHis
     }
     *joinHist=update_nodeHistory(indexOfrel2,indexOfrel1, *joinHist);
      *joinHist=update_nodeHistory(indexOfrel1,indexOfrel2, *joinHist);
-     print_joinHist(*joinHist);
+    // print_joinHist(*joinHist);
     return interm;
   }
   else if(currHist1==NULL && currHist2!=NULL){
@@ -517,49 +529,88 @@ interm_node* join2(interm_node* interm, infoNode* infoMap, joinHistory** joinHis
     }
     *joinHist=update_nodeHistory(indexOfrel1,indexOfrel2, *joinHist);
     *joinHist=update_nodeHistory(indexOfrel2,indexOfrel1, *joinHist);
-     print_joinHist(*joinHist);
+     //print_joinHist(*joinHist);
     return interm;
     
  }
  else if(currHist1!=currHist2 && currHist1!=NULL && currHist2!=NULL){
 
   //KANTO SUNARTHSH 
- printf("THA TO FTIAKSW \n");
- exit(0);
- /*
+ 
+
+ //---------------------- NEW HISTORY NODE--------------------------------------------
   new=malloc(sizeof(joinHistory));
   if(new==NULL){fprintf(stderr, "Malloc failed \n"); return NULL;}
-  new->rels=malloc(numOfrels* sizeof(char));
-  if(new->rels==NULL){fprintf(stderr, "Malloc failed \n"); return NULL;}
-  for(i=0;i<numOfrels;i++)new->rels[i]=0;
-  new->next=NULL;
-  //------------------
-  new->rels[indexOfrel1]=1;
-  new->rels[indexOfrel2]=1;
+  	
+  	new->numOfrels=numOfrels;
+	new->rels=malloc(numOfrels* sizeof(int*));
+	if(new->rels==NULL){fprintf(stderr, "Malloc failed \n"); return NULL;}
+	for(i=0;i<numOfrels;i++)new->rels[i]=NULL;
+
+	new->rels[indexOfrel1]=malloc(numOfrels* sizeof(int));
+	if(new->rels[indexOfrel1]==NULL){fprintf(stderr, "Malloc failed \n"); return NULL;}
+	for(i=0;i<numOfrels;i++){
+		if(currHist1->rels[indexOfrel1][i]!=-1){to_add=i;}
+		new->rels[indexOfrel1][i]=currHist1->rels[indexOfrel1][i]; 
+		//printf(" %d \n",currHist1->rels[indexOfrel1][i] );
+	
+	}
+	to_add++;
+	if(to_add>=numOfrels){fprintf(stderr, "Variable to_add \n"); return NULL;}
+	new->rels[indexOfrel1][to_add]=indexOfrel2;
+		
+	new->rels[indexOfrel2]=malloc(numOfrels* sizeof(int));
+	if(new->rels[indexOfrel2]==NULL){fprintf(stderr, "Malloc failed \n"); return NULL;}
+	for(i=0;i<numOfrels;i++){
+		if(currHist2->rels[indexOfrel2][i]!=-1){to_add=i;}
+		new->rels[indexOfrel2][i]=currHist2->rels[indexOfrel2][i]; 
+	
+	}
+	to_add++;
+	if(to_add>=numOfrels){fprintf(stderr, "Variable to_add \n"); return NULL;}
+	new->rels[indexOfrel2][to_add]=indexOfrel1;
+
+	new->next=NULL;
+//----------------------------------------------------------------------------------
 
    for(i=0; i<numOfrels; i++) {
-       if( (currHist1->rels[i])==1 && i!=indexOfrel1){
+       if( (currHist1->rels[i])!=NULL && i!=indexOfrel1){
         temp= real_RowIds( interm, updateIds[0], numOfrows, i, temp);
         interm= update_interm(interm, temp, i, numOfrows,  numOfrels);
-        new->rels[i]=1;
+        new->rels[i]=malloc(numOfrels* sizeof(int));
+        if(new->rels[i]==NULL){fprintf(stderr, "Malloc failed \n"); return NULL;}
+		for(j=0;j<numOfrels;j++){
+			new->rels[i][j]=currHist1->rels[i][j]; 
+		}
         free(temp);
       }
       
     }
     for(i=0; i<numOfrels; i++) {
-       if( (currHist2->rels[i])==1 && i!=indexOfrel2){
+       if( (currHist2->rels[i])!=NULL && i!=indexOfrel2){
         temp= real_RowIds( interm, updateIds[1], numOfrows, i, temp);
         interm= update_interm(interm, temp, i, numOfrows,  numOfrels);
-        new->rels[i]=1;
+        new->rels[i]=malloc(numOfrels* sizeof(int));
+        if(new->rels[i]==NULL){fprintf(stderr, "Malloc failed \n"); return NULL;}
+		for(j=0;j<numOfrels;j++){
+			new->rels[i][j]=currHist2->rels[i][j]; 
+		}
         free(temp);
       }
       
+    }
+    for(i=0; i<numOfrels; i++){
+    	if(new->rels[i]!=NULL){
+    		for(j=0; j<numOfrels; j++){
+    			//printf("new %d : %d\n",i,new->rels[i][j] );
+    		}
+    	}
     }
 
     *joinHist= merge_nodeHistory( indexOfrel1, indexOfrel2, new, joinHist);
   
     return interm;
-    */
+    
  }
 
 
