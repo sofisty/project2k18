@@ -617,6 +617,188 @@ interm_node* join2(interm_node* interm, infoNode* infoMap, joinHistory** joinHis
 
   }
 
+cross_list* init_crossList(cross_list* head, interm_node* interm, int numOfrels){
+  int i;
+  head=malloc(sizeof(cross_list));
+  if(head==NULL){fprintf(stderr, "Malloc failed\n"); return NULL;}
 
+  head->rowIds=malloc(numOfrels*sizeof(uint64_t*));
+  if(head->rowIds==NULL){fprintf(stderr, "Malloc failed\n"); return NULL;}
 
-//}
+  head->numOfrows=malloc(numOfrels*(sizeof(int)));
+  if(head->numOfrows==NULL){fprintf(stderr, "Malloc failed\n"); return NULL;}
+
+  head->toMul=malloc(numOfrels*(sizeof(long long int)));
+  if(head->toMul==NULL){fprintf(stderr, "Malloc failed\n"); return NULL;}
+
+  for(i=0;i<numOfrels;i++){
+    if(interm->numOfrows[i]!=-1){
+      head->rowIds[i]=malloc(interm->numOfrows[i]* sizeof(uint64_t));
+      if(head->rowIds[i]==NULL){fprintf(stderr, "Malloc failed\n"); return NULL;}
+      memcpy(head->rowIds[i], interm->rowIds[i], interm->numOfrows[i]* sizeof(uint64_t));
+    }    
+    head->numOfrows[i]=interm->numOfrows[i];
+    head->toMul[i]=1; //to arxikopoiw me monada gia na to pollaplasiazw apla
+  }
+
+  head->numOfrels=numOfrels;
+  return head;
+}
+
+cross_list* cross_nodes(interm_node* interm, infoNode* infoMap, joinHistory** joinHist, int numOfrels){
+  joinHistory* currHist=*joinHist;
+  uint64_t* new;
+  cross_list* list;
+  long long int new_numOfrows, rowsToMul, prev_rowsToMul; //tha to xrhsimopoihsw gia pollplassiasmo giauto arxikopoiw me 1
+  int  i, j=0, k, m, *prevs, found,first;
+
+  prevs=malloc(numOfrels*sizeof(int));
+  if(prevs==NULL){fprintf(stderr, "Malloc failed\n"); return NULL;}
+
+  //kanw initialize thn lista pou kanei immitate to intermediate gia to cross production
+  list=init_crossList(list,interm,numOfrels);
+
+  //arxika tha elegksw an iparxei kapoio filtro to opoio prepei na siberilavw
+  for(i=0;i<numOfrels;i++){
+    found=0;
+    if(list->numOfrows[i]!=-1){
+      currHist=*joinHist;
+      while(currHist!=NULL){
+        if(currHist->rels[i]!=NULL){
+          found=1;
+          break;
+        }
+        currHist=currHist->next;
+      }
+      if(!found){
+        printf("REL %d has filter and %d numOfrows\n", i, list->numOfrows[i]);
+        rowsToMul=list->numOfrows[i];
+        first=1;
+        for(k=0;k<numOfrels;k++){
+          if((*joinHist)->rels[k]!=NULL){
+            if(first){
+              prev_rowsToMul=list->numOfrows[k];
+              first=0;
+            }
+            printf("---------------------REL :%d\n",k);
+            list->toMul[k]=list->toMul[k]*rowsToMul;
+            printf("%lld-------------------rowToMul %d!!\n",rowsToMul,k);
+            printf("%lld------------------after multiplication %d!!\n",list->numOfrows[k]*list->toMul[k],k);
+          }
+        }
+        printf("---------------------REL :%d\n",i );
+        list->toMul[i]=list->toMul[i]*prev_rowsToMul;
+        printf("%lld-------------------rowToMul %d!!\n",prev_rowsToMul,i);
+        printf("%lld------------------after multiplication %d!!\n",list->numOfrows[i]*list->toMul[i],i);
+
+        prevs[j]=i;
+        j++;
+      }
+    }
+  }
+  currHist=*joinHist;
+  //print_joinHist(*joinHist,numOfrels );
+  if(currHist->next!=NULL){
+    //ypologizw to cross product tou prwtou komvou joinHist kai kanw update to intermediate
+    first=1;
+    for(i=0;i<numOfrels;i++){
+      if(currHist->rels[i]!=NULL){ 
+        if(first){
+          prev_rowsToMul=list->numOfrows[i];
+          first=0;
+        }
+        printf("REL: %d\n", i);      
+        prevs[j]=i;
+        j++;
+      }
+    }
+
+    //twra tha ipologisw to cross product olwn twn joinhist nodes
+    currHist=currHist->next;
+    while(currHist!=NULL){
+      //printf("BIKA WHILE\n");
+      first=1;
+      for(i=0;i<numOfrels;i++){
+        if(currHist->rels[i]!=NULL){ 
+          if(first){ //sauth th periptwsh prokeitai gia to prwto relation tou sygekrimenou joinhist node
+            rowsToMul=list->numOfrows[i];
+            for(k=0;k<j;k++){
+              printf("---------------------REL :%d\n",prevs[k] );
+              list->toMul[k]=list->toMul[k]*rowsToMul;
+              printf("%lld-------------------rowToMul %d!!\n",rowsToMul,k);
+              printf("%lld------------------after multiplication %d!!\n",list->numOfrows[k]*list->toMul[k],k);
+            }
+            first=0; 
+          }          
+          
+          printf("---------------------REL :%d\n",i );
+          list->toMul[i]=list->toMul[i]*prev_rowsToMul;
+          printf("%lld-------------------rowToMul %d!!\n",prev_rowsToMul,i);
+          printf("%lld------------------after multiplication %d!!\n",list->numOfrows[i]*list->toMul[i],i);
+
+          prevs[j]=i;
+          j++;   
+        }
+      }
+      currHist=currHist->next;
+    }   
+  }
+  //ektypwnw thn lista me ta joins
+  print_joinHist(*joinHist);
+
+  //ektypwnw thn lista twn previous na dw an tairiazei me ta joins
+  if(j!=0){
+    printf("--crossed: ");
+    for(i=0;i<j;i++){
+      if(i==j-1) printf("%d ",prevs[i]);
+      else printf("%d, ",prevs[i]);
+    }
+    printf("\n\n");
+  }  
+
+  free(prevs);
+  return list;
+}
+
+void statusOfCrossList(cross_list* list){
+  int i,j,k;
+
+  if(list==NULL) printf("The cross list is empty!\n");
+  else{
+    for(i=0;i<list->numOfrels;i++){
+      printf(">> Rel %d with rowIds: \n",i );
+      if(list->rowIds[i]==NULL){
+          printf("NULL |");
+      }
+      else{
+        for(k=0;k<list->toMul[i];k++){
+          for(j=0; j<list->numOfrows[i]; j++){
+             printf(" %ld|",list->rowIds[i][j] );  
+          }
+        }
+      }
+      printf("\nTotal join matches: %d\n",list->numOfrows[i] );
+      printf("\nTotal rowIds after cross (with duplicates): %lld\n",list->numOfrows[i]*list->toMul[i] );
+      printf("--------------------------------------\n");
+    }
+  }
+}
+
+void free_crossList(cross_list* list){
+  int i;
+
+  for(i=0;i<list->numOfrels;i++){
+    if(list->numOfrows[i]!=-1){
+      free(list->rowIds[i]);
+      list->rowIds[i]=NULL;
+    }
+    
+  }
+  free(list->rowIds);
+  list->rowIds=NULL;
+
+  free(list->numOfrows);
+  list->numOfrows=NULL;
+  free(list->toMul);
+  list->toMul=NULL;
+}

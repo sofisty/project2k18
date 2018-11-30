@@ -11,6 +11,13 @@ typedef struct joinHistory{
 	struct joinHistory* next;
 }joinHistory;
 
+typedef struct cross_list{
+	uint64_t** rowIds;
+	int* numOfrows;
+	long long int* toMul;
+	int numOfrels;
+}cross_list;
+
 uint64_t* real_RowIds(interm_node* interm, uint64_t* rowIds, int numOfrows, int updateRel, uint64_t* newRowIds);
 
 relation* relFromMap(infoNode* infoMap, int rel, int col);
@@ -27,5 +34,10 @@ joinHistory* merge_nodeHistory(int indexOfrel1, int indexOfrel2, joinHistory* ne
 uint64_t** exec_join(interm_node* interm, infoNode* infoMap, int  rel1,int  indexOfrel1,int rel2,int indexOfrel2, int col1, int col2, int numOfrels, uint64_t** rowIds1, uint64_t** rowIds2, int* numOfrows);
 interm_node* special_sjoin(interm_node* interm, infoNode* infoMap, int  rel1,int  indexOfrel1,int rel2,int indexOfrel2, int col1, int col2, int numOfrels);
 interm_node* join2(interm_node* interm, infoNode* infoMap, joinHistory** joinHist,int rel1,int indexOfrel1,int rel2,int indexOfrel2, int col1, int col2, int numOfrels);
+
+cross_list* cross_nodes(interm_node* interm, infoNode* infoMap, joinHistory** joinHist, int numOfrels);
+cross_list* init_crossList(cross_list* head,interm_node* interm, int numOfrels);
+void statusOfCrossList(cross_list* list);
+void free_crossList(cross_list* list);
 
 #endif

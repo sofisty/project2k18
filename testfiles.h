@@ -28,6 +28,7 @@ typedef struct interm_node{
 	int numOfrels;
 }interm_node;
 
+
 RelFiles* add_Relation(RelFiles** relHead, RelFiles* relList, char* file);
 void print_RelFiles(RelFiles* relList);
 infoNode* create_InfoMap(RelFiles* relList, infoNode* infoMap, int numOffiles );

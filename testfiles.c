@@ -393,3 +393,4 @@ void statusOfinterm(interm_node* interm){
     }
   }
 }
+

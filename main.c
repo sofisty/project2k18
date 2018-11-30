@@ -15,7 +15,7 @@ int main(int argc,char** argv){
 	char file[250], buff[400];
 	batch* b=NULL;
 	long int offset=0, prev_offset=0;
-  	char init_file[20];
+  	char init_file[20], work_file[40];
 	RelFiles* relList=NULL;
 	RelFiles* relCurr=relList;
 	infoNode* infoMap=NULL;
@@ -67,11 +67,20 @@ int main(int argc,char** argv){
 
 */
 	interm_node* interm=NULL;
-	result* result_list=NULL;
-	joinHistory* joinHist=NULL;
+  result* result_list=NULL;
+  joinHistory* joinHist=NULL;
+  cross_list* list=NULL;
 
-	//execute_workload("small.work",14,infoMap);
-
+  //interm=filter(interm, 1, infoMap,6,6,0,2000,14);
+  //interm=join2(interm, infoMap, &joinHist, 0,0,1,1, 0, 2, 14);
+    //interm=join2(interm, infoMap, &joinHist, 2,2,3,3, 0, 2, 14);
+    //list=cross_nodes(interm,infoMap, &joinHist, 14);
+    //free_crossList(list);
+    //statusOfCrossList(list);
+    //statusOfinterm( interm);
+  	printf("Enter workload: \n");
+	scanf("%s", work_file);
+  	execute_workload(work_file,14,infoMap);
 	/*printf("####### join 1 #################\n");
 	interm= join2( interm, infoMap, &joinHist,0,0, 1,1, 1,0, 14);
 	print_joinHist(joinHist);
