@@ -35,6 +35,15 @@ void print_RelFiles(RelFiles* relList){
   }
 }
 
+void free_RelFiles(RelFiles* relList){
+	RelFiles* curr=relList, *temp;
+	while(curr!=NULL){
+		temp=curr;
+		curr=curr->next;
+		free(temp);
+	}
+}
+
 //ftiaxnei thn domh pou krataei tis plhrofories 
 //columns, tuples kai enan pinaka me deiktes sthn mnhmh ths prwths eggrafhs kathe sthlhs
 infoNode* create_InfoMap(RelFiles* relList, infoNode* infoMap, int numOffiles){
@@ -98,11 +107,19 @@ infoNode* create_InfoMap(RelFiles* relList, infoNode* infoMap, int numOffiles){
 
 
   }
-
+  free_RelFiles( relList);
   return infoMap;
 
 }
 
+
+void free_InfoMap(infoNode* infoMap, int numOffiles){
+	for(int i=0; i< numOffiles; i++){
+		free(infoMap[i].addr);
+
+	}
+	free(infoMap);
+}
 
 void print_InfoMap(infoNode* infoMap, int numOffiles){
   int i, j;
@@ -176,6 +193,20 @@ interm_node* update_interm(interm_node* interm, uint64_t* rowIds, int indexOfrel
 
 }
 
+void free_interm(interm_node* interm){
+	int i,numOfrels;
+	if(interm!=NULL){
+		numOfrels=interm->numOfrels;
+		for(i=0; i<numOfrels; i++){	
+				free(interm->rowIds[i]);
+			
+		}
+		free(interm->numOfrows);
+		free(interm->rowIds);
+		free(interm);
+	}
+
+}
 
 uint64_t return_value(infoNode* infoMap, int rel ,int col, int tuple){
   
@@ -286,6 +317,7 @@ uint64_t* filterFromRel(int oper,uint64_t value,uint64_t* ptr, int numOftuples,u
     }
   }
 
+
   *numOfrows=j;
    if(j==0)return NULL;
   return filterRowIds;
@@ -343,15 +375,19 @@ interm_node* self_join(interm_node* interm, infoNode* infoMap, int rel, int inde
 
 interm_node* filter(interm_node* interm,int oper, infoNode* infoMap, int rel, int indexOfrel, int col, uint64_t value, int numOfrels){
   
-  int numOftuples= infoMap[rel].tuples;
+  int numOftuples= (int)(infoMap[rel].tuples);
   
   uint64_t* ptr;
   int numOfrows;
-  uint64_t* filterRowIds=malloc(numOftuples* sizeof(uint64_t)); 
+  
+  uint64_t* filterRowIds=NULL;	
+  if(numOftuples<=0)exit(0);
+  filterRowIds=(uint64_t*)malloc(numOftuples*sizeof(uint64_t)); 
   if(filterRowIds==NULL){fprintf(stderr, "Malloc failed \n"); return NULL;}
-
+  
   if(interm!=NULL){
-    if(interm->numOfrows[indexOfrel]!=-1){     
+    if(interm->numOfrows[indexOfrel]!=-1){   
+
       filterRowIds= filterFromInterm( interm, oper,value, rel, indexOfrel, col, infoMap, filterRowIds, &numOfrows);
     }
      else{
@@ -368,7 +404,9 @@ interm_node* filter(interm_node* interm,int oper, infoNode* infoMap, int rel, in
   
   interm=update_interm( interm, filterRowIds,  indexOfrel,  numOfrows,numOfrels);  
 
+
   free(filterRowIds);
+  
   return interm;
 
 }

@@ -164,6 +164,7 @@ uint64_t** resToRowIds(result* result_list, int* numOfr){
 		curr=curr->next;
 		
 	}	
+	
 
 	//desmevw mnhmh ggia tous monous pinakes row ids
 	rowIds[0]=malloc(numOfrows*sizeof(uint64_t));
@@ -196,6 +197,18 @@ uint64_t** resToRowIds(result* result_list, int* numOfr){
 	*numOfr=numOfrows;
 	//printf("numOfrows %d\n",numOfrows );
 	return rowIds;
+}
+
+void free_rowIds(uint64_t** rowIds){
+	 if(rowIds!=NULL){
+     	free(rowIds[0]);
+  
+      free(rowIds[1]);
+     
+      free(rowIds);
+    }
+    rowIds=NULL;
+
 }
 
 void free_result_list(result* result_list){ //apodesmevw thn mnhmh pou edwsa sth lista apotelesmatwn
@@ -263,16 +276,16 @@ result* RadixHashJoin(relation *R, relation *S){
  	
  	result_list= final_hash(R_head, S_head, phead, S_phead, R_new, S_new); //kalw thn synarthsh pou kanei to b-c hashing kai ola ta results
 
- 	//free(R_head);
+ 	free(R_head);
  
-	//free(S_head);
+	free(S_head);
 
- 	//free(phead);
+ 	free(phead);
  
- 	//free(S_phead);
+ 	free(S_phead);
  	
 
- 	//free(R_new->tuples);
+ 	free(R_new->tuples);
     
     free(S_new->tuples);
 	free(R_new);

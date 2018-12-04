@@ -18,6 +18,7 @@ int count_Qnum(FILE* fp,long int* offset){
 
 	return num_queries;
 }
+
 //metraei ta predicates enos query
 int count_preds(char* preds){
 	char* token, *temp;
@@ -625,7 +626,7 @@ interm_node* execute_pred(interm_node* interm, joinHistory** joinHist,pred* p,in
 interm_node* execute_query(interm_node* interm, joinHistory** joinHist, query* q, infoNode* InfoMap, int num_loadedrels){
 	int i;
 	pred* curr;
-	cross_list* list=NULL;
+	cross_list* list;
 	
 	for(i=0;i<q->num_rels;i++){
 		if(q->rels[i]>num_loadedrels-1){
@@ -640,13 +641,20 @@ interm_node* execute_query(interm_node* interm, joinHistory** joinHist, query* q
 	}
 
 	list=cross_nodes(interm, InfoMap, joinHist, num_loadedrels);
-	if(list==NULL) proj_sums(interm,q, InfoMap);
+	/*if(list==NULL) {
+		printf("EIIIIIIIIIIIIIIINAIIIIIIIIIIIII NNNNNNNNUUUUUUUUUULLLLLLLLLLL\n");
+		proj_sums(interm,q, InfoMap);
+	}
 	else {
+		printf("NOOOOOOOOOOT\n");
 		proj_sumsAfterCross(list, q, InfoMap);
 		free_crossList(list);
-	}
+	}*/
 
-	
+	proj_sumsAfterCross(list, q, InfoMap);
+	free_crossList(list);
+	free_interm( interm);
+	free_joinistory( *joinHist);
 	return interm;
 }
 

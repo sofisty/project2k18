@@ -31,17 +31,19 @@ typedef struct interm_node{
 
 RelFiles* add_Relation(RelFiles** relHead, RelFiles* relList, char* file);
 void print_RelFiles(RelFiles* relList);
+void free_RelFiles(RelFiles* relList);
+
 infoNode* create_InfoMap(RelFiles* relList, infoNode* infoMap, int numOffiles );
 void print_InfoMap(infoNode* infoMap, int numOffiles);
+void free_InfoMap(infoNode* infoMap, int numOffiles);
 
 interm_node* filter(interm_node* interm,int oper, infoNode* infoMap, int rel, int indexOfrel, int col, uint64_t value, int numOfrels);
 interm_node* self_join(interm_node* interm, infoNode* infoMap, int rel, int indexOfrel, int col1, int col2, int numOfrels);
 
 
 interm_node* store_interm_data(interm_node* interm ,uint64_t* rowIds, int indexOfrel, int numOfrows, int numOfrels);
-
-
 interm_node* update_interm(interm_node* interm, uint64_t* rowIds, int indexOfrel, int numOfrows,int numOfrels);
+void free_interm(interm_node* interm);
 
 uint64_t return_value(infoNode* infoMap, int rel ,int col, int tuple);
 

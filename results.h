@@ -14,6 +14,7 @@ result* search_results(result** head,result* curr_res, relation* S_new, int star
 result* store_results(result** head,result* curr_res, tuple resultR, tuple resultS );
 void print_results(result* result_list,int* resfortest);
 uint64_t** resToRowIds(result* result_list, int* numOfrows);
+void free_rowIds(uint64_t** rowIds);
 void free_result_list(result* result_list);
 
 result* RadixHashJoin(relation *R, relation *S);

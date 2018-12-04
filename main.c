@@ -11,7 +11,7 @@
 #define n 8
 
 int main(int argc,char** argv){
-	int i =0, numOffiles=0, num_batches;
+	int i, numOffiles=0;
 	char file[250], buff[400];
 	batch* b=NULL;
 	long int offset=0, prev_offset=0;
@@ -78,10 +78,16 @@ int main(int argc,char** argv){
     //free_crossList(list);
     //statusOfCrossList(list);
     //statusOfinterm( interm);
+  	
+
+
   	printf("Enter workload: \n");
 	scanf("%s", work_file);
   	execute_workload(work_file,14,infoMap);
-	/*printf("####### join 1 #################\n");
+	
+
+/*
+	printf("####### join 1 #################\n");
 	interm= join2( interm, infoMap, &joinHist,0,0, 1,1, 1,0, 14);
 	print_joinHist(joinHist);
 	 //print_joinHist( joinHist, 3);
@@ -110,5 +116,7 @@ int main(int argc,char** argv){
 	print_joinHist(joinHist);
 
 	*/
+	fclose(fp);
+	free_InfoMap(infoMap, numOffiles);
 	return 0;
 }
