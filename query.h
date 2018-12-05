@@ -55,7 +55,7 @@ interm_node* execute_query(interm_node* interm, joinHistory** joinHist, query* q
 interm_node* execute_pred(interm_node* interm, joinHistory** joinHist,pred* p,int* rels, int num_loadedrels, infoNode* infoMap);
 
 void proj_sums(interm_node* interm, query* q, infoNode* infoMap);
-void proj_sumsAfterCross(cross_list* list, query* q, infoNode* infoMap);
+void proj_sumsAfterCross(long long int* toMul, interm_node* interm, query* q, infoNode* infoMap);
 
 void free_batch(batch* b);
 void free_query(query* q);

@@ -482,7 +482,8 @@ batch* store_batch(FILE* fp,long int* offset,long int* prev_offset,char* buff, i
 	b->num_queries=num_queries;
 
 	i=0;
-	while (fgets(buff,buff_size,fp)) { //pairnei grammi -grammi pou kathe grammi einai mia eggrafh
+
+	while (fgets(buff,buff_size,fp)!=NULL) { //pairnei grammi -grammi pou kathe grammi einai mia eggrafh
 		if(strcmp(buff,"F\n")!=0){
 			b->q_arr[i]=store_query(buff,b->q_arr[i]);
 			reorder_preds(b->q_arr[i]);
@@ -626,7 +627,7 @@ interm_node* execute_pred(interm_node* interm, joinHistory** joinHist,pred* p,in
 interm_node* execute_query(interm_node* interm, joinHistory** joinHist, query* q, infoNode* InfoMap, int num_loadedrels){
 	int i;
 	pred* curr;
-	cross_list* list;
+	long long int* crossArr=NULL;
 	
 	for(i=0;i<q->num_rels;i++){
 		if(q->rels[i]>num_loadedrels-1){
@@ -636,23 +637,20 @@ interm_node* execute_query(interm_node* interm, joinHistory** joinHist, query* q
 	}
 	curr=q->preds;
 	while(curr!=NULL){
-		interm=execute_pred(interm, joinHist, curr, q->rels, num_loadedrels, InfoMap);
+		interm=execute_pred(interm, joinHist, curr, q->rels, q->num_rels, InfoMap);
 		curr=curr->next;
 	}
 
-	list=cross_nodes(interm, InfoMap, joinHist, num_loadedrels);
-	/*if(list==NULL) {
-		printf("EIIIIIIIIIIIIIIINAIIIIIIIIIIIII NNNNNNNNUUUUUUUUUULLLLLLLLLLL\n");
+	crossArr=cross_nodes(interm, q->rels, InfoMap, joinHist, q->num_rels);
+	if(crossArr==NULL) {
 		proj_sums(interm,q, InfoMap);
 	}
 	else {
-		printf("NOOOOOOOOOOT\n");
-		proj_sumsAfterCross(list, q, InfoMap);
-		free_crossList(list);
-	}*/
+		printf("Crossing the independent joins and filters:\n\n");
+		proj_sumsAfterCross(crossArr, interm, q, InfoMap);
+		free(crossArr);
+	}
 
-	proj_sumsAfterCross(list, q, InfoMap);
-	free_crossList(list);
 	free_interm( interm);
 	free_joinistory( *joinHist);
 	return interm;
@@ -724,8 +722,9 @@ void proj_sums(interm_node* interm, query* q, infoNode* infoMap){
   printf("----------\n");
 }
 
-void proj_sumsAfterCross(cross_list* list, query* q, infoNode* infoMap){
+void proj_sumsAfterCross(long long int* toMul, interm_node* interm, query* q, infoNode* infoMap){
 	long long int sum;
+	uint64_t* ptr;
 	int i,index=0,j=0,rel,rel_ind,col;
 	printf("---SUMS---\n");
 	while(j<q->num_projs){
@@ -734,10 +733,20 @@ void proj_sumsAfterCross(cross_list* list, query* q, infoNode* infoMap){
 		rel=q->rels[rel_ind];
 		col=q->projs[index+1];
 		index+=3; //prospernaw kai to -1 sto telos tou projection
-		for(i=0; i<list->numOfrows[rel_ind]; i++ ){
-		    sum+=return_value( infoMap, rel ,col, list->rowIds[rel_ind][i]);
+		if(interm->rowIds[rel_ind]==NULL){
+			ptr=(uint64_t*)infoMap[rel].addr[col];
+			for(i=0;i<interm->numOfrows[rel_ind];i++){
+				sum+=*ptr;
+				ptr++;
+			}
 		}
-		sum=sum*list->toMul[rel_ind];
+		else{
+			for(i=0; i<interm->numOfrows[rel_ind]; i++ ){
+			    sum+=return_value( infoMap, rel ,col, interm->rowIds[rel_ind][i]);
+			}
+		}
+		
+		sum=sum*toMul[rel_ind];
 		
 		printf("-%lld\n",sum);
 		j++;

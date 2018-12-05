@@ -36,9 +36,8 @@ uint64_t** exec_join(interm_node* interm, infoNode* infoMap, int  rel1,int  inde
 interm_node* special_sjoin(interm_node* interm, infoNode* infoMap, int  rel1,int  indexOfrel1,int rel2,int indexOfrel2, int col1, int col2, int numOfrels);
 interm_node* join2(interm_node* interm, infoNode* infoMap, joinHistory** joinHist,int rel1,int indexOfrel1,int rel2,int indexOfrel2, int col1, int col2, int numOfrels);
 
-cross_list* cross_nodes(interm_node* interm, infoNode* infoMap, joinHistory** joinHist, int numOfrels);
-cross_list* init_crossList(cross_list* head,interm_node* interm, int numOfrels);
-void statusOfCrossList(cross_list* list);
-void free_crossList(cross_list* list);
+long long int* cross_nodes(interm_node* interm,int* q_rels, infoNode* infoMap, joinHistory** joinHist, int numOfrels);
+long long int* init_crossArr(long long int* arr, int numOfrels);
+void statusOfCross(interm_node* interm, long long int* toMul, int numOfrels);
 
 #endif
