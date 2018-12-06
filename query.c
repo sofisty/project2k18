@@ -129,7 +129,7 @@ void store_pred(char* pred_str, pred* p){
 	//kanw tokenize to kathgorima
 	token= strtok(predicate,delim);  //pairnw to prwto tmhma tou kathgorhmatos pou einai sxedon panta mia sthlh enos relation
 	if(token==NULL){
-		printf("Not apropriate format for a predicate.\n");
+		fprintf(stderr,"Not apropriate format for a predicate.\n");
 		exit(-1);
 	}
 	for(i=0;i<strlen(token);i++){
@@ -157,7 +157,7 @@ void store_pred(char* pred_str, pred* p){
 	dots=0;
 	token= strtok(NULL,delim); 
 	if(token==NULL){
-		printf("Not apropriate format for a predicate.\n");
+		fprintf(stderr,"Not apropriate format for a predicate.\n");
 		exit(-1);
 	}
 	for(i=0;i<strlen(token);i++){
@@ -225,7 +225,7 @@ void store_proj(char* proj_str, query* q){
 
 	token= strtok(projections," \n");//pairnw to prwto projection
 	if(token==NULL){
-		printf("Not apropriate format for a predicate.\n");
+		fprintf(stderr,"Not apropriate format for a predicate.\n");
 		exit(-1);
 	}
 	index=0;
@@ -360,7 +360,7 @@ query* store_query(char* qstr, query* q){
 	//RELATIONS
 	token= strtok(qstr,"|"); 
 	if(token==NULL){
-		printf("Not apropriate format for a query.\n");
+		fprintf(stderr,"Not apropriate format for a query.\n");
 		exit(-1);
 	}
 	rels=malloc((strlen(token)+1)*sizeof(char));
@@ -373,7 +373,7 @@ query* store_query(char* qstr, query* q){
 	//PREDICATES
 	token= strtok(NULL,"|");
 	if(token==NULL){
-		printf("Not apropriate format for a query.\n");
+		fprintf(stderr,"Not apropriate format for a query.\n");
 		exit(-1);
 	}
 	preds=malloc((strlen(token)+1)*sizeof(char));
@@ -386,7 +386,7 @@ query* store_query(char* qstr, query* q){
 	//PROJECTIONS
 	token= strtok(NULL,"|");
 	if(token==NULL){
-		printf("Not apropriate format for a query.\n");
+		fprintf(stderr,"Not apropriate format for a query.\n");
 		exit(-1);
 	}
 	projs=malloc((strlen(token)+1)*sizeof(char));
@@ -431,7 +431,7 @@ query* store_query(char* qstr, query* q){
 	char *predicates[num_preds];
 	token= strtok(preds,"&"); //apothikevw ta relations pou xrhsimopoiei to query sth domi
 	if(token==NULL){
-		printf("Not apropriate format for a predicate.\n");
+		fprintf(stderr,"Not apropriate format for a predicate.\n");
 		exit(-1);
 	}
 	predicates[0]=malloc((strlen(token)+1)*sizeof(char));
@@ -446,7 +446,7 @@ query* store_query(char* qstr, query* q){
 	for(i=1;i<num_preds;i++){
 		token= strtok(NULL,"&"); //apothikevw ta relations pou xrhsimopoiei to query sth domi
 		if(token==NULL){
-			printf("Not apropriate format for a predicate.\n");
+			fprintf(stderr,"Not apropriate format for a predicate.\n");
 			exit(-1);
 		}
 		predicates[i]=malloc((strlen(token)+1)*sizeof(char));
@@ -549,11 +549,9 @@ void execute_workload( int num_loadedrels,infoNode* infoMap){
 		//fflush(stdin);
 		
 		if(fgets(buff, 500, stdin)==NULL)break;
-		printf("BUFF: %s\n",buff );
 		s=strlen(buff);
 		buff[s-1]='\0';
 		if(strcmp(buff,"F")==0 || strcmp(buff,"f")==0){
-			printf("kanw store\n");
 			b=store_batch(quList, numOfqueries, b);
 			//print_batch(b);
 			execute_batch(b, num_loadedrels, infoMap, &numquery);
@@ -568,9 +566,9 @@ void execute_workload( int num_loadedrels,infoNode* infoMap){
 		
 			numOfqueries+=1;
 		//printf("%s\n",file );
-			printf("KANW AAADD %s \n", buff);
+			//printf("KANW AAADD %s \n", buff);
 			quCurr=add_quNode(&quList, quCurr, buff);
-			print_quList(quList);		
+			//print_quList(quList);		
 	
 	}
 	fprintf(stderr, "Workload is done\n" );
@@ -585,7 +583,7 @@ void execute_batch(batch* b, int num_loadedrels, infoNode* infoMap ,int* numquer
 	for(i=0;i<b->num_queries;i++){
 		interm_node* interm=NULL;
 		joinHistory* joinHist=NULL;
-		printf("**********QUERY %d *************\n",count );
+		fprintf(stderr,"**********QUERY %d *************\n",count );
 		interm=execute_query(interm, &joinHist, b->q_arr[i], infoMap, num_loadedrels);
 		count++;
 		//print_joinHist(joinHist, num_loadedrels);
@@ -703,7 +701,7 @@ interm_node* execute_query(interm_node* interm, joinHistory** joinHist, query* q
 		proj_sums(interm,q, InfoMap);
 	}
 	else {
-		printf("Crossing the independent joins and filters:\n\n");
+		//printf("Crossing the independent joins and filters:\n\n");
 		proj_sumsAfterCross(crossArr, interm, q, InfoMap);
 		free(crossArr);
 	}
@@ -747,7 +745,7 @@ void free_batch(batch *b){
 	query* currq;
 	int i;
 	if(b==NULL){
-		printf("This batch is empty.Exiting.\n");
+		fprintf(stderr,"This batch is empty.Exiting.\n");
 		exit(-1);
 	}
 	for(i=0;i<curr->num_queries;i++){
@@ -763,7 +761,7 @@ void free_batch(batch *b){
 void proj_sums(interm_node* interm, query* q, infoNode* infoMap){
   uint64_t sum;
   int i,index=0,j=0,rel,rel_ind,col;
-  printf("---SUMS---\n");
+  //printf("---SUMS---\n");
   while(j<q->num_projs){
   	sum=0;
     rel_ind=q->projs[index];
@@ -773,17 +771,17 @@ void proj_sums(interm_node* interm, query* q, infoNode* infoMap){
     for(i=0; i<interm->numOfrows[rel_ind]; i++ ){
 	    sum+=return_value( infoMap, rel ,col, interm->rowIds[rel_ind][i]);
 	}
-	printf("-%ld\n",sum);
+	printf("%ld ",sum);
 	j++;
   }
-  printf("----------\n");
+  printf("\n");
 }
 
 void proj_sumsAfterCross(long long int* toMul, interm_node* interm, query* q, infoNode* infoMap){
 	long long int sum;
 	uint64_t* ptr;
 	int i,index=0,j=0,rel,rel_ind,col;
-	printf("---SUMS---\n");
+	//printf("---SUMS---\n");
 	while(j<q->num_projs){
 		sum=0;
 		rel_ind=q->projs[index];
@@ -805,9 +803,9 @@ void proj_sumsAfterCross(long long int* toMul, interm_node* interm, query* q, in
 		
 		sum=sum*toMul[rel_ind];
 		
-		printf("-%lld\n",sum);
+		printf("%lld ",sum);
 		j++;
 	}
-	printf("----------\n");
+	printf("\n");
 
 }

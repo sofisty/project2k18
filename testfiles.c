@@ -62,7 +62,7 @@ infoNode* create_InfoMap(RelFiles* relList, infoNode* infoMap, int numOffiles){
   for(i=0; i< numOffiles; i++){
     fd = open(currFile->file, O_RDONLY);
     if (fd==-1) {
-      fprintf(stderr, "Cannot open file\n" );
+      fprintf(stderr, "Relation file does not exist\n" );
       return NULL;
     }
     

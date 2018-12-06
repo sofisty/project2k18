@@ -44,7 +44,7 @@ int main(int argc,char** argv){
 	}
 	infoMap=create_InfoMap(relList,  infoMap, numOffiles);
 	//print_InfoMap( infoMap, numOffiles);
-
+	sleep(1);
 
 /*
 	FILE* fp=fopen("sm.work","r"); //anoigei to arxeio eperwthsewn

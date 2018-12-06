@@ -127,7 +127,7 @@ uint64_t **  exec_join(interm_node* interm, infoNode* infoMap, int  rel1,int  in
   relation *relation1=NULL, *relation2=NULL;
   result* result_list=NULL;
   if(interm==NULL){
-    printf("CREATE INTERM: Rel1 Map, Rel2 Map\n");
+    //printf("CREATE INTERM: Rel1 Map, Rel2 Map\n");
 
 
     relation1=relFromMap(infoMap, rel1, col1);
@@ -141,7 +141,7 @@ uint64_t **  exec_join(interm_node* interm, infoNode* infoMap, int  rel1,int  in
 
     rowIds=resToRowIds( result_list, &numOfrows);
     *numOfres=numOfrows;
-    printf("total matches %d\n",numOfrows );
+   // printf("total matches %d\n",numOfrows );
     
     *rowIds1=rowIds[0];
     *rowIds2= rowIds[1];
@@ -152,7 +152,7 @@ uint64_t **  exec_join(interm_node* interm, infoNode* infoMap, int  rel1,int  in
    else{
    
     if(interm->numOfrows[indexOfrel1]!=-1 && interm->numOfrows[indexOfrel2]==-1){
-      printf("Rel1 Interm, Rel2 Map\n");
+     // printf("Rel1 Interm, Rel2 Map\n");
   
       relation1=relFromInterm( interm, rel1, col1, indexOfrel1, infoMap);
       relation2=relFromMap(infoMap, rel2, col2);
@@ -165,7 +165,7 @@ uint64_t **  exec_join(interm_node* interm, infoNode* infoMap, int  rel1,int  in
       result_list=RadixHashJoin(relation1, relation2);
       rowIds=resToRowIds( result_list, &numOfrows);
       *numOfres=numOfrows;
-      printf("RETURN FROM RHJ: total matches %d\n",numOfrows);
+      //printf("RETURN FROM RHJ: total matches %d\n",numOfrows);
 
       newRowIds1 =real_RowIds( interm, rowIds[0], numOfrows, indexOfrel1, newRowIds1);
      
@@ -177,7 +177,7 @@ uint64_t **  exec_join(interm_node* interm, infoNode* infoMap, int  rel1,int  in
 
     }
     else if(interm->numOfrows[indexOfrel1]==-1 && interm->numOfrows[indexOfrel2]!=-1){
-      printf("Rel1 Map, Rel2 Interm\n");
+      //printf("Rel1 Map, Rel2 Interm\n");
      
       relation1=relFromMap(infoMap, rel1, col1);
       relation2=relFromInterm( interm, rel2, col2, indexOfrel2, infoMap);
@@ -185,7 +185,7 @@ uint64_t **  exec_join(interm_node* interm, infoNode* infoMap, int  rel1,int  in
       result_list=RadixHashJoin(relation1, relation2);
       rowIds=resToRowIds( result_list, &numOfrows);
       *numOfres=numOfrows;
-      printf("RETURN FROM RHJ: total matches %d\n",numOfrows);
+      //printf("RETURN FROM RHJ: total matches %d\n",numOfrows);
 
       newRowIds2 =real_RowIds( interm, rowIds[1], numOfrows, indexOfrel2, newRowIds2);
       
@@ -198,14 +198,14 @@ uint64_t **  exec_join(interm_node* interm, infoNode* infoMap, int  rel1,int  in
 
     }
     else if(interm->numOfrows[indexOfrel1]!=-1 && interm->numOfrows[indexOfrel2]!=-1){
-      printf("Rel1 Interm, Rel2 Interm\n");
+      //printf("Rel1 Interm, Rel2 Interm\n");
       relation1=relFromInterm( interm, rel1, col1, indexOfrel1, infoMap);
       relation2=relFromInterm( interm, rel2, col2, indexOfrel2, infoMap);
 
       result_list=RadixHashJoin(relation1, relation2);
       rowIds=resToRowIds( result_list, &numOfrows);
       *numOfres=numOfrows;
-      printf("RETURN FROM RHJ: total matches %d\n",numOfrows);
+      //printf("RETURN FROM RHJ: total matches %d\n",numOfrows);
    
 
       newRowIds1 =real_RowIds( interm, rowIds[0], numOfrows, indexOfrel1, newRowIds1);
@@ -222,7 +222,7 @@ uint64_t **  exec_join(interm_node* interm, infoNode* infoMap, int  rel1,int  in
 
     }
     else if(interm->numOfrows[indexOfrel1]==-1 && interm->numOfrows[indexOfrel2]==-1){ //uparxei to intermediate alla kanena relation apo auta
-       printf("Rel1 Map, Rel2 Map\n");
+       //printf("Rel1 Map, Rel2 Map\n");
       relation1=relFromMap(infoMap, rel1, col1);
       relation2=relFromMap(infoMap, rel2, col2);
       
@@ -231,7 +231,7 @@ uint64_t **  exec_join(interm_node* interm, infoNode* infoMap, int  rel1,int  in
       //print_results(result_list, &resfortest);
       rowIds=resToRowIds( result_list, &numOfrows);
       *numOfres=numOfrows;
-      printf("total matches %d\n",numOfrows );
+      //printf("total matches %d\n",numOfrows );
 
       *rowIds1=rowIds[0];
       *rowIds2=rowIds[1];
@@ -400,7 +400,6 @@ joinHistory* update_nodeHistory(int indexOfrel, int joinedRel, joinHistory* join
       	}
       	if(i>=numOfrels){fprintf(stderr, "Updated joinHistory\n"); return NULL;}  
       	joinHist->rels[indexOfrel][i]=joinedRel;
-      	printf("vazw to %d\n",joinedRel );
       	return joinHist;
       }
       
@@ -472,9 +471,8 @@ interm_node* join2(interm_node* interm, infoNode* infoMap, joinHistory** joinHis
 
   if((currHist1==currHist2)&&(currHist2!=NULL)&&(currHist1!=NULL)) {
     //interm=special_sjoin(interm, infoMap, rel1, indexOfrel1, rel2, indexOfrel2, col1, col2, numOfrels);  
-   printf("THA MPW>>>>>>>>>>>  INDEX1 %d INDEX2 %d \n", indexOfrel1, indexOfrel2);
   	if(find_join(*joinHist, indexOfrel1, indexOfrel2)==0){
-  		printf("eidiko self join\n");
+  		//printf("eidiko self join\n");
   		interm=special_sjoin( interm, infoMap, rel1, indexOfrel1, rel2, indexOfrel2, col1, col2, numOfrels);
   	}
   	else{
@@ -518,7 +516,6 @@ interm_node* join2(interm_node* interm, infoNode* infoMap, joinHistory** joinHis
 
   if(currHist1==NULL && currHist2==NULL && hold1==-1 && hold2==-1){
     if(*joinHist==NULL){
-       printf("mphkaa \n");
        *joinHist=add_nodeHistory(indexOfrel1,indexOfrel2,*joinHist,numOfrels);
        
        *joinHist=update_nodeHistory(indexOfrel2,indexOfrel1, *joinHist);
@@ -742,7 +739,7 @@ long long int* cross_nodes(interm_node* interm,int* q_rels, infoNode* infoMap, j
         }
       }
     }
-    statusOfCross(interm,toMul,numOfrels);  
+    //statusOfCross(interm,toMul,numOfrels);  
     return toMul;
   }
   //arxika tha elegksw an iparxei kapoio filtro to opoio prepei na siberilavw
@@ -868,10 +865,10 @@ long long int* cross_nodes(interm_node* interm,int* q_rels, infoNode* infoMap, j
     }
   }
   //ektypwnw thn lista me ta joins
-  print_joinHist(*joinHist);
+ // print_joinHist(*joinHist);
 
   //ektypwnw thn lista twn previous na dw an tairiazei me ta joins
-  if(j!=0){
+ /* if(j!=0){
     printf("--crossed: ");
     for(i=0;i<j;i++){
       if(i==j-1) printf("%d ",prevs[i]);
@@ -879,8 +876,8 @@ long long int* cross_nodes(interm_node* interm,int* q_rels, infoNode* infoMap, j
     }
     printf("\n\n");
   }
-
-  statusOfCross(interm,toMul,numOfrels);  
+*/
+ // statusOfCross(interm,toMul,numOfrels);  
 
   free(prevs);
   return toMul;
