@@ -20,9 +20,8 @@ int main(int argc,char** argv){
 	RelFiles* relCurr=relList;
 	infoNode* infoMap=NULL;
  	FILE* fp;
-   
-	printf("Enter init file: \n");
-	scanf("%s", init_file);
+   		
+	/*scanf("%s", init_file);
 	fp = fopen(init_file, "r");
 	if(fp==NULL){fprintf(stderr, "Cannot open init_file \n"); return 1;}
 	while(fscanf(fp, "%s", file)>0){
@@ -32,24 +31,20 @@ int main(int argc,char** argv){
 	relCurr=add_Relation(&relList, relCurr, file);
 
 	}
-	print_RelFiles( relList);
-	printf("total files %d\n",numOffiles );
-
+	//print_RelFiles( relList);
+	//printf("total files %d\n",numOffiles );
+	*/
+ 	fprintf(stderr, "Enter init file: \n" );
+	while(1){
+		if(	scanf("%s",file)==-1){fprintf(stderr, "scanf failed\n" ); return 1;}
+		if(strcmp(file,"Done")==0 || strcmp(file,"done")==0)break;
+		numOffiles+=1;
+		//printf("%s\n",file );
+		relCurr=add_Relation(&relList, relCurr, file);
+	}
 	infoMap=create_InfoMap(relList,  infoMap, numOffiles);
 	//print_InfoMap( infoMap, numOffiles);
 
- 
-
-//----------------------------------------------------------------------------------------
-//----------------------------------------------------------------------------------------
-	/*result* result_list=NULL;
-	result_list=RadixHashJoin(R, S);
-
-	print_results( result_list,&num_results);
-	free_result_list( result_list);	
-	*/
- 	
-//---------------------------------------------------------------------------------------
 
 /*
 	FILE* fp=fopen("sm.work","r"); //anoigei to arxeio eperwthsewn
@@ -81,42 +76,10 @@ int main(int argc,char** argv){
   	
 
 
-  	printf("Enter workload: \n");
-	scanf("%s", work_file);
-  	execute_workload(work_file,14,infoMap);
+  	fprintf(stderr,"Enter workload: \n");
+  	execute_workload(numOffiles,infoMap);
 	
-
-/*
-	printf("####### join 1 #################\n");
-	interm= join2( interm, infoMap, &joinHist,0,0, 1,1, 1,0, 14);
-	print_joinHist(joinHist);
-	 //print_joinHist( joinHist, 3);
-	printf("####### join 2 #################\n");
-	interm= join2( interm, infoMap, &joinHist,3,3, 2,2, 1,0, 14);
-	  print_joinHist(joinHist);
-	
-	printf("####### join 3 #################\n");
-	interm= join2( interm, infoMap, &joinHist,4,4, 5,5, 1,0, 14);
-	  print_joinHist(joinHist);
-	
-	printf("####### join 4 #################\n");
-	interm= join2( interm, infoMap, &joinHist,6,6, 7,7, 1,0, 14);
-	  print_joinHist(joinHist);
-	
-	printf("####### join 5 #################\n");
-	interm= join2( interm, infoMap, &joinHist,0,0, 7,7, 1,0, 14);
-	  print_joinHist(joinHist);
-	
-	printf("####### join  6#################\n");
-	interm= join2( interm, infoMap, &joinHist,3,3, 4,4, 1,0, 14);
-	print_joinHist(joinHist);
-
-	printf("####### join  7#################\n");
-	interm= join2( interm, infoMap, &joinHist,0,0, 4,4, 1,0, 14);
-	print_joinHist(joinHist);
-
-	*/
-	fclose(fp);
+	//fclose(fp);
 	free_InfoMap(infoMap, numOffiles);
 	return 0;
 }

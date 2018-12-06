@@ -61,6 +61,48 @@ int count_rels(char* rels){
 	return num_rels;
 }
 
+query_list* add_quNode(query_list** quHead, query_list* quList, char* buff){
+  query_list* curr=quList;
+
+  if(*quHead==NULL){
+    curr=*quHead;
+    curr=malloc(sizeof(query_list));
+    if(curr==NULL){ fprintf(stderr, "Malloc failed \n"); return NULL;}
+    strcpy(curr->query,buff);
+    curr->next=NULL;
+
+    *quHead=curr;
+    return curr;
+  }
+
+  if(curr->next==NULL){
+    curr->next=malloc(sizeof(query_list));
+    if(curr->next==NULL){ fprintf(stderr, "Malloc failed \n"); return NULL;}
+    strcpy(curr->next->query,buff);
+    curr->next->next=NULL;
+  }
+  
+  return curr->next;
+}
+
+void print_quList(query_list* quList){
+  query_list* curr=quList;
+  while(curr!=NULL){
+    printf("%s\n",curr->query );
+    curr=curr->next;
+  }
+}
+
+
+void free_quList(query_list* quList){
+	query_list* curr=quList, *temp;
+	while(curr!=NULL){
+		temp=curr;
+		curr=curr->next;
+		free(temp);
+	}
+}
+
 //apothikevei ena pred sth thesh pou prepei sth lista predicates tou query
 void store_pred(char* pred_str, pred* p){
 	int i,dots=0, index,rel1,rel2;
@@ -460,20 +502,22 @@ query* store_query(char* qstr, query* q){
 
 }
 
-batch* store_batch(FILE* fp,long int* offset,long int* prev_offset,char* buff, int buff_size, batch* b){
-	int num_queries,i=0;	
-
-	num_queries=count_Qnum(fp,offset);
-	printf("This batch has %d queries.\n",num_queries );
-	fseek(fp,*prev_offset, SEEK_SET);
-
-	//desmevw xwro gia to batch
-	b=malloc(sizeof(batch));
-	if (b== NULL) {
-    	fprintf(stderr, "Malloc failed \n"); 
-    	exit(-1);
+batch* store_batch(query_list* quList, int num_queries, batch* b){
+	int i=0;
+	query_list* curr=quList;
+	if(quList==NULL){
+		fprintf(stderr, "There are no queries for this batch\n" );
+		return NULL;
+	}	
+	if(b==NULL){
+		b=malloc(sizeof(batch));
+		if (b== NULL) {
+	    	fprintf(stderr, "Malloc failed \n"); 
+	    	exit(-1);
+		}
 	}
 
+	//desmevw xwro gia to batch
 	b->q_arr=malloc(num_queries*sizeof(query*));
 	if (b->q_arr== NULL) {
     	fprintf(stderr, "Malloc failed \n"); 
@@ -481,44 +525,57 @@ batch* store_batch(FILE* fp,long int* offset,long int* prev_offset,char* buff, i
 	}
 	b->num_queries=num_queries;
 
-	i=0;
-
-	while (fgets(buff,buff_size,fp)!=NULL) { //pairnei grammi -grammi pou kathe grammi einai mia eggrafh
-		if(strcmp(buff,"F\n")!=0){
-			b->q_arr[i]=store_query(buff,b->q_arr[i]);
-			reorder_preds(b->q_arr[i]);
-			i++;
-		}
-		else{
-			//printf("				The batch is over!\n\n\n");
-			break;
-		}		
+	for(i=0;i<num_queries; i++ ){
+		b->q_arr[i]=store_query(curr->query,b->q_arr[i]);
+		reorder_preds(b->q_arr[i]);
+		curr=curr->next;
 	}
+	
 	return b;
 }
 
-void execute_workload(char* filename, int num_loadedrels, infoNode* infoMap){
-	int i=0, num_batches;
-	char buff[400];
+void execute_workload( int num_loadedrels,infoNode* infoMap){
+	int i=0, num_batches, s;
+	char buff[500];
 	batch* b=NULL;
 	long int offset=0, prev_offset=0;
-	int numquery=0;
+	int numquery=0, numOfqueries=0; 
+	query_list* quList=NULL;
+	query_list* quCurr=quList;
+	size_t len;
+    ssize_t nread;
+	fgetc(stdin);
+	while(1){
+		//fflush(stdin);
+		
+		if(fgets(buff, 500, stdin)==NULL)break;
+		printf("BUFF: %s\n",buff );
+		s=strlen(buff);
+		buff[s-1]='\0';
+		if(strcmp(buff,"F")==0 || strcmp(buff,"f")==0){
+			printf("kanw store\n");
+			b=store_batch(quList, numOfqueries, b);
+			//print_batch(b);
+			execute_batch(b, num_loadedrels, infoMap, &numquery);
+			numOfqueries=0;
 
-	FILE* fp=fopen(filename,"r"); //anoigei to arxeio eperwthsewn
-	num_batches=count_batches(fp); //kai metraei posa batches eperwthsewn exei
-	printf("This file has %d batches of queries.\n",num_batches );
-	rewind(fp);
-	i=0;
-	for(i=0;i<num_batches;i++){
-		b=store_batch(fp,&offset,&prev_offset,buff,400,b);
-		//print_batch(b);
-		execute_batch(b, num_loadedrels, infoMap, &numquery);		
-		prev_offset=offset;
-		free_batch(b);
-		//exit(0);
+			free(quList);
+			quList=NULL;
+			quCurr=NULL;
+			free_batch(b);
+			b=NULL;		
+		}
+		
+			numOfqueries+=1;
+		//printf("%s\n",file );
+			printf("KANW AAADD %s \n", buff);
+			quCurr=add_quNode(&quList, quCurr, buff);
+			print_quList(quList);		
+	
 	}
-	fclose(fp);
-	printf("Workload %s is done.\n", filename);
+	fprintf(stderr, "Workload is done\n" );
+
+	//printf("Workload %s is done.\n", filename);
 }
 
 //ektelei mia omada eperwthsewn
