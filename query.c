@@ -546,9 +546,10 @@ void execute_workload( int num_loadedrels,infoNode* infoMap){
     ssize_t nread;
 	fgetc(stdin);
 	while(1){
-		//fflush(stdin);
+		fflush(stdout);
+
+		if(fgets(buff, 500, stdin)==NULL) break;
 		
-		if(fgets(buff, 500, stdin)==NULL)break;
 		s=strlen(buff);
 		buff[s-1]='\0';
 		if(strcmp(buff,"F")==0 || strcmp(buff,"f")==0){
@@ -559,16 +560,18 @@ void execute_workload( int num_loadedrels,infoNode* infoMap){
 
 			free(quList);
 			quList=NULL;
-			quCurr=NULL;
+			quCurr=quList;
 			free_batch(b);
 			b=NULL;		
 		}
-		
+		else{
 			numOfqueries+=1;
-		//printf("%s\n",file );
-			//printf("KANW AAADD %s \n", buff);
 			quCurr=add_quNode(&quList, quCurr, buff);
-			//print_quList(quList);		
+
+			//print_quList(quList);	
+		}
+		
+				
 	
 	}
 	fprintf(stderr, "Workload is done\n" );
@@ -771,10 +774,14 @@ void proj_sums(interm_node* interm, query* q, infoNode* infoMap){
     for(i=0; i<interm->numOfrows[rel_ind]; i++ ){
 	    sum+=return_value( infoMap, rel ,col, interm->rowIds[rel_ind][i]);
 	}
-	printf("%ld ",sum);
+	if(j==q->num_projs-1){
+		printf("%ld\n",sum);
+
+	}
+	else printf("%ld ",sum);
 	j++;
   }
-  printf("\n");
+  //printf("\n");
 }
 
 void proj_sumsAfterCross(long long int* toMul, interm_node* interm, query* q, infoNode* infoMap){

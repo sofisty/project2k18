@@ -95,7 +95,7 @@ interm_node* special_sjoin(interm_node* interm, infoNode* infoMap, int  rel1,int
   if(rowIds[1]==NULL){fprintf(stderr, "Malloc failed \n"); return NULL;}
 
 
-  printf("Rel1 Interm, Rel2 Interm\n");
+  //printf("Rel1 Interm, Rel2 Interm\n");
   
   for(i=0; i<numOfrows; i++){
     tuple1=interm->rowIds[indexOfrel1][i];
@@ -110,7 +110,7 @@ interm_node* special_sjoin(interm_node* interm, infoNode* infoMap, int  rel1,int
     }    
   }
 
-  printf("special_sjoin: total matches %d\n",j);
+  //printf("special_sjoin: total matches %d\n",j);
 
   interm=update_interm( interm, rowIds[0], indexOfrel1,  j, numOfrels);
   interm= update_interm( interm, rowIds[1], indexOfrel2, j,  numOfrels);
@@ -135,7 +135,7 @@ uint64_t **  exec_join(interm_node* interm, infoNode* infoMap, int  rel1,int  in
     
 
     result_list=RadixHashJoin(relation1, relation2);
-    print_results(result_list, &numOfrows);
+    //print_results(result_list, &numOfrows);
     //print_results(result_list, &resfortest);
     
 
