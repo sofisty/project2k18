@@ -12,8 +12,8 @@
 #include "join.h"
 
 typedef struct pred{
-	int* cols;// ean exw 0.1=1.22 tote apothikevetai [0,1,-1,1,2,2] to -1 diaxwrizei ta columns
-	int op; // i sxesh metaksi twn cols h col-val
+	int* cols;// ean exw 0.1=1.22 tote apothikevetai [0,1,-1,1,2,2,-1] to -1 diaxwrizei ta columns
+	int op; // i sxesh metaksi twn cols h col-val 1--> > , 2--> <, 3--> =
 	uint64_t val; // ean prokeitai gia filtro
 	int isFilter;
 	int isSelfjoin;
@@ -22,11 +22,11 @@ typedef struct pred{
 
 
 typedef struct query{
-	int* rels; //einai poli pio aplo apo to na metraw kathe fora posa einai ta relations, kai afou tha exw 4 max to evlaa etsi
+	int* rels; 
 	int num_rels;
 	int num_projs;
 	pred* preds;
-	int* projs; // ean exw 0.1 2.3 4.2 tote tha apothikevetai [0,1,2,3,4,2]
+	int* projs; // ean exw 0.1 2.3 4.2 tote tha apothikevetai [0,1,-1,2,3,-1,4,2,-1]
 	
 }query;
 
