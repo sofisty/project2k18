@@ -696,10 +696,11 @@ interm_node* execute_query(interm_node* interm, joinHistory** joinHist, query* q
 	curr=q->preds;
 	while(curr!=NULL){
 		interm=execute_pred(interm, joinHist, curr, q->rels, q->num_rels, InfoMap);
+		if(interm==NULL)break;
 		curr=curr->next;
 	}
 
-	crossArr=cross_nodes(interm, q->rels, InfoMap, joinHist, q->num_rels);
+	if(interm!=NULL)crossArr=cross_nodes(interm, q->rels, InfoMap, joinHist, q->num_rels);
 	if(crossArr==NULL) {
 		proj_sums(interm,q, InfoMap);
 	}
@@ -771,14 +772,23 @@ void proj_sums(interm_node* interm, query* q, infoNode* infoMap){
     rel=q->rels[rel_ind];
     col=q->projs[index+1];
     index+=3; //prospernaw kai to -1 sto telos tou projection
-    for(i=0; i<interm->numOfrows[rel_ind]; i++ ){
+    if(interm==NULL){
+    	if(j==q->num_projs-1){
+		printf("NULL\n");
+		}
+		else printf("NULL ");
+    }
+    else{
+    	for(i=0; i<interm->numOfrows[rel_ind]; i++ ){
 	    sum+=return_value( infoMap, rel ,col, interm->rowIds[rel_ind][i]);
-	}
-	if(j==q->num_projs-1){
-		printf("%ld\n",sum);
+		}
+		if(j==q->num_projs-1){
+			printf("%ld\n",sum);
 
-	}
-	else printf("%ld ",sum);
+		}
+		else printf("%ld ",sum);
+   	}
+    
 	j++;
   }
   //printf("\n");

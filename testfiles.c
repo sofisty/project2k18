@@ -139,20 +139,12 @@ void print_InfoMap(infoNode* infoMap, int numOffiles){
 
 interm_node* store_interm_data(interm_node* interm ,uint64_t* rowIds, int indexOfrel, int numOfrows, int numOfrels){
   int i=indexOfrel;
-  if(rowIds==NULL){
-    interm->rowIds[i]=NULL;
 
-  }
-  else{
-  	//printf("NUMOFROWS %d\n",numOfrows );
-  	if(numOfrows>0){
-  		interm->rowIds[i]=malloc(numOfrows* sizeof(uint64_t));
-    	if(interm->rowIds[i]==NULL){fprintf(stderr, "Malloc failed \n"); return NULL;}
-    	memcpy(interm->rowIds[i], rowIds, numOfrows* sizeof(uint64_t));
-  	}
-    
-  }
+  //printf("NUMOFROWS %d\n",numOfrows );
 
+  interm->rowIds[i]=malloc(numOfrows* sizeof(uint64_t));
+  if(interm->rowIds[i]==NULL){fprintf(stderr, "Malloc failed \n"); return NULL;}
+  memcpy(interm->rowIds[i], rowIds, numOfrows* sizeof(uint64_t));
   interm->numOfrows[i]=numOfrows;
   interm->numOfrels=numOfrels;
   return interm;
@@ -162,7 +154,7 @@ interm_node* store_interm_data(interm_node* interm ,uint64_t* rowIds, int indexO
 interm_node* update_interm(interm_node* interm, uint64_t* rowIds, int indexOfrel, int numOfrows,int numOfrels){
   int i,j;
   uint64_t* temp;
-  
+  if(rowIds==NULL)return NULL;
   if(interm==NULL){
     interm=malloc(sizeof(interm_node));
     if(interm==NULL){fprintf(stderr, "Malloc failed \n"); return NULL;}
@@ -415,7 +407,6 @@ interm_node* filter(interm_node* interm,int oper, infoNode* infoMap, int rel, in
   }
   
   interm=update_interm( interm, filterRowIds,  indexOfrel,  numOfrows, numOfrels);  
-
 
   if(filterRowIds!=NULL){free(filterRowIds); filterRowIds=NULL;}
   
