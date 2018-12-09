@@ -1,7 +1,7 @@
 #ifndef JOIN_H
 #define JOIN_H
 
-#include "testfiles.h"
+#include "interm.h"
 #include "results.h"
 
 
@@ -29,7 +29,7 @@ int print_joinHist(joinHistory* joinHist);
 int find_join(joinHistory* joinHist, int indexOfrel1, int indexOfrel2);
 void free_joinistory(joinHistory* joinHist);
 
-joinHistory* delete_nodeHistory(int indexOfrel, joinHistory** joinHist);
+joinHistory* delete_nodeHistory( joinHistory** joinHist, joinHistory* currHist);
 joinHistory* merge_nodeHistory(int indexOfrel1, int indexOfrel2, joinHistory* new, joinHistory** joinHist);
 
 uint64_t** exec_join(interm_node* interm, infoNode* infoMap, int  rel1,int  indexOfrel1,int rel2,int indexOfrel2, int col1, int col2, int numOfrels, uint64_t** rowIds1, uint64_t** rowIds2, int* numOfrows, int* free_flag);
