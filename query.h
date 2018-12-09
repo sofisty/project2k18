@@ -8,7 +8,8 @@
 #include <time.h>
 #include <stdint.h>
 
-#include "testfiles.h"
+#include "infomap.h"
+#include "interm.h"
 #include "join.h"
 
 typedef struct pred{

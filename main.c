@@ -5,7 +5,7 @@
 #include "testing.h"
 
 
-#include "testfiles.h"
+#include "infomap.h"
 #include"query.h"
 #include "join.h"
 
