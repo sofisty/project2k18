@@ -560,7 +560,7 @@ void execute_workload( int num_loadedrels,infoNode* infoMap){
 			execute_batch(b, num_loadedrels, infoMap, &numquery); //ektelei to batch
 			numOfqueries=0;
 
-			free(quList); //apodesmevei th lista twn dosmenwn query strings
+			free_quList(quList); //apodesmevei th lista twn dosmenwn query strings
 			quList=NULL;
 			quCurr=quList;
 			free_batch(b); //apodesmevei ton xwro pou exei desmeftei gia to batch
@@ -763,36 +763,32 @@ void free_batch(batch *b){
 
 //ipologizei ta athroismata twn provolwn sth periptwsh pou den exei xreiastei na ginei cross sto intermediate
 void proj_sums(interm_node* interm, query* q, infoNode* infoMap){
-  uint64_t sum;
-  int i,index=0,j=0,rel,rel_ind,col;
+	uint64_t sum;
+	int i,index=0,j=0,rel,rel_ind,col;
 
-  //ipologizei to sum gia kathe mia apo tis zitoumenes provoles
-  while(j<q->num_projs){
-  	sum=0;
-    rel_ind=q->projs[index];
-    rel=q->rels[rel_ind];
-    col=q->projs[index+1];
-    index+=3; //prospernaw kai to -1 sto telos tou projection
-    if(interm==NULL){ //ean to intermediate einai NULL, tote ektypwnw NULL gia ta athroismata
-    	if(j==q->num_projs-1){
-		printf("NULL\n");
-		}
-		else printf("NULL ");
-    }
-    else{ //alliws upologizw kai ektypwnw ena ena athroismata ths kathe provolhs
-    	for(i=0; i<interm->numOfrows[rel_ind]; i++ ){
-	    	sum+=return_value( infoMap, rel ,col, interm->rowIds[rel_ind][i]);
+	//ipologizei to sum gia kathe mia apo tis zitoumenes provoles
+	while(j<q->num_projs){
+		sum=0;
+		rel_ind=q->projs[index];
+		rel=q->rels[rel_ind];
+		col=q->projs[index+1];
+		index+=3; //prospernaw kai to -1 sto telos tou projection
+
+		//upologizw kai ektypwnw ena ena athroismata ths kathe provolhs
+		for(i=0; i<interm->numOfrows[rel_ind]; i++ ){
+			sum+=return_value( infoMap, rel ,col, interm->rowIds[rel_ind][i]);
 		}
 		//ektypwnw ta sums
 		if(j==q->num_projs-1){
-			printf("%ld\n",sum);
-
+			if(sum==0) printf("NULL\n");
+			else printf("%ld\n",sum);
 		}
-		else printf("%ld ",sum);
-   	}
-    
-	j++;
-  }
+		else {
+			if(sum==0) printf("NULL ");
+			else printf("%ld ",sum);
+		}
+		j++;
+	}
 }
 
 //ipologizei ta sums otan exei xreiastei na ginei cross sta relations pou iparxoun sto intermediate

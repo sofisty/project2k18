@@ -18,7 +18,7 @@ interm_node* store_interm_data(interm_node* interm ,uint64_t* rowIds, int indexO
 interm_node* update_interm(interm_node* interm, uint64_t* rowIds, int indexOfrel, int numOfrows,int numOfrels){
   int i,j;
   uint64_t* temp;
-  if(rowIds==NULL)return NULL; //ean den ipirxan koina apotelesmata epistrefei null
+  //if(rowIds==NULL)return NULL; //ean den ipirxan koina apotelesmata epistrefei null
   if(interm==NULL){ //ean den exei arxikopoiithei akoma to intermediate, to arxikopoiw kai kataxwrw ta apotelesmata
     interm=malloc(sizeof(interm_node));
     if(interm==NULL){fprintf(stderr, "Malloc failed \n"); return NULL;}
@@ -60,7 +60,7 @@ void free_interm(interm_node* interm){
 		numOfrels=interm->numOfrels;
 		
 		for(i=0; i<numOfrels; i++){	
-			if(interm->numOfrows>0)free(interm->rowIds[i]);
+			if(interm->numOfrows[i]>=0)free(interm->rowIds[i]);
 			
 		}
 		free(interm->numOfrows);
