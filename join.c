@@ -512,7 +512,7 @@ interm_node* join2(interm_node* interm, infoNode* infoMap, joinHistory** joinHis
       free_rowIds(updateIds);
 
   	}
-    if(numOfrows==0){free_interm(interm); interm=NULL;}
+    //if(numOfrows==0){free_interm(interm); interm=NULL;}
     return interm;
     
   }
@@ -545,7 +545,7 @@ interm_node* join2(interm_node* interm, infoNode* infoMap, joinHistory** joinHis
       else{free(rowIds1); free(rowIds2);}
      } 
     free_rowIds(updateIds);
-     if(numOfrows==0){free_interm(interm); interm=NULL;}
+     //if(numOfrows==0){free_interm(interm); interm=NULL;}
     return interm;
   }
 
@@ -573,7 +573,7 @@ interm_node* join2(interm_node* interm, infoNode* infoMap, joinHistory** joinHis
       else if(free_flag==1){free(rowIds2);}
       else{free(rowIds1); free(rowIds2);}
      }
-      if(numOfrows==0){free_interm(interm); interm=NULL;}
+      //if(numOfrows==0){free_interm(interm); interm=NULL;}
     return interm;
   
 
@@ -600,7 +600,7 @@ interm_node* join2(interm_node* interm, infoNode* infoMap, joinHistory** joinHis
       else{free(rowIds1); free(rowIds2);}
      }
     free_rowIds(updateIds);
-    if(numOfrows==0){free_interm(interm); interm=NULL;}
+    //if(numOfrows==0){free_interm(interm); interm=NULL;}
     return interm;
     
  }
@@ -693,7 +693,7 @@ interm_node* join2(interm_node* interm, infoNode* infoMap, joinHistory** joinHis
       else{free(rowIds1); free(rowIds2);}
      }
     free_rowIds(updateIds);
-    if(numOfrows==0){free_interm(interm); interm=NULL;}
+    //if(numOfrows==0){free_interm(interm); interm=NULL;}
     return interm;
     
  }
