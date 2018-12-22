@@ -24,6 +24,7 @@ JobScheduler::JobScheduler(uint32_t numOfthreads){
 	this->numOfthreads=numOfthreads;
 	this->thr_arr=new pthread_t[this->numOfthreads];
 	this->result_list=NULL;
+	this->run=1;
 	this->queue=new jqueue;
 
 	//------initialliaze queue-------
@@ -88,7 +89,7 @@ void  JobScheduler::printQueue(){
 	if(this->queue->start!=NULL){
 		curr=this->queue->start;
 		while(curr!=NULL){
-			curr->job->function();;
+			cout<<"Job id: "<<curr->job->jobId<<endl ;
 			curr=curr->next;
 		}
 	}
@@ -114,28 +115,37 @@ void* JobScheduler::runThread(void* sch){
 	
 	JobScheduler* js=reinterpret_cast<JobScheduler*>(sch);
 	
-	pthread_mutex_lock(&(js->queue->job_mutex));
-	while(js->queue->numOfJobs==0){
-		pthread_cond_wait(&(js->queue->job_cond), &(js->queue->job_mutex));
-	}
-	pthread_mutex_unlock(&(js->queue->job_mutex));
+	
+	while(js->run==1){
+		pthread_mutex_lock(&(js->queue->job_mutex));
+		while(js->queue->numOfJobs==0 ){
+			if(js->run==0)break;
+			pthread_cond_wait(&(js->queue->job_cond), &(js->queue->job_mutex));
+		}
+	
+		if(js->run==1){
+			pthread_mutex_unlock(&(js->queue->job_mutex));
+			pthread_mutex_lock(&(js->queue->pop_mutex));	
+			cout<<"Kanw pop thread: "<<pthread_self()<<endl;
+			j=js->popJob();
+			pthread_mutex_unlock(&(js->queue->pop_mutex));
 
-	pthread_mutex_lock(&(js->queue->pop_mutex));
-	j=js->popJob();
-	pthread_mutex_unlock(&(js->queue->pop_mutex));
+			if(j!=NULL){
+				//cout<<"This is thread with id: "<<pthread_self()<<endl;
+				j->function();
+			}
+			//cout<<"---------------------------"<<js->queue->numOfJobs<<endl;
+			pthread_mutex_lock(&(js->jobs_mutex));
+			if (js->queue->numOfJobs==0) {     
+				cout<<"Eimai edw"<<endl;                      
+		        pthread_cond_signal (&js->jobs_cond);
+			}
+			pthread_mutex_unlock(&(js->jobs_mutex));
+		}
+		
 
-	if(j!=NULL){
-		//cout<<"This is thread with id: "<<pthread_self()<<endl;
-		j->function();
-	}
-	//cout<<"---------------------------"<<js->queue->numOfJobs<<endl;
-	pthread_mutex_lock(&(js->jobs_mutex));
-	if (js->queue->numOfJobs==0) {     
-		cout<<"Eimai edw"<<endl;                      
-        pthread_cond_signal (&js->jobs_cond);
-	}
-	pthread_mutex_unlock(&(js->jobs_mutex));
 
+	}
 	return NULL;
 }
 
@@ -154,7 +164,6 @@ JobScheduler::~JobScheduler(){
     this->destroyQueue();
     pthread_cond_destroy (&(this->jobs_cond));
 }
-
 
 Work::Work(int jobId, arguments* args):Job(jobId, args){};
 Work::~Work(){};
@@ -191,6 +200,32 @@ int main (void){
 		rv=pthread_create(&(jsch->thr_arr[i]), NULL, jsch->runThread,jsch);
 		if(rv!=0) cout<<"kati paei lathos"<<endl;
 	}
+
+	pthread_mutex_lock (&(jsch->queue->job_mutex));
+	pthread_cond_broadcast (&(jsch->queue->job_cond));
+	pthread_mutex_unlock (&(jsch->queue->job_mutex)); 
+
+	pthread_mutex_lock (&(jsch->jobs_mutex));
+
+    while (jsch->queue->numOfJobs > 0) {
+       pthread_cond_wait (&(jsch->jobs_cond), &(jsch->jobs_mutex));
+
+    }
+	
+	pthread_mutex_unlock (&(jsch->jobs_mutex));
+
+
+	jsch->run = 0;
+	
+    pthread_mutex_lock (&(jsch->queue->job_mutex));                                     //signal all workers to wake up, but because
+    pthread_cond_broadcast (&(jsch->queue->job_cond));                                    //and since the "boolean" is set to 0 they exit
+    pthread_mutex_unlock (&(jsch->queue->job_mutex));
+
+    for (i = 0; i < jsch->numOfthreads; i++) {
+
+        pthread_join (jsch->thr_arr[i], NULL);                                       //wait for threads to exit
+
+}
 
 	//jsch->printQueue();	
 

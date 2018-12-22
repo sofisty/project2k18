@@ -54,6 +54,7 @@ class Work: public Job{
 
 class JobScheduler{		
 	public:
+		int run;
 		uint32_t numOfthreads;
 		pthread_t* thr_arr;
 		pthread_mutex_t jobs_mutex;
