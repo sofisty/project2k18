@@ -7,13 +7,13 @@
 #include <math.h>
 #include <stdint.h>
 
-typedef struct tuple {
+typedef struct tup{
 	uint64_t key;
 	uint64_t payload;
-} tuple;
+}tup;
 
 typedef struct relation {
-	tuple *tuples;
+	tup *tuples;
 	uint64_t num_tuples;
 } relation;
 

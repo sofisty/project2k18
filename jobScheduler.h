@@ -4,7 +4,10 @@
 #include <iostream>
 #include <cstdlib>
 #include <pthread.h>
+#include <semaphore.h> 
+#include <unistd.h> 
 
+#include <stdio.h>
 #include "results.h"
 #include "hash1.h"
 
@@ -32,6 +35,9 @@ typedef struct jqueue{
 	pthread_cond_t 	   job_cond; 
 }jqueue;
 
+jqueue* init_queue(void);
+
+
 class Job{
 	public:
 		int jobId;
@@ -49,6 +55,15 @@ class Work: public Job{
 
 		Work(int jobId, arguments* args);
 		~Work();
+
+};
+
+class Work1: public Job{
+	public:
+		virtual int function(void) override;
+
+		Work1(int jobId, arguments* args);
+		~Work1();
 
 };
 
@@ -70,6 +85,8 @@ class JobScheduler{
 		void printQueue();
 		void destroyQueue();
 		static void* runThread(void*);
+		void barrier(void* sch);
+		void finishJobs(void* sch);
 };
 
 

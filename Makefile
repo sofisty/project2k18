@@ -1,36 +1,34 @@
-CC = gcc
-CFLAGS  = -g3 -Wall
-LIBS += -lm
+CXX = g++
+CXXFLAGS += -std=c++11 -Wall -Wextra -g
+LIBS += -lm -pthread
 
 
-rhj:  main.o results.o hash1.o hash2.o files.o infomap.o interm.o query.o join.o
-	$(CC) $(CFLAGS) -o rhj main.o results.o hash1.o hash2.o files.o infomap.o interm.o query.o join.o $(LIBS)
+rhj:  main.o results.o hash1.o hash2.o infomap.o interm.o query.o join.o jobScheduler.o
+	$(CXX) $(CXXFLAGS) -o rhj main.o results.o hash1.o hash2.o infomap.o interm.o query.o join.o jobScheduler.o $(LIBS)
 
-query.o:  query.c query.h
-	$(CC) $(CFLAGS) -c query.c
+query.o:  query.cpp query.h
+	$(CXX) $(CXXFLAGS) -c query.cpp
 
-hash1.o:  hash1.c hash1.h 
-	$(CC) $(CFLAGS) -c hash1.c
+hash1.o:  hash1.cpp hash1.h 
+	$(CXX) $(CXXFLAGS) -c hash1.cpp
 
-hash2.o:  hash2.c hash2.h 
-	$(CC) $(CFLAGS) -c hash2.c
+hash2.o:  hash2.cpp hash2.h 
+	$(CXX) $(CXXFLAGS) -c hash2.cpp
 
-files.o: files.c files.h
-	$(CC) $(CFLAGS) -c files.c
+results.o: results.cpp results.h 
+	$(CXX) $(CXXFLAGS) -c results.cpp
 
-results.o: results.c results.h 
-	$(CC) $(CFLAGS) -c results.c
+interm.o: interm.cpp interm.h 
+	$(CXX) $(CXXFLAGS) -c interm.cpp
 
-interm.o: interm.c interm.h 
-	$(CC) $(CFLAGS) -c interm.c
+infomap.o: infomap.cpp infomap.h 
+	$(CXX) $(CXXFLAGS) -c infomap.cpp
 
-infomap.o: infomap.c infomap.h 
-	$(CC) $(CFLAGS) -c infomap.c
+join.o: join.cpp join.h 
+	$(CXX) $(CXXFLAGS) -c join.cpp
 
-join.o: join.c join.h 
-	$(CC) $(CFLAGS) -c join.c
-
-
+jobScheduler.o: jobScheduler.cpp jobScheduler.h
+	$(CXX) $(CXXFLAGS) -c jobScheduler.cpp
 clean: 
 	-rm -f *.o 
 	-rm -f rhj
