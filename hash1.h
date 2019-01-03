@@ -7,13 +7,13 @@
 #include <math.h>
 #include <stdint.h>
 
-typedef struct tuple {
+typedef struct tup{
 	uint64_t key;
 	uint64_t payload;
-} tuple;
+}tup;
 
 typedef struct relation {
-	tuple *tuples;
+	tup *tuples;
 	uint64_t num_tuples;
 } relation;
 
@@ -35,16 +35,16 @@ typedef struct result {
     int count;
 } result;
 
-int hash_func(uint64_t value, int n);
+int hash_func(uint64_t value);
 
-hist_node* update_hist(hist_node* hist, relation* R, int n);
+hist_node* update_hist(int start, int end, relation* R);
 void print_hist(hist_node*  hist);
 
 
 psum_node* update_psumlist(psum_node* psum, hist_node* hist );
 void print_psum(psum_node * psum);
 
-relation* reorder_R(psum_node* phead, relation* R, relation* R_new, int n  );
+relation* reorder_R(psum_node* phead, relation* R, relation* R_new );
 void print_R(relation* R);
 void free_R(relation* R);
 

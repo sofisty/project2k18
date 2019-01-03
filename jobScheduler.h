@@ -4,17 +4,19 @@
 #include <iostream>
 #include <cstdlib>
 #include <pthread.h>
+#include <semaphore.h> 
+#include <unistd.h> 
 
+#include <stdio.h>
 #include "results.h"
 #include "hash1.h"
 
-
-//hist_node* update_hist(hist_node* hist, relation* R, int n)
-
-
 typedef struct arguments{
-	int i;
-	double d;
+	int n;
+	relation* rel;
+	int start;
+	int end;
+	hist_node** hist_list;
 }arguments;
 
 typedef struct jqueue_node{
@@ -32,35 +34,48 @@ typedef struct jqueue{
 	pthread_cond_t 	   job_cond; 
 }jqueue;
 
+jqueue* init_queue(void);
+
+
 class Job{
 	public:
 		int jobId;
 		arguments* args;
-
 		//synarthseis
-		virtual int function(void);
-		Job(int jobId, arguments* args);
+		virtual void* function(void);
+		Job();
 		~Job();
+		void set_args(int jobId, arguments* args );
 };
 
-class Work: public Job{
+class HistJob: public Job{
 	public:
-		virtual int function(void) override;
+		virtual void* function(void) override;
 
-		Work(int jobId, arguments* args);
-		~Work();
+		HistJob();
+		~HistJob();
+
+};
+
+class Work1: public Job{
+	public:
+		virtual void* function(void) override;
+
+		Work1();
+		~Work1();
 
 };
 
 class JobScheduler{		
 	public:
 		int run;
+		int finished;
 		uint32_t numOfthreads;
 		pthread_t* thr_arr;
 		pthread_mutex_t jobs_mutex;
 		pthread_cond_t jobs_cond;		
 		jqueue* queue;
-		void* result_list;
+		
 
 		JobScheduler(uint32_t numOfthreads);
 		~JobScheduler();
@@ -69,7 +84,11 @@ class JobScheduler{
 		Job* popJob();
 		void printQueue();
 		void destroyQueue();
+
 		static void* runThread(void*);
+		void barrier(void* sch, int numOfJobs);
+		void set_ready();
+		void finishJobs(void* sch);
 };
 
 
