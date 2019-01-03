@@ -17,6 +17,19 @@ typedef struct arguments{
 	int start;
 	int end;
 	hist_node** hist_list;
+	psum_node* head;
+	relation* R;
+	relation* R_new;
+	relation* S_new;
+	int hash_n;
+	int index;
+	result** list_head;
+	result* curr_res;
+	hist_node* curr_R;
+	hist_node* curr_S;
+	psum_node* curr_Rp;
+	psum_node* curr_Sp;
+	class JobScheduler* sch;
 }arguments;
 
 typedef struct jqueue_node{
@@ -42,7 +55,7 @@ class Job{
 		int jobId;
 		arguments* args;
 		//synarthseis
-		virtual void* function(void);
+		virtual int function(void);
 		Job();
 		~Job();
 		void set_args(int jobId, arguments* args );
@@ -50,21 +63,33 @@ class Job{
 
 class HistJob: public Job{
 	public:
-		virtual void* function(void) override;
+		virtual int function(void) override;
 
 		HistJob();
 		~HistJob();
 
 };
 
-class Work1: public Job{
+//partition Job
+class PartitionJob: public Job{
 	public:
-		virtual void* function(void) override;
+		virtual int function(void) override;
 
-		Work1();
-		~Work1();
+		PartitionJob();
+		~PartitionJob();
 
 };
+
+//join Job
+class JoinJob: public Job{
+	public:
+		virtual int function(void) override;
+
+		JoinJob();
+		~JoinJob();
+
+};
+
 
 class JobScheduler{		
 	public:

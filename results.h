@@ -8,6 +8,7 @@
 
 #include "hash1.h"
 #include "hash2.h"
+#include "jobScheduler.h"
 
 
 result* search_results(result** head,result* curr_res, relation* S_new, int startS, int endS, int** bucket, int** chain, relation* R_new, int startR, int hash_size,  int index);

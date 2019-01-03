@@ -66,28 +66,27 @@ void print_psum(psum_node * psum) { //ektypwnei tin psum lista
 }
 
 
-relation* reorder_R(psum_node* phead, relation* R, relation* R_new ){ //kanei reorder na relation me vasi thn psum list
+relation* reorder_R(psum_node* phead, relation* R, relation* R_new, int start, int end ){ //kanei reorder na relation me vasi thn psum list
 	int i,y, size=R->num_tuples, curr_off;
 	int  key, payload;
-	R_new->num_tuples=size;
-	R_new->tuples=(tup*)malloc(size* sizeof(tup));
-	if(R_new->tuples==NULL){ fprintf(stderr, "Malloc failed \n"); return NULL;}
 
 	for(i=0; i<size; i++){ //ftiaxnei to R_new pou tha epistrafei me thn seira etsi wste na armozei h tmhmatopoihsh tou
 						   // me auth thn psum kai tou isogrammatos
 		key=R->tuples[i].key;
 		payload=R->tuples[i].payload;
 		y=hash_func(key);
-		curr_off=phead[y].curr_off;
-		phead[y].curr_off+=1;
+		if((y>=start)&&(y<=end)){ //an anikei sta oria ta opoia exei analavei to sigekrimeno job
+			curr_off=phead[y].curr_off;
+			phead[y].curr_off+=1;
 
-		R_new->tuples[curr_off].key=key;
-		R_new->tuples[curr_off].payload=payload;
+			R_new->tuples[curr_off].key=key;
+			R_new->tuples[curr_off].payload=payload;
+		}
+		
 	}
 	return R_new; //epistrefei th nea anadiorganwmenh sxesh
 
 }
-
 void print_R(relation* R){ //ektipwnei ta tuples ths relation pou dinetai
 	int i, h, size=R->num_tuples;
 	printf("Relation num_tuples: %d\n",size );

@@ -1,6 +1,7 @@
 #include "results.h"
 #include "jobScheduler.h"
 #define NUM_THREADS 3
+#define n 8
 
 #define size (((1024*1024)/24)-1) //arithmos eggrafwn pou xwrane sto ena bucket ths listas 
 //#define size 2000000000
@@ -242,8 +243,15 @@ result* RadixHashJoin(relation *R, relation *S){
 	//----------------New---------------------------
 	relation* R_new=(relation*)malloc(sizeof(relation));
 	if (R_new == NULL) { fprintf(stderr, "Malloc failed \n"); return NULL;}
+	R_new->num_tuples=R->num_tuples;
+	R_new->tuples=(tup*)malloc(R_new->num_tuples* sizeof(tup));
+	if(R_new->tuples==NULL){ fprintf(stderr, "Malloc failed \n"); return NULL;}
+
 	relation* S_new=(relation*)malloc(sizeof(relation));
 	if (S_new == NULL) { fprintf(stderr, "Malloc failed \n"); return NULL;}
+	S_new->num_tuples=S->num_tuples;
+	S_new->tuples=(tup*)malloc(S_new->num_tuples* sizeof(tup));
+	if(S_new->tuples==NULL){ fprintf(stderr, "Malloc failed \n"); return NULL;}
 
 	//------------------Psum----------------------------------
 	psum_node* phead=(psum_node*)malloc(256* sizeof(psum_node));
@@ -319,21 +327,131 @@ result* RadixHashJoin(relation *R, relation *S){
 	
 
 	jsch->set_ready();	
-	jsch->finishJobs(jsch);
+	//jsch->finishJobs(jsch);
 	for(i=0; i<NUM_THREADS; i++){free(hist_list[i]);}
+
+	//exit(0);
 	
 
 	
 	phead=update_psumlist(phead,R_hist);
-	S_phead=update_psumlist(S_phead,S_hist);	
+	S_phead=update_psumlist(S_phead,S_hist);
 
-
- 	R_new=reorder_R(phead,  R,  R_new );//anadiorganwnw to relation R
+	//##################################################################################################################################
+	cout<<"------------------------------"<<endl;
+	//Job* job;
+	arguments argsR[jsch->numOfthreads];
+	PartitionJob* arrR=new PartitionJob[jsch->numOfthreads];
 	
- 	S_new=reorder_R(S_phead,  S,  S_new  );//anadiorganwnw to relation R
+	//Ftixnw ta partition Jobs,--thewrw oti exw 3 threads
+	for(i=0;i<jsch->numOfthreads;i++){
+		argsR[i].head=phead;
+		argsR[i].R=R;
+		argsR[i].R_new=R_new;
+		argsR[i].hash_n=n;
+		if(i==0){
+			argsR[i].start=0;
+			argsR[i].end=256/jsch->numOfthreads;
+		}
+		else if(i==jsch->numOfthreads-1){
+			argsR[i].start=argsR[i-1].end+1;
+			argsR[i].end=255;
+		}
+		else{
+			argsR[i].start=argsR[i-1].end+1;
+			argsR[i].end=argsR[i].start+256/jsch->numOfthreads;
+
+		}
+		arrR[i]=PartitionJob();
+		arrR[i].set_args(i,&argsR[i]);
+	}
+
+	for(i=0;i<jsch->numOfthreads;i++){
+		job=&arrR[i];
+		jsch->pushJob(job);
+	}
+
+	arguments argsS[jsch->numOfthreads];
+	PartitionJob* arrS=new PartitionJob[jsch->numOfthreads];
+	
+	//Ftixnw ta partition Jobs,--thewrw oti exw 3 threads
+	for(i=0;i<jsch->numOfthreads;i++){
+		argsS[i].head=S_phead;
+		argsS[i].R=S;
+		argsS[i].R_new=S_new;
+		argsS[i].hash_n=n;
+		if(i==0){
+			argsS[i].start=0;
+			argsS[i].end=256/jsch->numOfthreads;
+		}
+		else if(i==jsch->numOfthreads-1){
+			argsS[i].start=argsS[i-1].end+1;
+			argsS[i].end=255;
+		}
+		else{
+			argsS[i].start=argsS[i-1].end+1;
+			argsS[i].end=argsS[i].start+256/jsch->numOfthreads;
+
+		}
+		arrS[i]=PartitionJob();
+		arrS[i].set_args(i,&argsS[i]);
+	}
+
+	for(i=0;i<jsch->numOfthreads;i++){
+		job=&arrS[i];
+		jsch->pushJob(job);
+	}
+
+
+	jsch->barrier(jsch,NUM_THREADS*2);
+	jsch->set_ready();	
+
+	//print_R(R_new);
+
+	//exit(0);
+
+	//###################################################################################################
+	//Twra tha dimiourgisw ta join jobs
+ 	//gia kathe node apo tous pinakes hist twn relations
+
+ 	cout<<"ARXIZOUN TA JOIN"<<endl;
+ 	arguments joinArgs[256];
+ 	JoinJob* arrJ=new JoinJob[256];
+
+	for(i=0; i<256; i++){
+		if(R_hist[i].count==0 || S_hist[i].count==0)continue;
+
+		joinArgs[i].index=buck_compare( R_hist[i],S_hist[i]);
+		joinArgs[i].list_head=&result_list;
+		joinArgs[i].curr_res=NULL;
+		joinArgs[i].curr_R=&(R_hist[i]);
+		joinArgs[i].curr_S=&(S_hist[i]);
+		joinArgs[i].curr_Rp=&(phead[i]);
+		joinArgs[i].curr_Sp=&(S_phead[i]);
+		joinArgs[i].R_new=R_new;
+		joinArgs[i].S_new=S_new;		
+
+
+		arrJ[i]=JoinJob();
+		arrJ[i].set_args(i,&(joinArgs[i]));		 
+		job=&arrJ[i];		
+		jsch->pushJob(job);
+
+	}
+
+	
+	jsch->barrier(jsch,256);
+	
+
+	jsch->finishJobs(jsch);	
+
+
+ 	//R_new=reorder_R(phead,  R,  R_new );//anadiorganwnw to relation R
+	
+ 	//S_new=reorder_R(S_phead,  S,  S_new  );//anadiorganwnw to relation R
 
  	
- 	result_list= final_hash(R_hist, S_hist, phead, S_phead, R_new, S_new); //kalw thn synarthsh pou kanei to b-c hashing kai ola ta results
+ 	//result_list= final_hash(R_hist, S_hist, phead, S_phead, R_new, S_new); //kalw thn synarthsh pou kanei to b-c hashing kai ola ta results
 
  	//free(R_head);
 

@@ -36,8 +36,39 @@ Job::~Job(){
 	}*/
 };
 
-void* Job::function(void){
+int Job::function(void){
 	cout<<"This is a job "<<this->jobId<<endl;
+	return 0;
+} 
+
+//partitionJob
+PartitionJob::PartitionJob():Job(){};
+PartitionJob::~PartitionJob(){};
+
+int PartitionJob::function(void){
+	//cout<<"This is a partitionJob"<<this->jobId<<endl;
+	if(this->args==NULL) {
+		cout<<"Null arguments given"<<endl;
+		return 1;
+	}
+
+	this->args->R_new=reorder_R(this->args->head, this->args->R, this->args->R_new, this->args->start, this->args->end);
+	return 0;
+} 
+
+//JoinJob
+JoinJob::JoinJob():Job(){};
+JoinJob::~JoinJob(){};
+
+int JoinJob::function(void){
+	//cout<<"This is a partitionJob"<<this->jobId<<endl;
+	if(this->args==NULL) {
+		cout<<"Null arguments given here"<<endl;
+		//exit(1);
+		return 1;
+	}
+	//join(result** head,result* curr_res, int index,hist_node curr_R, hist_node curr_S, psum_node curr_Rp, psum_node curr_Sp, relation* R_new, relation* S_new);
+	this->args->curr_res=join(this->args->list_head,this->args->curr_res,this->args->index,*(this->args->curr_R), *(this->args->curr_S),*(this->args->curr_Rp),*(this->args->curr_Sp),this->args->R_new,this->args->S_new);
 	return 0;
 } 
 
@@ -146,7 +177,7 @@ void JobScheduler::set_ready(){
 
 void* JobScheduler::runThread(void* sch){
 	Job* j;
-	void* ret=NULL;
+	//void* ret=NULL;
 	
 	JobScheduler* js=reinterpret_cast<JobScheduler*>(sch);
 		
@@ -168,7 +199,7 @@ void* JobScheduler::runThread(void* sch){
 		//if(j==NULL){cout<<"NOP"<<endl;}
 		if(j!=NULL){
 			
-			ret=j->function();
+			j->function();
 			//cout<<"HIST JOB ID : "<<j->jobId<<endl; 
 			
 		}
@@ -188,7 +219,7 @@ void* JobScheduler::runThread(void* sch){
 			
 		
 	}
-	return ret;
+	return NULL;
 
 }
 
@@ -245,22 +276,15 @@ HistJob::HistJob():Job(){
 
 HistJob::~HistJob(){};
 
-void* HistJob::function(void){
+int HistJob::function(void){
 	//cout<<"HistJob "<<this->jobId<<" : "<<this->args->start<<" + "<<this->args->end <<endl;
 	args->hist_list[this->jobId]= update_hist(this->args->start, this->args->end, this->args->rel);
-	return NULL;
+	return 1;
 	//print_hist( hist);
 	//return (void*) hist;
 	
 }
 
-Work1::Work1():Job(){};
-Work1::~Work1(){};
-
-void* Work1::function(void){
-	cout<<"This is work1: "<<this->jobId<<endl;
-	return 0;
-}
 
 
 /*

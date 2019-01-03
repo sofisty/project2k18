@@ -44,7 +44,7 @@ void print_hist(hist_node*  hist);
 psum_node* update_psumlist(psum_node* psum, hist_node* hist );
 void print_psum(psum_node * psum);
 
-relation* reorder_R(psum_node* phead, relation* R, relation* R_new );
+relation* reorder_R(psum_node* phead, relation* R, relation* R_new,int start, int end);
 void print_R(relation* R);
 void free_R(relation* R);
 
