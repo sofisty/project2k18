@@ -1,4 +1,5 @@
 #include "infomap.h"
+#define MAX 50000000
 
 //ftiaxnei mia lista me ta onomata twn files gia na ftiaksei ton pinaka meta
 RelFiles* add_Relation(RelFiles** relHead, RelFiles* relList, char* file){
@@ -48,13 +49,16 @@ void free_RelFiles(RelFiles* relList){
 //ftiaxnei thn domh pou krataei tis plhrofories 
 //columns, tuples kai enan pinaka me deiktes sthn mnhmh ths prwths eggrafhs kathe sthlhs
 infoNode* create_InfoMap(RelFiles* relList, infoNode* infoMap, int numOffiles){
-  int i, j, fd, length;
+  int i, j, k,fd, length;
   char *addr;
-  uint64_t numOfcol, numOftuples;
+  uint64_t numOfcol, numOftuples, max, min, dist_size, pos, distincts;
+  
+  char* dist_hash; 
+  uint64_t* ptr;
   struct stat sb;
   RelFiles* currFile=relList;
 
-  if(infoMap==NULL){ //ean einai adeio to map to dimiourgei
+  if(infoMap==NULL){ 
     infoMap=(infoNode*)malloc(numOffiles* sizeof(infoNode));
     if(infoMap==NULL){ fprintf(stderr, "Malloc failed \n"); return NULL;}
   }
@@ -88,22 +92,62 @@ infoNode* create_InfoMap(RelFiles* relList, infoNode* infoMap, int numOffiles){
     infoMap[i].columns=numOfcol;
     infoMap[i].tuples=numOftuples;
 
-    //desmeuei mnhmh gia pointers se uint64
-    //den eimai sigourh an einai auto to swsto
     infoMap[i].addr=(uint64_t*)malloc(numOfcol * sizeof(uint64_t ));
     if(infoMap[i].addr==NULL){ fprintf(stderr, "Malloc failed \n"); return NULL;}
+
+    infoMap[i].l=(uint64_t*)malloc(numOfcol * sizeof(uint64_t ));
+    if(infoMap[i].l==NULL){ fprintf(stderr, "Malloc failed \n"); return NULL;}
+
+    infoMap[i].u=(uint64_t*)malloc(numOfcol * sizeof(uint64_t ));
+    if(infoMap[i].u==NULL){ fprintf(stderr, "Malloc failed \n"); return NULL;}
+
+     infoMap[i].f=(uint64_t*)malloc(numOfcol * sizeof(uint64_t ));
+    if(infoMap[i].f==NULL){ fprintf(stderr, "Malloc failed \n"); return NULL;}
+
+    infoMap[i].d=(uint64_t*)malloc(numOfcol * sizeof(uint64_t ));
+    if(infoMap[i].d==NULL){ fprintf(stderr, "Malloc failed \n"); return NULL;}
    
     //gia kathe sthlh
     for(j=0; j<(int)numOfcol; j++){ 
 
       infoMap[i].addr[j]=(uint64_t)addr;
       addr+=numOftuples*sizeof(uint64_t);
-      //ptr=infoMap[i].addr[j];
-      //printf("First of col %ld\n", *(ptr) ); 
+      infoMap[i].f[j]=numOftuples;
+      ptr=(uint64_t*)infoMap[i].addr[j];
+      max=*(ptr);
+      min=*(ptr);
+      for(k=0; k<numOftuples; k++){
+        if( *(ptr)>max ){max=*(ptr);}
+        if( *(ptr)<min){min=*(ptr);}
+        ptr++;
+      }
+      infoMap[i].u[j]=max;
+      infoMap[i].l[j]=min;
       
+      if(max>MAX){ dist_size=MAX;}
+      else{dist_size=max; }
+      dist_hash=(char*)malloc(dist_size*sizeof(char));
+      memset(dist_hash, 0, dist_size);
+      //for(int g=0; g<dist_size ; g++){if(dist_hash[g]!=0){printf("WHAAAAAAAAAT\n"); exit(0);} }
+      ptr=(uint64_t*)infoMap[i].addr[j];
+      for(k=0; k<numOftuples; k++){
+        if(max>MAX){pos=*(ptr)-min ; }
+        else{pos= (*(ptr)-min) % MAX ;}
+        dist_hash[pos]=1;
+        ptr++;
+      }
+
+      distincts=0;
+      for(k=0; k<dist_size; k++){ if(dist_hash[k]==1){distincts+=1;} }
+      infoMap[i].d[j]=distincts;
+
+      free(dist_hash);
+
+      //uint64_t* temp=(uint64_t*)(infoMap[i].addr[j]);
+      //printf("First of col %ld\n", *temp ); 
+      //printf("REl: %d col: %d : --MAX: %ld | MIN: %ld |DIST: %ld --\n",i,j,  infoMap[i].u[j],  infoMap[i].l[j], infoMap[i].d[j] );
     }
     
-
     currFile=currFile->next;
 
 
@@ -117,6 +161,11 @@ infoNode* create_InfoMap(RelFiles* relList, infoNode* infoMap, int numOffiles){
 void free_InfoMap(infoNode* infoMap, int numOffiles){
 	for(int i=0; i< (int)numOffiles; i++){
 		free(infoMap[i].addr);
+    free(infoMap[i].l);
+    free(infoMap[i].u);
+    free(infoMap[i].f);
+    free(infoMap[i].d);
+
 
 	}
 	free(infoMap);
