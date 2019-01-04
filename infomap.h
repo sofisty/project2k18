@@ -20,6 +20,10 @@ typedef struct infoNode {
 	uint64_t columns;
 	uint64_t tuples;
 	uint64_t* addr;
+	uint64_t* l;
+	uint64_t* u;
+	uint64_t* f;
+	uint64_t* d;
 } infoNode;
 
 
