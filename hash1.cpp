@@ -23,7 +23,7 @@ hist_node* update_hist( int start,int end, relation* R){
 	if (hist == NULL) { fprintf(stderr, "Malloc failed \n"); return NULL;}
 
 	for(i=0; i<256; i++){ hist[i].count=0; }
-	printf("--START %d END %d--\n",start, end );
+	//printf("--START %d END %d--\n",start, end );
 	for(i =start; i<end; i++){ //pernaw apo ton tuplesR tis eggrafes sti domi tou relation
 		hash_val= hash_func( (R->tuples[i].key));
 		if(hash_val<0)return NULL;

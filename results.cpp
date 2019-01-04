@@ -3,7 +3,7 @@
 #define NUM_THREADS 3
 #define n 8
 
-#define size (((1024*1024)/24)-1) //arithmos eggrafwn pou xwrane sto ena bucket ths listas 
+#define size (128*1024-1) //arithmos eggrafwn pou xwrane sto ena bucket ths listas 
 //#define size 2000000000
 
 using namespace std;
@@ -152,6 +152,77 @@ result* search_results(result** head,result* curr_res, relation* S_new, int star
 	return curr_res;//epistrerfw thn lista apotelesmatwn
 
 } 
+
+result* copy_results(result** resultList_arr,result* result_list){
+	result* curr_head;
+	result* curr_res=result_list;
+	int ch_index,index,count;
+
+	for(int i=0;i<256;i++){
+		curr_head=resultList_arr[i];		
+
+		while(curr_head!=NULL){
+			ch_index=0;
+			for(int j=0;j<curr_head->count;j++){
+			//cout<<"eimai sto "<<j<<"-osto match tou "<<i<<"-ostou result list"<<endl;
+				if( curr_res==NULL){//an exei dothei keni lista tote dimiourgw kainourgia lista apotelesmatwn
+					curr_res=(result*)malloc(sizeof(result));
+					if (curr_res == NULL) { fprintf(stderr, "Malloc failed \n"); return NULL;}
+					curr_res->matches=(uint64_t*)malloc(size*3* sizeof(uint64_t));
+					if (curr_res->matches== NULL) { fprintf(stderr, "Malloc failed \n"); return NULL;}
+					
+					curr_res->next=NULL;
+					curr_res->matches[0]=curr_head->matches[0]; //kai arxikopoiw thn lista apotelesmatwn me ta dothenta tuples
+					curr_res->matches[1]=curr_head->matches[1];
+					curr_res->matches[2]=curr_head->matches[2];
+					curr_res->count=1; //auksanw ton arithmo eggrafwn tis listas kata 1
+					// krataw thn thesi pou exei ftasei h lista apotelesmatwn gia na th xrhsimopoihsw argotera
+					result_list=curr_res;
+				}
+				else{//ean den einai kenh, prosthetw to apotelesma (sindiasmo tuples )sth lista
+
+					if(curr_res->count<size){ //an to apotelesma xwraei sto bucket pou vriskomai, to kataxwrw ekei
+							//printf("woo hoo\n");
+						
+						count=curr_res->count;
+						index=count*3;
+						ch_index=3*j;
+						curr_res->matches[index]=curr_head->matches[ch_index]; //kai arxikopoiw thn lista apotelesmatwn me ta dothenta tuples
+						curr_res->matches[index+1]=curr_head->matches[ch_index+1];
+						
+						curr_res->matches[index+2]=curr_head->matches[ch_index+2];
+						curr_res->count+=1;
+
+					}
+					else if(curr_res->count==size){// an h lista den exei xwro, desmevw xwro enos bucket akomh sth lista kai to arxikopoiw me to dothen tup
+						 
+						curr_res->next=(result*)malloc(sizeof(result));
+						if (curr_res->next == NULL) { fprintf(stderr, "Malloc failed \n"); return NULL;}
+						curr_res->next->matches=(uint64_t*)malloc(size*3* sizeof(uint64_t));
+						if (curr_res->next->matches== NULL) { fprintf(stderr, "Malloc failed \n"); return NULL;}
+						
+						
+						ch_index=3*j;
+						curr_res->next->matches[0]=curr_head->matches[ch_index]; //kai arxikopoiw thn lista apotelesmatwn me ta dothenta tuples
+						curr_res->next->matches[1]=curr_head->matches[ch_index+1];
+						curr_res->next->matches[2]=curr_head->matches[ch_index+2];
+						curr_res->next->count=1; //auksanw kata ena to count tou neou bucket
+						curr_res->next->next=NULL;
+						
+						curr_res=curr_res->next;
+
+					}
+					else{fprintf(stderr, "Count is wrong \n"); return NULL;}
+				}
+
+			}
+			curr_head=curr_head->next;
+			
+
+		}
+	}
+	return result_list;
+}
 
 uint64_t** resToRowIds(result* result_list, int* numOfr){
 	int  index,i;
@@ -338,7 +409,7 @@ result* RadixHashJoin(relation *R, relation *S){
 	S_phead=update_psumlist(S_phead,S_hist);
 
 	//##################################################################################################################################
-	cout<<"------------------------------"<<endl;
+	//cout<<"------------------------------"<<endl;
 	//Job* job;
 	arguments argsR[jsch->numOfthreads];
 	PartitionJob* arrR=new PartitionJob[jsch->numOfthreads];
@@ -414,15 +485,19 @@ result* RadixHashJoin(relation *R, relation *S){
 	//Twra tha dimiourgisw ta join jobs
  	//gia kathe node apo tous pinakes hist twn relations
 
- 	cout<<"ARXIZOUN TA JOIN"<<endl;
+ 	//cout<<"ARXIZOUN TA JOIN"<<endl;
  	arguments joinArgs[256];
  	JoinJob* arrJ=new JoinJob[256];
 
+ 	result** resultList_arr=new result* [256];
+ 	int legit_jobs=0;
+
 	for(i=0; i<256; i++){
+		resultList_arr[i]=NULL;
 		if(R_hist[i].count==0 || S_hist[i].count==0)continue;
 
 		joinArgs[i].index=buck_compare( R_hist[i],S_hist[i]);
-		joinArgs[i].list_head=&result_list;
+		joinArgs[i].list_head=&resultList_arr[i];
 		joinArgs[i].curr_res=NULL;
 		joinArgs[i].curr_R=&(R_hist[i]);
 		joinArgs[i].curr_S=&(S_hist[i]);
@@ -436,24 +511,18 @@ result* RadixHashJoin(relation *R, relation *S){
 		arrJ[i].set_args(i,&(joinArgs[i]));		 
 		job=&arrJ[i];		
 		jsch->pushJob(job);
+		legit_jobs++;
 
 	}
 
 	
-	jsch->barrier(jsch,256);
+	jsch->barrier(jsch,legit_jobs);
 	
 
 	jsch->finishJobs(jsch);	
 
-
- 	//R_new=reorder_R(phead,  R,  R_new );//anadiorganwnw to relation R
 	
- 	//S_new=reorder_R(S_phead,  S,  S_new  );//anadiorganwnw to relation R
-
- 	
- 	//result_list= final_hash(R_hist, S_hist, phead, S_phead, R_new, S_new); //kalw thn synarthsh pou kanei to b-c hashing kai ola ta results
-
- 	//free(R_head);
+	result_list=copy_results(resultList_arr,result_list);
 
  
 	//free(S_head);

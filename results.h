@@ -17,6 +17,7 @@ void print_results(result* result_list,int* resfortest);
 uint64_t** resToRowIds(result* result_list, int* numOfrows);
 void free_rowIds(uint64_t** rowIds);
 void free_result_list(result* result_list);
+result* copy_results(result** resultList_arr,result* result_list);
 
 result* RadixHashJoin(relation *R, relation *S);
 

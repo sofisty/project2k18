@@ -88,7 +88,7 @@ JobScheduler::JobScheduler(uint32_t numOfthreads){
 		rv=pthread_create(&(this->thr_arr[i]), NULL, this->runThread,this);
 		if(rv!=0) cout<<"kati paei lathos"<<endl;
 	}
-	cout<<"Now threads are created"<<endl;
+	//cout<<"Now threads are created"<<endl;
 
 	
 }
@@ -211,7 +211,8 @@ void* JobScheduler::runThread(void* sch){
 		pthread_mutex_lock(&(js->jobs_mutex));
 		//if (js->finished==3) { 		
 		if(js->queue->numOfJobs==0){	
-			cout<<"ekana signal: "<<pthread_self()<<endl;
+			//cout<<"FINISHED "<<js->finished<<endl;
+			//cout<<"ekana signal: "<<pthread_self()<<endl;
 			                      
 	        pthread_cond_signal(&js->jobs_cond);
 		}
