@@ -12,6 +12,14 @@
 #include "interm.h"
 #include "join.h"
 
+typedef struct stats{
+	int columns;
+	uint64_t* l;
+	uint64_t* u;
+	double* f;
+	double* d;
+}stats;
+
 typedef struct pred{
 	int* cols;// ean exw 0.1=1.22 tote apothikevetai [0,1,-1,1,2,2,-1] to -1 diaxwrizei ta columns
 	int op; // i sxesh metaksi twn cols h col-val 1--> > , 2--> <, 3--> =

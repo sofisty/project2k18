@@ -22,8 +22,8 @@ typedef struct infoNode {
 	uint64_t* addr;
 	uint64_t* l;
 	uint64_t* u;
-	uint64_t* f;
-	uint64_t* d;
+	double* f;
+	double* d;
 } infoNode;
 
 

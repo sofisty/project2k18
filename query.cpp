@@ -678,10 +678,34 @@ interm_node* execute_pred(interm_node* interm, joinHistory** joinHist,pred* p,in
 
 //ektelei ena query tou batch
 interm_node* execute_query(interm_node* interm, joinHistory** joinHist, query* q, infoNode* InfoMap, int num_loadedrels){
-	int i;
+	int i,j,r,clmns;
 	pred* curr;
 	long long int* crossArr=NULL;
-	
+	stats* qu_stats=(stats*)malloc(num_loadedrels* sizeof(stats));
+	for(i=0; i<q->num_rels; i++){
+		r=q->rels[i];
+		clmns=InfoMap[r].columns;
+		qu_stats[i].columns=clmns;
+		printf("REl %d, i: %d with columns %d \n",r,i,clmns );
+
+		qu_stats[i].u=(uint64_t*)malloc(clmns* sizeof(uint64_t));
+		memcpy(qu_stats[i].u, InfoMap[r].u, clmns*sizeof(uint64_t));
+		
+		qu_stats[i].l=(uint64_t*)malloc(clmns* sizeof(uint64_t));
+		memcpy(qu_stats[i].l, InfoMap[r].l, clmns*sizeof(uint64_t));
+		
+		qu_stats[i].d=(double*)malloc(clmns* sizeof(double));
+		memcpy(qu_stats[i].d, InfoMap[r].d, clmns*sizeof(double));
+		
+		qu_stats[i].f=(double*)malloc(clmns* sizeof(double));
+		memcpy(qu_stats[i].f, InfoMap[r].d, clmns*sizeof(double));
+		for(j=0; j<clmns; j++){
+			printf("\tCOLUMN: %d\n",j );
+			printf("\t\t--Info: u:%ld, l:%ld, f:%lf, d:%lf \n",InfoMap[r].u[j], InfoMap[r].l[j],InfoMap[r].f[j], InfoMap[r].d[j]);
+			printf("\t\tStats: u:%ld, l:%ld, f:%lf, d:%lf --\n",qu_stats[i].u[j],qu_stats[i].l[j],qu_stats[i].f[j],qu_stats[i].d[j] );
+		}
+
+	}
 	//arxika elegxw an to query einai valid
 	for(i=0;i<q->num_rels;i++){
 		if(q->rels[i]>num_loadedrels-1){

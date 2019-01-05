@@ -101,10 +101,10 @@ infoNode* create_InfoMap(RelFiles* relList, infoNode* infoMap, int numOffiles){
     infoMap[i].u=(uint64_t*)malloc(numOfcol * sizeof(uint64_t ));
     if(infoMap[i].u==NULL){ fprintf(stderr, "Malloc failed \n"); return NULL;}
 
-     infoMap[i].f=(uint64_t*)malloc(numOfcol * sizeof(uint64_t ));
+     infoMap[i].f=(double*)malloc(numOfcol * sizeof(double ));
     if(infoMap[i].f==NULL){ fprintf(stderr, "Malloc failed \n"); return NULL;}
 
-    infoMap[i].d=(uint64_t*)malloc(numOfcol * sizeof(uint64_t ));
+    infoMap[i].d=(double*)malloc(numOfcol * sizeof(double ));
     if(infoMap[i].d==NULL){ fprintf(stderr, "Malloc failed \n"); return NULL;}
    
     //gia kathe sthlh
