@@ -12,13 +12,7 @@
 #include "interm.h"
 #include "join.h"
 
-typedef struct stats{
-	int columns;
-	uint64_t* l;
-	uint64_t* u;
-	double* f;
-	double* d;
-}stats;
+
 
 typedef struct pred{
 	int* cols;// ean exw 0.1=1.22 tote apothikevetai [0,1,-1,1,2,2,-1] to -1 diaxwrizei ta columns
@@ -70,7 +64,7 @@ void print_batch(batch* b);
 void execute_workload( int num_loadedrels, infoNode* infoMap);
 void execute_batch(batch* b, int num_loadedrels, infoNode* infoMap, int* numquery);
 interm_node* execute_query(interm_node* interm, joinHistory** joinHist, query* q, infoNode* InfoMap, int numOfrels);
-interm_node* execute_pred(interm_node* interm, joinHistory** joinHist,pred* p,int* rels, int num_loadedrels, infoNode* infoMap);
+interm_node* execute_pred(interm_node* interm, joinHistory** joinHist,pred* p,int* rels, int num_loadedrels, infoNode* infoMap, stats** qu_stats);
 
 void proj_sums(interm_node* interm, query* q, infoNode* infoMap);
 void proj_sumsAfterCross(long long int* toMul, interm_node* interm, query* q, infoNode* infoMap);

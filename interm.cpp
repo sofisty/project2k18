@@ -139,7 +139,7 @@ uint64_t* selfjoinFromInterm(interm_node* interm, int rel, int indexOfrel, int c
 
 //einai h genikh synarthsh pou efarmozei selfjoin se diaforetikes sthles koinou relation, apofasizontas apo pou prepei
 //na parei ta rowIds tou relation analoga me th katastash tou sto intermediate
-interm_node* self_join(interm_node* interm, infoNode* infoMap, int rel, int indexOfrel, int col1, int col2, int numOfrels){
+interm_node* self_join(interm_node* interm, infoNode* infoMap, int rel, int indexOfrel, int col1, int col2, int numOfrels, stats* rel_stats){
   int numOftuples= infoMap[rel].tuples;
   
   uint64_t* ptr1, *ptr2;
@@ -167,18 +167,117 @@ interm_node* self_join(interm_node* interm, infoNode* infoMap, int rel, int inde
   //enimerwnw to intermediate me ta kainourgia oina apotelesmata
   interm=update_interm( interm, sjoinRowIds,  indexOfrel,  numOfrows,numOfrels);  
 
+  //update_selfJoinStats( rel_stats,  col1,  col2 );
+  
   if(sjoinRowIds!=NULL){free(sjoinRowIds); sjoinRowIds=NULL;}
   return interm; //epistrefw to intermediate enimerwmeno me ti trexousa katastash
 }
 
+void print_stats(stats* qu_stats, int rels){
+  for(int i =0 ;i<rels; i++){
+    printf("-----REL %d --------------------------------------\n",i );
+    for(int j=0; j<qu_stats[i].columns; j++){
+      printf("\tColumn: %d\n",j );
+      printf("\t\tStats: u:%ld, l:%ld, f:%lf, d:%lf --\n",qu_stats[i].u[j],qu_stats[i].l[j],qu_stats[i].f[j],qu_stats[i].d[j] );
+    }
+    
+  }
+}
+
+void update_eqStats( stats* rel_stats, int col, uint64_t val ,int found){
+  uint64_t dC, fC;
+  double dA,fA,new_fA;
+  int i;
+  rel_stats->l[col]=val;
+  rel_stats->u[col]=val;
+  dA=rel_stats->d[col];
+  fA=rel_stats->f[col];
+ 
+  if(found==0){
+    rel_stats->d[col]=0;
+    rel_stats->f[col]=0;
+  }
+  else if(dA==0 || fA==0){
+    rel_stats->f[col]=0;
+    rel_stats->d[col]=1;
+  }
+  else{
+    printf("DIAIRW FA :%lf me dA: %lf\n",fA,dA );
+    rel_stats->f[col]=fA/dA;
+    rel_stats->d[col]=1;
+  }
+  new_fA=rel_stats->f[col];
+  for(i=0; i<rel_stats->columns; i++){ 
+   if(i==col)continue;
+    dC=rel_stats->d[i];
+    fC=rel_stats->f[i];
+    if(dC==0 || fC==0|| fA==0 ||new_fA==0){ rel_stats->d[i]=0;}
+    else{ rel_stats->d[i]= dC * (1 - pow( ( 1 - (new_fA / fA) ), (fC/dC) ) );}
+    rel_stats->f[i]=new_fA;
+
+  }
+}
+
+void update_selfJoinStats( stats* rel_stats, int col1, int col2 ){
+  int i;
+  uint64_t dC, fC, max, min, d ;
+  double dA,fA,new_fA;
+
+  if(rel_stats->u[col1]>rel_stats->u[col2]){ max=rel_stats->u[col1];}
+  else{ max=rel_stats->u[col2];}
+
+  if(rel_stats->l[col1]<rel_stats->l[col2]){ min=rel_stats->l[col1];}
+  else{ min=rel_stats->l[col2];}
+
+  rel_stats->u[col1]=max;
+  rel_stats->u[col2]=max;
+
+  rel_stats->l[col1]=min;
+  rel_stats->l[col2]=min;
+
+  fA=rel_stats->f[col1];
+  d=max-min +1;
+  if(fA==0 || d==0){
+    rel_stats->f[col1]=0;
+    rel_stats->f[col2]=0;
+  }
+  else{
+    rel_stats->f[col1]=fA/d;
+    rel_stats->f[col2]=fA/d;
+  }
+  new_fA= rel_stats->f[col1];
+  dA= rel_stats->d[col1];
+
+  if(dA==0 || fA==0 ||new_fA==0){
+    rel_stats->d[col1]=0;
+    rel_stats->d[col2]=0;
+ }
+ else{
+    rel_stats->d[col1]= dA * (1 - pow( ( 1 - (new_fA / fA) ), (fA/dA) ) );
+    rel_stats->d[col2]= rel_stats->d[col1];
+ }
+
+ for(i=0; i<rel_stats->columns; i++){
+  if(i==col1 || i==col2)continue;
+  dC=rel_stats->d[i];
+  fC=rel_stats->f[i];
+  if(dC==0 || fC==0|| fA==0 ||new_fA==0){ rel_stats->d[i]=0;}
+  else{ rel_stats->d[i]= dC * (1 - pow( ( 1 - (new_fA / fA) ), (fC/dC) ) );}
+  rel_stats->f[i]=new_fA;
+ }
+
+}
+
+
 //einai h genikh synarthsh pou efarmozei filtro se relation, apofasizontas apo pou prepei
 //na parei ta rowIds tou relation analoga me th katastash tou sto intermediate
-interm_node* filter(interm_node* interm,int oper, infoNode* infoMap, int rel, int indexOfrel, int col, uint64_t value, int numOfrels){
+interm_node* filter(interm_node* interm,int oper, infoNode* infoMap, int rel, int indexOfrel, int col, uint64_t value, int numOfrels ,stats* rel_stats){
   
   int numOftuples= (int)(infoMap[rel].tuples);  
   
   uint64_t* ptr;
   int numOfrows;
+  int found=0;
   
   uint64_t* filterRowIds=NULL;	
 
@@ -203,6 +302,11 @@ interm_node* filter(interm_node* interm,int oper, infoNode* infoMap, int rel, in
   
   //emimerwnei to intermediate me ta apotelesmata tou filtrou gia to dothen relation
   interm=update_interm( interm, filterRowIds,  indexOfrel,  numOfrows, numOfrels);  
+
+  if(oper==3){
+    if(filterRowIds!=NULL){found=1;}
+    update_eqStats( rel_stats,col, value,found);
+  }
 
   if(filterRowIds!=NULL){free(filterRowIds); filterRowIds=NULL;}
   

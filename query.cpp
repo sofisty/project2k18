@@ -591,8 +591,9 @@ void execute_batch(batch* b, int num_loadedrels, infoNode* infoMap ,int* numquer
 }
 
 //ektelei ena kathgorhma enos query
-interm_node* execute_pred(interm_node* interm, joinHistory** joinHist,pred* p,int* rels, int num_loadedrels, infoNode* infoMap){
+interm_node* execute_pred(interm_node* interm, joinHistory** joinHist,pred* p,int* rels, int num_loadedrels, infoNode* infoMap, stats** qu_stats){
 	int i=0,j=0,index;
+	stats* rel_stats=*qu_stats;
 
 	if(p->isFilter){ //ean prokeitai gia filtro
 		int col,rel,indexOfrel;
@@ -611,7 +612,10 @@ interm_node* execute_pred(interm_node* interm, joinHistory** joinHist,pred* p,in
 		indexOfrel=index;
 
 		//ektelw to filtro
-		interm=filter(interm, p->op, infoMap, rel, indexOfrel, col, p->val, num_loadedrels);
+		rel_stats=&(rel_stats[indexOfrel]);
+		printf("PRED index %d columns  %d \n",indexOfrel, rel_stats->columns );
+		interm=filter(interm, p->op, infoMap, rel, indexOfrel, col, p->val, num_loadedrels, rel_stats);
+		print_stats( *qu_stats, num_loadedrels);
 	}
 	else if(p->isSelfjoin){ //prokeitai gia selfjoin
 		int col1,col2,rel,indexOfrel;
@@ -638,7 +642,8 @@ interm_node* execute_pred(interm_node* interm, joinHistory** joinHist,pred* p,in
 
 		indexOfrel=index;
 		//ektelw to selfjoin
-		interm=self_join(interm, infoMap, rel, indexOfrel, col1, col2, num_loadedrels);
+		rel_stats=qu_stats[indexOfrel];
+		interm=self_join(interm, infoMap, rel, indexOfrel, col1, col2, num_loadedrels, rel_stats);
 
 	}
 	else{ //prokeitai gia aplo join
@@ -676,6 +681,17 @@ interm_node* execute_pred(interm_node* interm, joinHistory** joinHist,pred* p,in
 	return interm; //epistrefw to intermediate		
 }
 
+void free_stats(stats* qu_stats, int numOfrels){
+	int i;
+	for(i=0; i<numOfrels; i++){
+		free(qu_stats[i].u);
+		free(qu_stats[i].l);
+		free(qu_stats[i].f);
+		free(qu_stats[i].d);
+	}
+	free(qu_stats);
+}
+
 //ektelei ena query tou batch
 interm_node* execute_query(interm_node* interm, joinHistory** joinHist, query* q, infoNode* InfoMap, int num_loadedrels){
 	int i,j,r,clmns;
@@ -686,7 +702,7 @@ interm_node* execute_query(interm_node* interm, joinHistory** joinHist, query* q
 		r=q->rels[i];
 		clmns=InfoMap[r].columns;
 		qu_stats[i].columns=clmns;
-		printf("REl %d, i: %d with columns %d \n",r,i,clmns );
+		//printf("REl %d, i: %d with columns %d \n",r,i,clmns );
 
 		qu_stats[i].u=(uint64_t*)malloc(clmns* sizeof(uint64_t));
 		memcpy(qu_stats[i].u, InfoMap[r].u, clmns*sizeof(uint64_t));
@@ -698,14 +714,15 @@ interm_node* execute_query(interm_node* interm, joinHistory** joinHist, query* q
 		memcpy(qu_stats[i].d, InfoMap[r].d, clmns*sizeof(double));
 		
 		qu_stats[i].f=(double*)malloc(clmns* sizeof(double));
-		memcpy(qu_stats[i].f, InfoMap[r].d, clmns*sizeof(double));
-		for(j=0; j<clmns; j++){
+		memcpy(qu_stats[i].f, InfoMap[r].f, clmns*sizeof(double));
+		/*for(j=0; j<clmns; j++){
 			printf("\tCOLUMN: %d\n",j );
 			printf("\t\t--Info: u:%ld, l:%ld, f:%lf, d:%lf \n",InfoMap[r].u[j], InfoMap[r].l[j],InfoMap[r].f[j], InfoMap[r].d[j]);
 			printf("\t\tStats: u:%ld, l:%ld, f:%lf, d:%lf --\n",qu_stats[i].u[j],qu_stats[i].l[j],qu_stats[i].f[j],qu_stats[i].d[j] );
-		}
+		}*/
 
 	}
+	print_stats( qu_stats, q->num_rels);
 	//arxika elegxw an to query einai valid
 	for(i=0;i<q->num_rels;i++){
 		if(q->rels[i]>num_loadedrels-1){
@@ -715,7 +732,8 @@ interm_node* execute_query(interm_node* interm, joinHistory** joinHist, query* q
 	}
 	curr=q->preds;
 	while(curr!=NULL){ //ektelw ola ta kathgorhmata pou exei to query
-		interm=execute_pred(interm, joinHist, curr, q->rels, q->num_rels, InfoMap);
+		interm=execute_pred(interm, joinHist, curr, q->rels, q->num_rels, InfoMap, &qu_stats);
+
 		if(interm==NULL)break;
 		curr=curr->next;
 	}
@@ -732,6 +750,7 @@ interm_node* execute_query(interm_node* interm, joinHistory** joinHist, query* q
 
 	free_interm( interm); //apodesmevw to intermediate
 	free_joinistory( *joinHist); //apodesmevw to history twn joins
+	free_stats( qu_stats,q->num_rels);
 	return interm;
 }
 
