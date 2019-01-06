@@ -615,7 +615,7 @@ interm_node* execute_pred(interm_node* interm, joinHistory** joinHist,pred* p,in
 		rel_stats=&(rel_stats[indexOfrel]);
 		printf("PRED index %d columns  %d \n",indexOfrel, rel_stats->columns );
 		interm=filter(interm, p->op, infoMap, rel, indexOfrel, col, p->val, num_loadedrels, rel_stats);
-		print_stats( *qu_stats, num_loadedrels);
+		print_stats( rel_stats, num_loadedrels);
 	}
 	else if(p->isSelfjoin){ //prokeitai gia selfjoin
 		int col1,col2,rel,indexOfrel;
@@ -642,8 +642,10 @@ interm_node* execute_pred(interm_node* interm, joinHistory** joinHist,pred* p,in
 
 		indexOfrel=index;
 		//ektelw to selfjoin
-		rel_stats=qu_stats[indexOfrel];
+		rel_stats=&(rel_stats[indexOfrel]);
+		printf("PRED index %d columns  %d \n",indexOfrel, rel_stats->columns );
 		interm=self_join(interm, infoMap, rel, indexOfrel, col1, col2, num_loadedrels, rel_stats);
+		print_stats( rel_stats, num_loadedrels);
 
 	}
 	else{ //prokeitai gia aplo join

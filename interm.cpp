@@ -1,5 +1,6 @@
 #include "interm.h"
 
+
 //apothikevei ton pinaka me ta rowIds twn apotelesmatwn sto intermediate katw apo to relation pou tou antistoixei
 interm_node* store_interm_data(interm_node* interm ,uint64_t* rowIds, int indexOfrel, int numOfrows, int numOfrels){
   int i=indexOfrel;
@@ -218,6 +219,50 @@ void update_eqStats( stats* rel_stats, int col, uint64_t val ,int found){
   }
 }
 
+void update_gsStats(stats* rel_stats, int col, uint64_t k1, uint64_t k2){
+  int i;
+  double fA, new_fA, fC, dC;
+  uint64_t uA, lA;
+
+  fA=rel_stats->f[col];
+  uA=rel_stats->u[col];
+  lA=rel_stats->l[col];
+  rel_stats->l[col]=k1;
+  rel_stats->u[col]=k2;
+
+  if((rel_stats->u[col]-rel_stats->l[col])==0){
+    rel_stats->d[col]=0;
+    rel_stats->f[col]=0;
+    new_fA=0;
+  }
+  else{
+    printf("old da %lf\n",rel_stats->d[col]);
+    rel_stats->d[col]=((k2-k1)/(uA-lA))*rel_stats->d[col];
+    printf("k2-k1= %ld\n", k2-k1);
+    printf("u-l= %ld\n", uA-lA);
+    printf("------------ %ld\n",(k2-k1)/((uA-lA)));
+    //printf("new da %f\n",((k2-k1)/(rel_stats->u[col]-rel_stats->l[col])));
+    printf("old fa %lf\n",rel_stats->f[col]);
+    rel_stats->f[col]=((k2-k1)/((uA-lA)))*rel_stats->f[col];
+    printf("new fa %lf\n",((k2-k1)/((uA-lA)))*rel_stats->f[col]);
+    new_fA=rel_stats->f[col];
+  }
+
+  for(i=0;i<rel_stats->columns;i++){
+    if(i!=col){
+      fC=rel_stats->f[i];
+      dC=rel_stats->d[i];
+      if((fA==0)||(dC==0)){
+        rel_stats->d[i]=0;
+      }
+      else{
+        rel_stats->d[i]=dC*(1-pow((1-new_fA/fA),fC/dC));
+      }
+      rel_stats->f[i]=new_fA;
+    }
+  }
+}
+
 void update_selfJoinStats( stats* rel_stats, int col1, int col2 ){
   int i;
   uint64_t dC, fC, max, min, d ;
@@ -275,7 +320,7 @@ interm_node* filter(interm_node* interm,int oper, infoNode* infoMap, int rel, in
   
   int numOftuples= (int)(infoMap[rel].tuples);  
   
-  uint64_t* ptr;
+  uint64_t* ptr,k1,k2;
   int numOfrows;
   int found=0;
   
@@ -307,6 +352,20 @@ interm_node* filter(interm_node* interm,int oper, infoNode* infoMap, int rel, in
     if(filterRowIds!=NULL){found=1;}
     update_eqStats( rel_stats,col, value,found);
   }
+
+  if((oper==1)||(oper==2)){
+    if(oper==1){
+      k1=value;
+      k2=rel_stats->u[col];
+      printf("k1= %ld, k2= %ld\n",k1, k2);
+    }
+    else{
+      k1=rel_stats->l[col];
+      k2=value;
+      printf("k1= %ld, k2= %ld\n",k1, k2);
+    }
+    update_gsStats(rel_stats, col, k1, k2);
+  } 
 
   if(filterRowIds!=NULL){free(filterRowIds); filterRowIds=NULL;}
   
