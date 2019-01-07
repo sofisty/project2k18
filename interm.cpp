@@ -313,6 +313,90 @@ void update_selfJoinStats( stats* rel_stats, int col1, int col2 ){
 
 }
 
+void update_joinStats(stats* rel1_stats, stats* rel2_stats, int col1, int col2){
+  int i;
+  double fA, new_fA, new_fB, fB, fC, dA, new_dA, dB, new_dB, dC;
+  uint64_t uA, uB, lB, lA, n;
+
+
+
+  uA=rel1_stats->u[col1];
+  uB=rel2_stats->u[col2];
+
+  lA=rel1_stats->l[col1];
+  lB=rel2_stats->l[col2];
+
+  fA=rel1_stats->f[col1];
+  fB=rel2_stats->f[col2];
+
+  dA=rel1_stats->d[col1];
+  dB=rel2_stats->d[col2];
+
+  if(uA>uB) {
+    rel1_stats->u[col1]=uB; 
+    uA=uB;
+  }
+  else {
+    rel2_stats->u[col2]=uA;
+    uB=uA;
+  }
+  if(lA<lB){
+    rel1_stats->l[col1]=lB;
+    lA=lB;
+  }
+  else{
+    rel2_stats->l[col2]=lA;
+    lB=lA;
+  }
+
+  n=uA-lA+1;
+  if(n==0){
+    rel1_stats->f[col1]=0;
+    new_fA=0;
+    rel2_stats->f[col2]=0;
+    new_fB=0;
+    rel1_stats->d[col1]=0;
+    new_dA=0;
+    rel2_stats->d[col2]=0;
+    new_dB=0;
+  } 
+  else{
+    rel1_stats->f[col1]=(fA*fB)/n;
+    new_fA=(fA*fB)/n;
+    rel2_stats->f[col2]=rel1_stats->f[col1];
+    new_fB=(fA*fB)/n;
+    rel1_stats->d[col1]=(dA*dB)/n;
+    new_dA=(dA*dB)/n;
+    rel2_stats->d[col2]=rel1_stats->d[col1];
+    new_dB=(dA*dB)/n;
+  }
+
+ //update columns of relation 1
+  for(i=0;i<rel1_stats->columns;i++){
+    if(i!=col1){
+      fC=rel1_stats->f[i];
+      dC=rel1_stats->d[i];
+      rel1_stats->f[i]=new_fA;
+
+      if(dC==0 || fC==0|| dA==0 ||new_dA==0){ rel1_stats->d[i]=0;}
+      else{ rel1_stats->d[i]= dC * (1 - pow( ( 1 - (new_dA / dA) ), (fC/dC) ) );}
+    }
+  }
+
+//update columns of relation 2
+  for(i=0;i<rel2_stats->columns;i++){
+    if(i!=col2){
+      fC=rel2_stats->f[i];
+      dC=rel2_stats->d[i];
+      rel2_stats->f[i]=new_fA;
+
+      if(dC==0 || fC==0|| dB==0 ||new_dB==0){ rel2_stats->d[i]=0;}
+      else{ rel2_stats->d[i]= dC * (1 - pow( ( 1 - (new_dB / dB) ), (fC/dC) ) );}
+    }
+  }
+
+}
+
 
 //einai h genikh synarthsh pou efarmozei filtro se relation, apofasizontas apo pou prepei
 //na parei ta rowIds tou relation analoga me th katastash tou sto intermediate

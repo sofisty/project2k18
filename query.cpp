@@ -594,6 +594,8 @@ void execute_batch(batch* b, int num_loadedrels, infoNode* infoMap ,int* numquer
 interm_node* execute_pred(interm_node* interm, joinHistory** joinHist,pred* p,int* rels, int num_loadedrels, infoNode* infoMap, stats** qu_stats){
 	int i=0,j=0,index;
 	stats* rel_stats=*qu_stats;
+	stats* rel1_stats=*qu_stats;
+	stats* rel2_stats=*qu_stats;
 
 	if(p->isFilter){ //ean prokeitai gia filtro
 		int col,rel,indexOfrel;
@@ -678,6 +680,12 @@ interm_node* execute_pred(interm_node* interm, joinHistory** joinHist,pred* p,in
 		sscanf(cols2, "%d", &col2);
 
 		//ektelw to join
+		rel1_stats=&(rel1_stats[indexOfrel1]);
+		rel2_stats=&(rel2_stats[indexOfrel2]);
+		printf("Join : %d.%d = %d.%d\n",rel1,col1,rel2,col2);
+		print_stats( rel_stats, num_loadedrels);
+		update_joinStats(rel1_stats, rel2_stats, col1, col2);
+		print_stats( rel_stats, num_loadedrels);
 		interm=join2(interm, infoMap, joinHist, rel1, indexOfrel1, rel2, indexOfrel2, col1, col2, num_loadedrels);
 	}
 	return interm; //epistrefw to intermediate		
