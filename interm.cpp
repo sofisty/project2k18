@@ -203,7 +203,7 @@ void update_eqStats( stats* rel_stats, int col, uint64_t val ,int found){
     rel_stats->d[col]=1;
   }
   else{
-    printf("DIAIRW FA :%lf me dA: %lf\n",fA,dA );
+    //printf("DIAIRW FA :%lf me dA: %lf\n",fA,dA );
     rel_stats->f[col]=fA/dA;
     rel_stats->d[col]=1;
   }
@@ -236,15 +236,15 @@ void update_gsStats(stats* rel_stats, int col, uint64_t k1, uint64_t k2){
     new_fA=0;
   }
   else{
-    printf("old da %lf\n",rel_stats->d[col]);
+   // printf("old da %lf\n",rel_stats->d[col]);
     rel_stats->d[col]=((k2-k1)/(uA-lA))*rel_stats->d[col];
-    printf("k2-k1= %ld\n", k2-k1);
-    printf("u-l= %ld\n", uA-lA);
-    printf("------------ %ld\n",(k2-k1)/((uA-lA)));
+    //printf("k2-k1= %ld\n", k2-k1);
+   // printf("u-l= %ld\n", uA-lA);
+    //printf("------------ %ld\n",(k2-k1)/((uA-lA)));
     //printf("new da %f\n",((k2-k1)/(rel_stats->u[col]-rel_stats->l[col])));
-    printf("old fa %lf\n",rel_stats->f[col]);
-    rel_stats->f[col]=((k2-k1)/((uA-lA)))*rel_stats->f[col];
-    printf("new fa %lf\n",((k2-k1)/((uA-lA)))*rel_stats->f[col]);
+    //printf("old fa %lf\n",rel_stats->f[col]);
+    rel_stats->f[col]=(double)(((double)(k2-k1)/(double)(uA-lA))*rel_stats->f[col]);
+    //printf("new fa %lf\n",rel_stats->f[col]);
     new_fA=rel_stats->f[col];
   }
 
@@ -441,12 +441,12 @@ interm_node* filter(interm_node* interm,int oper, infoNode* infoMap, int rel, in
     if(oper==1){
       k1=value;
       k2=rel_stats->u[col];
-      printf("k1= %ld, k2= %ld\n",k1, k2);
+      //printf("k1= %ld, k2= %ld\n",k1, k2);
     }
     else{
       k1=rel_stats->l[col];
       k2=value;
-      printf("k1= %ld, k2= %ld\n",k1, k2);
+      //printf("k1= %ld, k2= %ld\n",k1, k2);
     }
     update_gsStats(rel_stats, col, k1, k2);
   } 

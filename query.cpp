@@ -615,9 +615,9 @@ interm_node* execute_pred(interm_node* interm, joinHistory** joinHist,pred* p,in
 
 		//ektelw to filtro
 		rel_stats=&(rel_stats[indexOfrel]);
-		printf("PRED index %d columns  %d \n",indexOfrel, rel_stats->columns );
+		//printf("PRED index %d columns  %d \n",indexOfrel, rel_stats->columns );
 		interm=filter(interm, p->op, infoMap, rel, indexOfrel, col, p->val, num_loadedrels, rel_stats);
-		print_stats( rel_stats, num_loadedrels);
+		//print_stats( rel_stats, num_loadedrels);
 	}
 	else if(p->isSelfjoin){ //prokeitai gia selfjoin
 		int col1,col2,rel,indexOfrel;
@@ -645,9 +645,9 @@ interm_node* execute_pred(interm_node* interm, joinHistory** joinHist,pred* p,in
 		indexOfrel=index;
 		//ektelw to selfjoin
 		rel_stats=&(rel_stats[indexOfrel]);
-		printf("PRED index %d columns  %d \n",indexOfrel, rel_stats->columns );
+		//printf("PRED index %d columns  %d \n",indexOfrel, rel_stats->columns );
 		interm=self_join(interm, infoMap, rel, indexOfrel, col1, col2, num_loadedrels, rel_stats);
-		print_stats( rel_stats, num_loadedrels);
+		//print_stats( rel_stats, num_loadedrels);
 
 	}
 	else{ //prokeitai gia aplo join
@@ -682,10 +682,10 @@ interm_node* execute_pred(interm_node* interm, joinHistory** joinHist,pred* p,in
 		//ektelw to join
 		rel1_stats=&(rel1_stats[indexOfrel1]);
 		rel2_stats=&(rel2_stats[indexOfrel2]);
-		printf("Join : %d.%d = %d.%d\n",rel1,col1,rel2,col2);
-		print_stats( rel_stats, num_loadedrels);
+		//printf("Join : %d.%d = %d.%d\n",rel1,col1,rel2,col2);
+		//print_stats( rel_stats, num_loadedrels);
 		update_joinStats(rel1_stats, rel2_stats, col1, col2);
-		print_stats( rel_stats, num_loadedrels);
+		//print_stats( rel_stats, num_loadedrels);
 		interm=join2(interm, infoMap, joinHist, rel1, indexOfrel1, rel2, indexOfrel2, col1, col2, num_loadedrels);
 	}
 	return interm; //epistrefw to intermediate		
@@ -732,7 +732,7 @@ interm_node* execute_query(interm_node* interm, joinHistory** joinHist, query* q
 		}*/
 
 	}
-	print_stats( qu_stats, q->num_rels);
+	//print_stats( qu_stats, q->num_rels);
 	//arxika elegxw an to query einai valid
 	for(i=0;i<q->num_rels;i++){
 		if(q->rels[i]>num_loadedrels-1){

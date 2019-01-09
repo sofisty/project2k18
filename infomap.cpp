@@ -140,7 +140,7 @@ infoNode* create_InfoMap(RelFiles* relList, infoNode* infoMap, int numOffiles){
       distincts=0;
       for(k=0; k<dist_size; k++){ if(dist_hash[k]==1){distincts+=1;} }
       infoMap[i].d[j]=distincts;
-      printf("Rel %d col %d distincts : %ld \n",i,j, distincts );
+      //printf("Rel %d col %d distincts : %ld \n",i,j, distincts );
 
       free(dist_hash);
 

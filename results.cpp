@@ -1,6 +1,6 @@
 #include "results.h"
 #include "jobScheduler.h"
-#define NUM_THREADS 3
+#define NUM_THREADS 4
 #define n 8
 
 #define size (128*1024-1) //arithmos eggrafwn pou xwrane sto ena bucket ths listas 
