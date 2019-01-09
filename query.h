@@ -33,6 +33,14 @@ typedef struct query{
 	
 }query;
 
+typedef struct joinHash{
+	int numOfrels;
+	pred** bucketArr;
+	int* buckCount;
+	int numOfcombs;
+	int* relCombs;
+}joinHash;
+
 typedef struct query_list {
 	char query[500];
 	struct query_list* next; 
@@ -42,6 +50,13 @@ typedef struct batch{
 	query** q_arr;
 	int num_queries;
 }batch;
+
+int factorial(int n);
+int create_comb(int rel1, int rel2);
+int relCombHash(int rel1, int rel2, int numOfrels, int* relCombs, int numOfcombs);
+joinHash* create_joinHash(int numOfrels, pred* head);
+void statusOfJoinHash(joinHash* jh);
+void free_joinHash(joinHash* jh);
 
 query_list* add_quNode(query_list** quHead, query_list* quList, char* buff);
 void free_quList(query_list* quList);
@@ -71,6 +86,7 @@ void proj_sumsAfterCross(long long int* toMul, interm_node* interm, query* q, in
 
 void free_batch(batch* b);
 void free_query(query* q);
+
 
 
 

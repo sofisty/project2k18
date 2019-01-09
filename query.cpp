@@ -1,5 +1,170 @@
 #include "query.h"
 
+int factorial(int n){
+  return (n == 1 || n == 0) ? 1 : factorial(n - 1) * n;
+}
+
+//edw einai oles oi synarthseis gia to hash twn zeugariwn apo relations twn join 
+int create_comb(int rel1, int rel2){
+	int combination=0;
+
+	if(rel1>rel2){
+		combination+=rel1*10;
+		combination+=rel2;
+	}  
+	else{
+		combination+=rel2*10;
+		combination+=rel1;
+	}  
+	//printf("------%d & %d = %d ---------\n",rel1, rel2, combination);
+	return combination;
+
+}
+int relCombHash(int rel1, int rel2, int* relCombs,int numOfcombs){
+	int i,combination;
+	combination=create_comb(rel1,rel2);
+   	
+   	//hashcode= combination & ((1<<numOfrels)-1);
+   	for(i=0;i<numOfcombs;i++){
+   		if(relCombs[i]==combination) return i;
+   	}
+}
+
+joinHash* create_joinHash(int numOfrels, pred* head){
+	int i,j,k,index,rel1,rel2,combination,hash_index;
+	pred* buckStart;
+	pred* curr=head;
+	pred* join,*curr_join;
+	//twra tha vrw apo pou ksekinane ta join tou predicate array , diladi tha prospaerasw join kai selfjoin
+	while(curr!=NULL){
+		if((curr->isFilter)||(curr->isSelfjoin)) curr=curr->next;
+		else break;
+	}
+	if(curr==NULL){
+		fprintf(stderr, "No joins to do here!\n");
+		return NULL;
+	}
+	//ftiaxnw th domh
+	joinHash* jh=(joinHash*)malloc(sizeof(joinHash));
+	if (jh== NULL) {
+	    fprintf(stderr, "Malloc failed \n"); 
+	    exit(-1);
+	}
+	jh->numOfrels=numOfrels;
+	jh->numOfcombs=(factorial(jh->numOfrels)/((factorial(jh->numOfrels-2))*2));//de tha xrisimopoihthoun ola einai apla gia tin arxikopoihsh tou hash
+
+	jh->relCombs=(int*)malloc(jh->numOfcombs*sizeof(int));
+	if (jh->relCombs== NULL) {
+	    fprintf(stderr, "Malloc failed \n"); 
+	    exit(-1);
+	}
+	k=0;
+	for(i=0;i<jh->numOfrels;i++){
+		j=i+1;
+		while(j<jh->numOfrels){
+			int combo=create_comb(i,j);
+			//printf("================================== %d\n",combo);
+			jh->relCombs[k]=create_comb(i,j);
+			j++;
+			k++;
+		}
+	}
+
+	
+	jh->buckCount=(int*)malloc(jh->numOfcombs*sizeof(int));
+	if (jh->buckCount== NULL) {
+	    fprintf(stderr, "Malloc failed \n"); 
+	    exit(-1);
+	}
+	jh->bucketArr=(pred**)malloc(jh->numOfcombs*sizeof(pred*));
+	if (jh->bucketArr== NULL) {
+	    fprintf(stderr, "Malloc failed \n"); 
+	    exit(-1);
+	}
+
+	for(i=0;i<jh->numOfcombs;i++){
+		jh->bucketArr[i]=NULL;
+		jh->buckCount[i]=0;
+	} 
+
+	i=0;
+	int count=0;
+	while(curr!=NULL){
+		i=0;
+		count++;
+		rel1=curr->cols[i]; //krataei to index tou prwtou rel
+		i++;
+		while(curr->cols[i]!=-1){ //opws parapanw krataei to string tou column
+			i++;
+		}
+		i++;
+		rel2=curr->cols[i]; //krataei to index tou deuterou rel
+		hash_index=relCombHash(rel1,rel2,jh->relCombs,jh->numOfcombs);
+		if(jh->bucketArr[hash_index]==NULL){
+			jh->bucketArr[hash_index]=(pred*)malloc(jh->numOfcombs*sizeof(pred));
+			if (jh->bucketArr[hash_index]== NULL) {
+			    fprintf(stderr, "Malloc failed \n"); 
+			    exit(-1);
+			}
+		}
+
+		jh->bucketArr[hash_index][jh->buckCount[hash_index]]=*curr;
+		printf("\n");
+		jh->buckCount[hash_index]++;
+		curr=curr->next;
+	}
+
+	return jh;
+}
+
+void statusOfJoinHash(joinHash* jh){
+	int i,j,k,m,hashcode;
+	for(i=0;i<jh->numOfrels;i++){
+		j=i+1;
+		while(j<jh->numOfrels){
+			printf("--------Combinations %d%d or %d%d :\n",i,j,j,i);
+			printf("--------Joins :\n");
+
+			hashcode=relCombHash(i,j,jh->relCombs,jh->numOfcombs);;
+			pred* curr=jh->bucketArr[hashcode];
+			if(curr==NULL) printf("No joins available for this combination of relations.\n");
+			for(k=0;k<jh->buckCount[hashcode];k++){
+				printf("%d.",curr[k].cols[0]);
+				m=1;
+				while(curr[k].cols[m]!=-1){
+					printf("%d",curr[k].cols[m]);
+					m++;
+				}
+				m++;
+				printf(" "); 
+				printf("= ");
+				printf("%d.",curr[k].cols[m]);
+				m++;
+				while(curr[k].cols[m]!=-1){
+					printf("%d",curr[k].cols[m]);
+					m++;
+				}				
+				printf("\n");
+			}
+			j++;
+		}
+	}
+}
+
+void free_joinHash(joinHash* jh){
+	int numOfrels,i;
+	for(i=0;i<jh->numOfcombs;i++){
+		free(jh->bucketArr[i]);
+	}
+	free(jh->bucketArr);
+	free(jh->buckCount);
+	free(jh->relCombs);
+	free(jh);
+	jh=NULL;
+}
+
+
+
 //metraei ta queries enos batch
 int count_Qnum(FILE* fp,long int* offset){ 
 	int num_queries=0,ch=0;
@@ -740,6 +905,9 @@ interm_node* execute_query(interm_node* interm, joinHistory** joinHist, query* q
 			return NULL;
 		}
 	}
+	joinHash* jh=create_joinHash(q->num_rels, q->preds);
+	statusOfJoinHash(jh);
+
 	curr=q->preds;
 	while(curr!=NULL){ //ektelw ola ta kathgorhmata pou exei to query
 		interm=execute_pred(interm, joinHist, curr, q->rels, q->num_rels, InfoMap, &qu_stats);
@@ -761,6 +929,7 @@ interm_node* execute_query(interm_node* interm, joinHistory** joinHist, query* q
 	free_interm( interm); //apodesmevw to intermediate
 	free_joinistory( *joinHist); //apodesmevw to history twn joins
 	free_stats( qu_stats,q->num_rels);
+	free_joinHash(jh);
 	return interm;
 }
 
