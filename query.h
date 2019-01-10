@@ -7,15 +7,17 @@
 #include <math.h>
 #include <time.h>
 #include <stdint.h>
+#include <iostream>
+#include <cstdlib>
 
 #include "infomap.h"
 #include "interm.h"
 #include "join.h"
-
-
+#include "optim.h"
 
 typedef struct pred{
 	int* cols;// ean exw 0.1=1.22 tote apothikevetai [0,1,-1,1,2,2,-1] to -1 diaxwrizei ta columns
+	int* new_cols;
 	int op; // i sxesh metaksi twn cols h col-val 1--> > , 2--> <, 3--> =
 	uint64_t val; // ean prokeitai gia filtro
 	int isFilter;
@@ -35,11 +37,13 @@ typedef struct query{
 
 typedef struct joinHash{
 	int numOfrels;
-	pred** bucketArr;
+	struct pred** bucketArr;
 	int* buckCount;
 	int numOfcombs;
 	int* relCombs;
 }joinHash;
+
+
 
 typedef struct query_list {
 	char query[500];
@@ -53,7 +57,7 @@ typedef struct batch{
 
 int factorial(int n);
 int create_comb(int rel1, int rel2);
-int relCombHash(int rel1, int rel2, int numOfrels, int* relCombs, int numOfcombs);
+int relCombHash(int rel1, int rel2, int* relCombs, int numOfcombs);
 joinHash* create_joinHash(int numOfrels, pred* head);
 void statusOfJoinHash(joinHash* jh);
 void free_joinHash(joinHash* jh);

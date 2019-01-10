@@ -28,6 +28,7 @@ int relCombHash(int rel1, int rel2, int* relCombs,int numOfcombs){
    	for(i=0;i<numOfcombs;i++){
    		if(relCombs[i]==combination) return i;
    	}
+   	return -1;
 }
 
 joinHash* create_joinHash(int numOfrels, pred* head){
@@ -99,7 +100,7 @@ joinHash* create_joinHash(int numOfrels, pred* head){
 		}
 		i++;
 		rel2=curr->cols[i]; //krataei to index tou deuterou rel
-		hash_index=relCombHash(rel1,rel2,jh->relCombs,jh->numOfcombs);
+		hash_index=relCombHash(rel1,rel2, jh->relCombs,jh->numOfcombs);
 		if(jh->bucketArr[hash_index]==NULL){
 			jh->bucketArr[hash_index]=(pred*)malloc(jh->numOfcombs*sizeof(pred));
 			if (jh->bucketArr[hash_index]== NULL) {
@@ -274,6 +275,7 @@ void free_quList(query_list* quList){
 void store_pred(char* pred_str, pred* p){
 	int i,dots=0, index,rel1,rel2;
 	char *token, *predicate, delim[]="><=";
+	int dec=1;
 	
 	//sthn arxh thwrw oti to sigekrimeno kathgorhma den einai oute filtro oute selfJoin gia na ta allaksw sth poreia
 	p->isFilter=0;
@@ -293,6 +295,11 @@ void store_pred(char* pred_str, pred* p){
 	    fprintf(stderr, "Malloc failed \n"); 
 	    exit(-1);
 	}
+	p->new_cols=(int*)malloc(2*sizeof(int)); 
+	if (p->new_cols== NULL) {
+	    fprintf(stderr, "Malloc failed \n"); 
+	    exit(-1);
+	}
 	//kanw tokenize to kathgorima
 	token= strtok(predicate,delim);  //pairnw to prwto tmhma tou kathgorhmatos pou einai sxedon panta mia sthlh enos relation
 	if(token==NULL){
@@ -305,14 +312,21 @@ void store_pred(char* pred_str, pred* p){
 	if(dots==1){ //exw column, ara apothikevw ta columns tou predicate
 		index=0;
 		rel1=token[0] - '0';
-
+	
+		p->new_cols[0]=0;
 		//apothikevw to column
+		
+
 		for(i=0;i<strlen(token);i++){
 			if(token[i]!='.'){
 				p->cols[index]=token[i] - '0';
+				p->new_cols[0]=  (token[i] - '0');
 				index++;
+				
 			}
 		}
+		
+
 		p->cols[index]=-1; //diaxwrhstiko metaksi twn columns valw panta ena -1
 		index++;
 	}
@@ -337,13 +351,21 @@ void store_pred(char* pred_str, pred* p){
 		if(rel1==rel2) p->isSelfjoin=1;
 
 		//apothikevw to column
+		
+		p->new_cols[1]=0;
+
+		
+
 		for(i=0;i<strlen(token);i++){
 			if(token[i]!='.'){
 				p->cols[index]=token[i] - '0';
 				index++;
+				p->new_cols[1]= (token[i] - '0');
+				
 			}
 		}
 		p->cols[index]=-1; //diaxwrhstiko twn columns einai ena -1
+		
 	}
 	else { //alliws prokeitai gia filtro
 		p->val=(uint64_t)atoi(token);
@@ -907,6 +929,7 @@ interm_node* execute_query(interm_node* interm, joinHistory** joinHist, query* q
 	}
 	joinHash* jh=create_joinHash(q->num_rels, q->preds);
 	statusOfJoinHash(jh);
+	joinEnumeration(q->num_rels, jh, qu_stats);
 
 	curr=q->preds;
 	while(curr!=NULL){ //ektelw ola ta kathgorhmata pou exei to query
