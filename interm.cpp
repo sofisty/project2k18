@@ -185,12 +185,11 @@ void print_stats(stats* qu_stats, int rels){
   }
 }
 
-void update_eqStats( stats* rel_stats, int col, uint64_t val ,int found){
-  uint64_t dC, fC;
-  double dA,fA,new_fA;
+void update_eqStats( stats* rel_stats, int col, uint64_t value ,int found){
+  double dA,fA,new_fA, dC, fC,val;
   int i;
-  rel_stats->l[col]=val;
-  rel_stats->u[col]=val;
+  rel_stats->l[col]=value;
+  rel_stats->u[col]=value;
   dA=rel_stats->d[col];
   fA=rel_stats->f[col];
  
@@ -204,7 +203,7 @@ void update_eqStats( stats* rel_stats, int col, uint64_t val ,int found){
   }
   else{
     //printf("DIAIRW FA :%lf me dA: %lf\n",fA,dA );
-    rel_stats->f[col]=fA/dA;
+    rel_stats->f[col]=(double)(fA/dA);
     rel_stats->d[col]=1;
   }
   new_fA=rel_stats->f[col];
@@ -213,7 +212,11 @@ void update_eqStats( stats* rel_stats, int col, uint64_t val ,int found){
     dC=rel_stats->d[i];
     fC=rel_stats->f[i];
     if(dC==0 || fC==0|| fA==0 ||new_fA==0){ rel_stats->d[i]=0;}
-    else{ rel_stats->d[i]= dC * (1 - pow( ( 1 - (new_fA / fA) ), (fC/dC) ) );}
+    else{ 
+      val=dC *(1 - pow((1-(double)(new_fA/fA)),(double)(fC/dC)));
+      if((new_fA>0)&&((isnan(val))||(val<=1))) rel_stats->d[i]=1;
+      else rel_stats->d[i]= val;
+    }
     rel_stats->f[i]=new_fA;
 
   }
@@ -221,7 +224,7 @@ void update_eqStats( stats* rel_stats, int col, uint64_t val ,int found){
 
 void update_gsStats(stats* rel_stats, int col, uint64_t k1, uint64_t k2){
   int i;
-  double fA, new_fA, fC, dC;
+  double fA, new_fA, fC, dC,val;
   uint64_t uA, lA;
 
   fA=rel_stats->f[col];
@@ -236,16 +239,13 @@ void update_gsStats(stats* rel_stats, int col, uint64_t k1, uint64_t k2){
     new_fA=0;
   }
   else{
-   // printf("old da %lf\n",rel_stats->d[col]);
-    rel_stats->d[col]=((k2-k1)/(uA-lA))*rel_stats->d[col];
-    //printf("k2-k1= %ld\n", k2-k1);
-   // printf("u-l= %ld\n", uA-lA);
-    //printf("------------ %ld\n",(k2-k1)/((uA-lA)));
-    //printf("new da %f\n",((k2-k1)/(rel_stats->u[col]-rel_stats->l[col])));
-    //printf("old fa %lf\n",rel_stats->f[col]);
-    rel_stats->f[col]=(double)(((double)(k2-k1)/(double)(uA-lA))*rel_stats->f[col]);
-    //printf("new fa %lf\n",rel_stats->f[col]);
+    rel_stats->f[col]=(double)((double)(k2-k1)/(double)(uA-lA))*rel_stats->f[col];
     new_fA=rel_stats->f[col];
+    val=((double)((double)(k2-k1)/(double)(uA-lA)))*rel_stats->d[col];
+    if((new_fA>0)&&((isnan(val))||(val<=1))) rel_stats->d[col]=1;
+    else rel_stats->d[col]=val;
+    
+    
   }
 
   for(i=0;i<rel_stats->columns;i++){
@@ -256,7 +256,9 @@ void update_gsStats(stats* rel_stats, int col, uint64_t k1, uint64_t k2){
         rel_stats->d[i]=0;
       }
       else{
-        rel_stats->d[i]=dC*(1-pow((1-new_fA/fA),fC/dC));
+        val=dC*(1-pow((1-(double)(new_fA/fA)),(double)(fC/dC)));
+        if((new_fA>0)&&((isnan(val))||(val<=1))) rel_stats->d[i]=1;
+        else rel_stats->d[i]=val;
       }
       rel_stats->f[i]=new_fA;
     }
@@ -265,8 +267,8 @@ void update_gsStats(stats* rel_stats, int col, uint64_t k1, uint64_t k2){
 
 void update_selfJoinStats( stats* rel_stats, int col1, int col2 ){
   int i;
-  uint64_t dC, fC, max, min, d ;
-  double dA,fA,new_fA;
+  uint64_t max, min, d ;
+  double dA,fA,new_fA,val,dC,fC;
 
   if(rel_stats->u[col1]>rel_stats->u[col2]){ max=rel_stats->u[col1];}
   else{ max=rel_stats->u[col2];}
@@ -287,8 +289,8 @@ void update_selfJoinStats( stats* rel_stats, int col1, int col2 ){
     rel_stats->f[col2]=0;
   }
   else{
-    rel_stats->f[col1]=fA/d;
-    rel_stats->f[col2]=fA/d;
+    rel_stats->f[col1]=(double)(fA/d);
+    rel_stats->f[col2]=(double)(fA/d);
   }
   new_fA= rel_stats->f[col1];
   dA= rel_stats->d[col1];
@@ -298,7 +300,9 @@ void update_selfJoinStats( stats* rel_stats, int col1, int col2 ){
     rel_stats->d[col2]=0;
  }
  else{
-    rel_stats->d[col1]= dA * (1 - pow( ( 1 - (new_fA / fA) ), (fA/dA) ) );
+    val=dA*(1-pow((1-(double)(new_fA/fA)),(double)(fA/dA)));
+    if((new_fA>0)&&((isnan(val)||(val<=1)))) rel_stats->d[col1]=1;
+    else rel_stats->d[col1]= val;
     rel_stats->d[col2]= rel_stats->d[col1];
  }
 
@@ -307,7 +311,11 @@ void update_selfJoinStats( stats* rel_stats, int col1, int col2 ){
   dC=rel_stats->d[i];
   fC=rel_stats->f[i];
   if(dC==0 || fC==0|| fA==0 ||new_fA==0){ rel_stats->d[i]=0;}
-  else{ rel_stats->d[i]= dC * (1 - pow( ( 1 - (new_fA / fA) ), (fC/dC) ) );}
+  else{ 
+    val=dC*(1-pow((1-(double)(new_fA/fA)),(double)(fC/dC)));
+    if((new_fA>0)&&((isnan(val))||(val<=1)))  rel_stats->d[i]=1;
+    else rel_stats->d[i]= val;
+  }
   rel_stats->f[i]=new_fA;
  }
 
@@ -315,10 +323,10 @@ void update_selfJoinStats( stats* rel_stats, int col1, int col2 ){
 
 void update_autocorrStats( stats* rel_stats, int col ){
   int i;
-  uint64_t d;
-  double new_f;
-  d=rel_stats->u[col]-rel_stats->l[col]+1;
-  new_f= (rel_stats->f[col]*rel_stats->f[col])/d ;
+  double new_f,d;
+  d=(double)(rel_stats->u[col]-rel_stats->l[col]+1);
+  if(d==0) new_f=0;
+  else new_f= (rel_stats->f[col]*rel_stats->f[col])/d ;
   
   for(i=0; i<rel_stats->columns; i++){
     rel_stats->f[i]=new_f;
@@ -329,7 +337,7 @@ void update_autocorrStats( stats* rel_stats, int col ){
 
 void update_joinStats(stats* rel1_stats, stats* rel2_stats, int col1, int col2){
   int i;
-  double fA, new_fA, new_fB, fB, fC, dA, new_dA, dB, new_dB, dC;
+  double fA, new_fA, new_fB, fB, fC, dA, new_dA, dB, new_dB, dC,val;
   uint64_t uA, uB, lB, lA, n;
 
 
@@ -375,14 +383,17 @@ void update_joinStats(stats* rel1_stats, stats* rel2_stats, int col1, int col2){
     new_dB=0;
   } 
   else{
-    rel1_stats->f[col1]=(fA*fB)/n;
-    new_fA=(fA*fB)/n;
+    rel1_stats->f[col1]=(double)((fA*fB)/(double)n);
+    new_fA=rel1_stats->f[col1];
     rel2_stats->f[col2]=rel1_stats->f[col1];
-    new_fB=(fA*fB)/n;
-    rel1_stats->d[col1]=(dA*dB)/n;
-    new_dA=(dA*dB)/n;
+    new_fB=rel1_stats->f[col1];
+
+    val=(double)((dA*dB)/(double)n);
+    if((new_fA>0)&&((isnan(val))||(val<=1))) rel1_stats->d[col1]=1;
+    else rel1_stats->d[col1]=val;
+    new_dA=rel1_stats->d[col1];
     rel2_stats->d[col2]=rel1_stats->d[col1];
-    new_dB=(dA*dB)/n;
+    new_dB=rel1_stats->d[col1];
   }
 
  //update columns of relation 1
@@ -393,7 +404,11 @@ void update_joinStats(stats* rel1_stats, stats* rel2_stats, int col1, int col2){
       rel1_stats->f[i]=new_fA;
 
       if(dC==0 || fC==0|| dA==0 ||new_dA==0){ rel1_stats->d[i]=0;}
-      else{ rel1_stats->d[i]= dC * (1 - pow( ( 1 - (new_dA / dA) ), (fC/dC) ) );}
+      else{ 
+        val=dC*(1-pow((1-(double)(new_dA/dA) ),(double)(fC/dC)));
+        if((new_fA>0)&&((isnan(val))||(val<=1))) rel1_stats->d[i]=1;
+        else rel1_stats->d[i]= val;
+      }
     }
   }
 
@@ -405,7 +420,11 @@ void update_joinStats(stats* rel1_stats, stats* rel2_stats, int col1, int col2){
       rel2_stats->f[i]=new_fA;
 
       if(dC==0 || fC==0|| dB==0 ||new_dB==0){ rel2_stats->d[i]=0;}
-      else{ rel2_stats->d[i]= dC * (1 - pow( ( 1 - (new_dB / dB) ), (fC/dC) ) );}
+      else{ 
+        val=dC*(1-pow((1-(double)(new_dB/dB)),(double)(fC/dC)));
+        if((new_fA>0)&&((isnan(val))||(val<=1))) rel2_stats->d[i]=1;
+        else rel2_stats->d[i]=val;
+      }
     }
   }
 
