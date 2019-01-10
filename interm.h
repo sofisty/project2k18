@@ -21,6 +21,7 @@ void print_stats(stats* qu_stats, int rels);
 void update_eqStats( stats* rel_stats, int col, uint64_t val ,int found);
 void update_gsStats(stats** rel_stats, int col, uint64_t k1, uint64_t k2);
 void update_joinStats(stats* rel1_stats, stats* rel2_stats, int col1, int col2);
+void update_autocorrStats( stats* rel_stats, int col );
 interm_node* filter(interm_node* interm,int oper, infoNode* infoMap, int rel, int indexOfrel, int col, uint64_t value, int numOfrels, stats* rel_stats);
 void update_selfJoinStats( stats* rel_stats, int col1, int col2 );
 interm_node* self_join(interm_node* interm, infoNode* infoMap, int rel, int indexOfrel, int col1, int col2, int numOfrels, stats* rel_stats);

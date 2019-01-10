@@ -313,6 +313,20 @@ void update_selfJoinStats( stats* rel_stats, int col1, int col2 ){
 
 }
 
+void update_autocorrStats( stats* rel_stats, int col ){
+  int i;
+  uint64_t d;
+  double new_f;
+  d=rel_stats->u[col]-rel_stats->l[col]+1;
+  new_f= (rel_stats->f[col]*rel_stats->f[col])/d ;
+  
+  for(i=0; i<rel_stats->columns; i++){
+    rel_stats->f[i]=new_f;
+  }
+
+
+}
+
 void update_joinStats(stats* rel1_stats, stats* rel2_stats, int col1, int col2){
   int i;
   double fA, new_fA, new_fB, fB, fC, dA, new_dA, dB, new_dB, dC;

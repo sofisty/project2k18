@@ -3,22 +3,15 @@
 
 #include "query.h"
 
-//den eimai katholou sigourh gia auto
-typedef struct joinTree_node{
-	int degree;
+typedef struct treeNode {
 	int* path;
-	struct joinTree_node* parent;
-	struct joinTree_node* child;
-}joinTree_node;
+	stats* path_stats;
+	double cost;
+	
+} treeNode;
 
-typedef struct joinIndex{
-	int numOfrels;
-	int** posOfJoins; //o nxn pinakas pou krataei se poio bucket vrisketai to join metaksi 2 relations
-	int** relCombs;	//oi n ana k pithanes diades metaksi twn relations
-	pred** joinBuckets; //array apo buckets 
-	int* done; //simatodotis done gia kathe bucket
-}joinIndex;
+int* joinEnumeration(int numOfrels, struct joinHash*  jh, stats* qu_stats);
+stats* copy_stats(stats* qu_stats, int numOfrels);
+double createJoinTRee(treeNode joinTree, treeNode* newTree , int rel1, int rel2,joinHash* jh, int k, int numOfrels );
 
-int factorial(int n);
-int* joinEnumeration(joinIndex* index, joinTree_node* root);
-
+#endif
