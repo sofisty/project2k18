@@ -1,5 +1,6 @@
 #include "query.h"
 
+/*
 int factorial(int n){
   return (n == 1 || n == 0) ? 1 : factorial(n - 1) * n;
 }
@@ -163,7 +164,7 @@ void free_joinHash(joinHash* jh){
 	free(jh);
 	jh=NULL;
 }
-
+*/
 
 
 //metraei ta queries enos batch
@@ -275,11 +276,11 @@ void free_quList(query_list* quList){
 void store_pred(char* pred_str, pred* p){
 	int i,dots=0, index,rel1,rel2;
 	char *token, *predicate, delim[]="><=";
-	int dec=1;
 	
 	//sthn arxh thwrw oti to sigekrimeno kathgorhma den einai oute filtro oute selfJoin gia na ta allaksw sth poreia
 	p->isFilter=0;
 	p->isSelfjoin=0;
+	p->priority=0;
 
 	//antigrafw to dothen string tou kathgorhmatos se ena allo gia na min berdeftei h strtok
 	predicate=(char*)malloc(((strlen(pred_str))+1)*sizeof(char));
@@ -290,16 +291,7 @@ void store_pred(char* pred_str, pred* p){
 	strcpy(predicate, pred_str);
 
 	//desmevw xwro gia ta columns estw oti to pred einai 1.22=3.2 tote exw strlen-2 ,diladi afairw ta dots .ta cols diaxwrizontai me -1
-	p->cols=(int*)malloc((strlen(predicate)-1)*sizeof(int)); //enw ta dots einai 2 ,  iparxei kai -1 pou apothikevetai sto telos opote desmevw strlen-1 
-	if (p->cols== NULL) {
-	    fprintf(stderr, "Malloc failed \n"); 
-	    exit(-1);
-	}
-	p->new_cols=(int*)malloc(2*sizeof(int)); 
-	if (p->new_cols== NULL) {
-	    fprintf(stderr, "Malloc failed \n"); 
-	    exit(-1);
-	}
+	
 	//kanw tokenize to kathgorima
 	token= strtok(predicate,delim);  //pairnw to prwto tmhma tou kathgorhmatos pou einai sxedon panta mia sthlh enos relation
 	if(token==NULL){
@@ -310,25 +302,9 @@ void store_pred(char* pred_str, pred* p){
 		if(token[i]=='.') dots++;
 	}
 	if(dots==1){ //exw column, ara apothikevw ta columns tou predicate
-		index=0;
-		rel1=token[0] - '0';
-	
-		p->new_cols[0]=0;
-		//apothikevw to column
-		
-
-		for(i=0;i<strlen(token);i++){
-			if(token[i]!='.'){
-				p->cols[index]=token[i] - '0';
-				p->new_cols[0]=  (token[i] - '0');
-				index++;
-				
-			}
-		}
-		
-
-		p->cols[index]=-1; //diaxwrhstiko metaksi twn columns valw panta ena -1
-		index++;
+		rel1=token[0] - '0';	
+		p->rels[0]=rel1;
+		p->cols[0]=token[2] - '0';
 	}
 	else { //ean den exw dots einai value, ara an einai anapoda grammeno to fitro diladi exw px 300>2.1. 
 		p->val=(uint64_t)atoi(token); //apothikevw to value
@@ -346,26 +322,13 @@ void store_pred(char* pred_str, pred* p){
 		if(token[i]=='.') dots++;
 	}
 	if(dots==1){ //ean exw ena dot paei na pei pws einai column
-		rel2=token[0] - '0';
+		rel2=token[0] - '0';	
 		//twra tha elegksw an to kathgorima einai selfjoin
 		if(rel1==rel2) p->isSelfjoin=1;
 
-		//apothikevw to column
-		
-		p->new_cols[1]=0;
-
-		
-
-		for(i=0;i<strlen(token);i++){
-			if(token[i]!='.'){
-				p->cols[index]=token[i] - '0';
-				index++;
-				p->new_cols[1]= (token[i] - '0');
+		p->rels[1]=rel2;
+		p->cols[1]=token[2] - '0';
 				
-			}
-		}
-		p->cols[index]=-1; //diaxwrhstiko twn columns einai ena -1
-		
 	}
 	else { //alliws prokeitai gia filtro
 		p->val=(uint64_t)atoi(token);
@@ -471,6 +434,28 @@ void reorder_preds(query* q){
 	q->preds=head; //dinw sthn lista tou query thn arxh ths listas pou exw anadiorganwsei
 }
 
+//synarthsh pou anadiorganwnei ta joins me vasi tin proteraiothta ekteleshs (less cost->bigger priority) 
+void reorder_priority(pred* joinHead){
+	pred* head=joinHead;
+	pred* curr=head;
+	pred* prev,*temp, *max;
+	max=curr;
+	prev=curr;
+	while(curr!=NULL){
+		if((curr->priority>max->priority)&&(curr!=head)){
+			prev->next=curr->next;
+			temp=head;
+			head=curr;
+			max=head;
+			head->next=temp;
+		}
+		prev=curr;
+		curr=curr->next;
+	}
+
+	joinHead=head;
+}
+
 //ektypwnei eola ta dedomena pou einai apothikevmena se mia domh query
 void print_query(query q){ 
 	int i,j;
@@ -481,26 +466,15 @@ void print_query(query q){
 	printf("The following predicates must be implemented: \n");
 	pred* curr=q.preds;
 	while(curr!=NULL){
-		printf("%d.",curr->cols[0]);
-		i=1;
-		while(curr->cols[i]!=-1){
-			printf("%d",curr->cols[i]);
-			i++;
-		}
-		i++;
+		printf("%d.%d",curr->rels[0],curr->cols[0]);
+	
 		printf(" "); 
 		if(curr->op==1) printf("> ");
 		else if(curr->op==2) printf("< ");
 		else printf("= ");
 		if (curr->isFilter) printf("%ld", curr->val);
-		else {
-			printf("%d.",curr->cols[i]);
-			i++;
-			while(curr->cols[i]!=-1){
-				printf("%d",curr->cols[i]);
-				i++;
-			}
-		}
+		else printf("%d.%d",curr->rels[1], curr->cols[1]);
+
 		printf("\n");
 		curr=curr->next;
 	}
@@ -786,93 +760,41 @@ interm_node* execute_pred(interm_node* interm, joinHistory** joinHist,pred* p,in
 
 	if(p->isFilter){ //ean prokeitai gia filtro
 		int col,rel,indexOfrel;
-		char cols[3]; //thewrw ori den exei parapanw apo 999 columns
-		index=p->cols[i]; //krataei to index tou relation
-		rel=rels[index]; //krataei to pragmatiko relation
-		i++;
-		while(p->cols[i]!=-1){ //krataei to column ws string, giati stin periptwsh pou den einai monopsifios den borei na apothikeftei alliws
-			cols[j]=p->cols[i] +'0';
-			j++;
-			i++;
-		}
-		cols[j]='\0'; //termatizei to string column
-		sscanf(cols, "%d", &col); //metatrepei to string tou column se integer
-
-		indexOfrel=index;
+		
+		indexOfrel=p->rels[0];
+		rel=rels[indexOfrel]; //krataei to pragmatiko relation
+		col=p->cols[0];
 
 		//ektelw to filtro
 		rel_stats=&(rel_stats[indexOfrel]);
-		//printf("PRED index %d columns  %d \n",indexOfrel, rel_stats->columns );
 		interm=filter(interm, p->op, infoMap, rel, indexOfrel, col, p->val, num_loadedrels, rel_stats);
-		//print_stats( rel_stats, num_loadedrels);
 	}
 	else if(p->isSelfjoin){ //prokeitai gia selfjoin
 		int col1,col2,rel,indexOfrel;
-		char cols[3]; //thewrw oti den exei parapawn apo 999 columns
-		index=p->cols[i]; //krataei to index tou relation
-		rel=rels[index]; //krataei to pragmatiko relation
-		i++;
-		while(p->cols[i]!=-1){ //krataei se string to column, se periptwsh pou den einai monopsifio den ginetai alliws
-			cols[j]=p->cols[i] +'0';
-			j++;
-			i++;
-		}
-		cols[j]='\0'; //termatizei to string tou column
-		sscanf(cols, "%d", &col1); //metatrepei to column se integer
-		i+=2;//afou einai to idio relation prospernaw kai to deutero relation
-		j=0;
-		while(p->cols[i]!=-1){ //krataei se string to column, se periptwsh pou den einai monopsifio den ginetai alliws
-			cols[j]=p->cols[i] +'0';
-			j++;
-			i++;
-		}
-		cols[j]='\0'; //termatizei to string tou column 
-		sscanf(cols, "%d", &col2); //to metatrepei se integer
 
-		indexOfrel=index;
+		indexOfrel=p->rels[0];
+		rel=rels[indexOfrel]; //krataei to pragmatiko relation
+		col1=p->cols[0];
+		col2=p->cols[1];
 		//ektelw to selfjoin
 		rel_stats=&(rel_stats[indexOfrel]);
-		//printf("PRED index %d columns  %d \n",indexOfrel, rel_stats->columns );
 		interm=self_join(interm, infoMap, rel, indexOfrel, col1, col2, num_loadedrels, rel_stats);
-		//print_stats( rel_stats, num_loadedrels);
 
 	}
 	else{ //prokeitai gia aplo join
 		int col1,col2,rel1,rel2,indexOfrel1,indexOfrel2;
-		char cols1[3],cols2[3]; //den pistevw na exei parapanw apo 999 sthles
-		index=p->cols[i]; //krataei to index tou prwtou rel
-		rel1=rels[index]; //krataei to pragmatiko prwto rel
-		indexOfrel1=index;
-		i++;
-		while(p->cols[i]!=-1){ //opws parapanw krataei to string tou column
-			cols1[j]=p->cols[i] +'0';
-			j++;
-			i++;
-		}
-		cols1[j]='\0'; //termatizei to string
-		sscanf(cols1, "%d", &col1); //to metatrepei se integer
-		i++;
-		j=0;
-		index=p->cols[i]; //krataei to index tou deuterou rel
-		rel2=rels[index]; //krataei to deutero rel
-		indexOfrel2=index;
 
-		i++;
-		while(p->cols[i]!=-1){ //apothikevei to column
-			cols2[j]=p->cols[i] +'0';
-			j++;
-			i++;
-		}
-		cols2[j]='\0';
-		sscanf(cols2, "%d", &col2);
+		indexOfrel1=p->rels[0]; //krataei to index tou prwtou rel
+		rel1=rels[indexOfrel1]; //krataei to pragmatiko prwto rel
+		indexOfrel2=p->rels[1];
+		rel2=rels[indexOfrel2];
+		col1=p->cols[0];
+		col2=p->cols[1];	
 
 		//ektelw to join
-		rel1_stats=&(rel1_stats[indexOfrel1]);
-		rel2_stats=&(rel2_stats[indexOfrel2]);
-		//printf("Join : %d.%d = %d.%d\n",rel1,col1,rel2,col2);
-		//print_stats( rel_stats, num_loadedrels);
-		update_joinStats(rel1_stats, rel2_stats, col1, col2);
-		//print_stats( rel_stats, num_loadedrels);
+		//rel1_stats=&(rel1_stats[indexOfrel1]);
+		//rel2_stats=&(rel2_stats[indexOfrel2]);
+		//update_joinStats(rel1_stats, rel2_stats, col1, col2);
 		interm=join2(interm, infoMap, joinHist, rel1, indexOfrel1, rel2, indexOfrel2, col1, col2, num_loadedrels);
 	}
 	return interm; //epistrefw to intermediate		
@@ -892,7 +814,7 @@ void free_stats(stats* qu_stats, int numOfrels){
 //ektelei ena query tou batch
 interm_node* execute_query(interm_node* interm, joinHistory** joinHist, query* q, infoNode* InfoMap, int num_loadedrels){
 	int i,j,r,clmns;
-	pred* curr;
+	pred* curr, *temp;
 	long long int* crossArr=NULL;
 	stats* qu_stats=(stats*)malloc(num_loadedrels* sizeof(stats));
 	for(i=0; i<q->num_rels; i++){
@@ -927,16 +849,25 @@ interm_node* execute_query(interm_node* interm, joinHistory** joinHist, query* q
 			return NULL;
 		}
 	}
-	joinHash* jh=create_joinHash(q->num_rels, q->preds);
-	statusOfJoinHash(jh);
-	joinEnumeration(q->num_rels, jh, qu_stats);
 
 	curr=q->preds;
-	while(curr!=NULL){ //ektelw ola ta kathgorhmata pou exei to query
+	while((curr!=NULL)&&((curr->isSelfjoin)||(curr->isFilter))){ //ektelw ola ta kathgorhmata pou exei to query
 		interm=execute_pred(interm, joinHist, curr, q->rels, q->num_rels, InfoMap, &qu_stats);
 
 		if(interm==NULL)break;
+		temp=curr;
 		curr=curr->next;
+		free(temp);
+	}
+	if(curr!=NULL){
+		q->preds=curr;
+		reorder_priority(q->preds);
+		while(curr!=NULL){
+			interm=execute_pred(interm, joinHist, curr, q->rels, q->num_rels, InfoMap, &qu_stats);
+
+			if(interm==NULL)break;
+			curr=curr->next;
+		}
 	}
 
 	//Kalw thn cross_nodes h opoia epistrefei null ean den xreiazetai na ginei cross metaksi twn relations pou iparxoun sto intermediate
@@ -952,7 +883,6 @@ interm_node* execute_query(interm_node* interm, joinHistory** joinHist, query* q
 	free_interm( interm); //apodesmevw to intermediate
 	free_joinistory( *joinHist); //apodesmevw to history twn joins
 	free_stats( qu_stats,q->num_rels);
-	free_joinHash(jh);
 	return interm;
 }
 
@@ -977,7 +907,6 @@ void free_query(query* q){
 	while((currp!=NULL)){
 		temp=currp;
 		currp=currp->next;
-		free(temp->cols);
 		free(temp);
 		temp=NULL;
 	}

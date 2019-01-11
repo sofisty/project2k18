@@ -16,12 +16,13 @@
 #include "optim.h"
 
 typedef struct pred{
-	int* cols;// ean exw 0.1=1.22 tote apothikevetai [0,1,-1,1,2,2,-1] to -1 diaxwrizei ta columns
-	int* new_cols;
+	int rels[2];//ean exw 0.1=1.22 tote apothikevetai [0,1] 
+	int cols[2];// ean exw 0.1=1.22 tote apothikevetai [1,2]
 	int op; // i sxesh metaksi twn cols h col-val 1--> > , 2--> <, 3--> =
 	uint64_t val; // ean prokeitai gia filtro
 	int isFilter;
 	int isSelfjoin;
+	int priority;
 	struct pred* next;
 }pred;
 
@@ -35,6 +36,7 @@ typedef struct query{
 	
 }query;
 
+/*
 typedef struct joinHash{
 	int numOfrels;
 	struct pred** bucketArr;
@@ -43,7 +45,7 @@ typedef struct joinHash{
 	int* relCombs;
 }joinHash;
 
-
+*/
 
 typedef struct query_list {
 	char query[500];
@@ -55,12 +57,13 @@ typedef struct batch{
 	int num_queries;
 }batch;
 
+/*
 int factorial(int n);
 int create_comb(int rel1, int rel2);
 int relCombHash(int rel1, int rel2, int* relCombs, int numOfcombs);
 joinHash* create_joinHash(int numOfrels, pred* head);
 void statusOfJoinHash(joinHash* jh);
-void free_joinHash(joinHash* jh);
+void free_joinHash(joinHash* jh);*/
 
 query_list* add_quNode(query_list** quHead, query_list* quList, char* buff);
 void free_quList(query_list* quList);

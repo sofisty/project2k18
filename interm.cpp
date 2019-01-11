@@ -168,7 +168,8 @@ interm_node* self_join(interm_node* interm, infoNode* infoMap, int rel, int inde
   //enimerwnw to intermediate me ta kainourgia oina apotelesmata
   interm=update_interm( interm, sjoinRowIds,  indexOfrel,  numOfrows,numOfrels);  
 
-  //update_selfJoinStats( rel_stats,  col1,  col2 );
+  if(col1!=col2) update_selfJoinStats( rel_stats,  col1,  col2 );
+  else update_autocorrStats(rel_stats, col1);
   
   if(sjoinRowIds!=NULL){free(sjoinRowIds); sjoinRowIds=NULL;}
   return interm; //epistrefw to intermediate enimerwmeno me ti trexousa katastash
