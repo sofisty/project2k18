@@ -10,7 +10,7 @@ stats* copy_stats(stats* qu_stats, int numOfrels){
 	for(i=0; i<numOfrels; i++){
 		clmns=qu_stats[i].columns;
 		new_stats[i].columns=clmns;
-		//printf("REl %d, i: %d with columns %d \n",r,i,clmns );
+		//printf("REl %d, i: %d with columns %d \n",i,i,clmns );
 
 		new_stats[i].u=(uint64_t*)malloc(clmns* sizeof(uint64_t));
 		memcpy(	new_stats[i].u,qu_stats[i].u, clmns*sizeof(uint64_t));
@@ -29,99 +29,150 @@ stats* copy_stats(stats* qu_stats, int numOfrels){
 }
 
 
-double createJoinTRee(treeNode currTree, treeNode* newTree, int rel1, int rel2,joinHash* jh, int k , int numOfrels){
-	int i, col1, col2;
-	double cost=0;
 
-	newTree->path_stats= copy_stats(currTree.path_stats, numOfrels);
+int joinEnumeration(int numOfrels, pred** predl, stats* qu_stats){
+	pred* curr_pred =*predl, *best_pred;
+	int i =0,j=0,height ,rel1, rel2, col1, col2, best_rel1, best_rel2, best_rnew ,numOfpreds, prior=1, hash_code;
+	int* s, *hash_checked;
+	double cost=0, bestCost=0;
+	stats* temp=NULL, *bestOfH=NULL, *best_stats=NULL, *start_stats=NULL;
+	s=(int*)malloc(numOfrels* sizeof(int));
+	if(s==NULL){fprintf(stderr, "Malloc failed\n"); exit(1);}
+	hash_checked=(int*)malloc(numOfrels* sizeof(int));
+	if(hash_checked==NULL){fprintf(stderr, "Malloc failed\n"); exit(1);}
 
-	printf("buck count %d \n", jh->buckCount[k]);
-	for(i=0; i<jh->buckCount[k]; i++){
-		col1=jh->bucketArr[k][i].new_cols[0];
-		col2=jh->bucketArr[k][i].new_cols[1];
-		printf("REL1 %d  COL1 %d  & REL2 %d  COL2 %d and k %d\n",rel1, col1, rel2, col2,k );
+	numOfpreds=0;
+	while(curr_pred!=NULL){
+		rel1=curr_pred->rels[0];
+		rel2=curr_pred->rels[1];
+		col1=curr_pred->cols[0];
+		col2=curr_pred->cols[1];
 
-		printf("-----\tcost before rel1 : %lf rel2: %lf \n", newTree->path_stats[rel1].f[col1] ,newTree->path_stats[rel1].f[col1] );
-		update_joinStats( &(newTree->path_stats[rel1]),&(newTree->path_stats[rel1]),col1, col2);
-		printf("\tcost after rel1 : %lf rel2: %lf ------- \n", newTree->path_stats[rel1].f[col1] ,newTree->path_stats[rel1].f[col1] );
+		temp=copy_stats(qu_stats, numOfrels);
+		update_joinStats(&temp[rel1], &temp[rel2],col1 ,col2);
+		cost= temp[rel1].f[col1];
 
-	}
-	cost= newTree->path_stats[rel1].f[col1];
-
-	return cost;
-}
-
-
-int* joinEnumeration(int numOfrels, joinHash* jh, stats* qu_stats){
-	int pos, posS,posJ;
-	int i, j, k, s,size=1 << numOfrels;
-	int checked=0;
-	//printf("SIZE IS %d and numOfrels %d \n",size,numOfrels );
-	int best=0, curr=0;
-	treeNode* joinTree=(treeNode*)malloc(size  *sizeof(treeNode));
-	if (joinTree==NULL) {fprintf(stderr, "Malloc failed \n"); exit(-1);}
-	
-	for(i=0;i<size;i++){
-		joinTree[i].path=(int*)malloc(numOfrels* sizeof(int));
-		if (joinTree[i].path==NULL) {fprintf(stderr, "Malloc failed \n"); exit(-1);}
-		memset(joinTree[i].path, 0, numOfrels* sizeof(int));
-	}
-
-	for(i=0; i<numOfrels; i++){		
-		pos= 1 << i;
-		//printf(" pos %d  and %d \n",pos, i );
-		joinTree[pos].path[0]=i;
-		joinTree[pos].path_stats=copy_stats(qu_stats, numOfrels);
-		//print_stats(joinTree[pos].path_stats, numOfrels);
-	}
-	
-	k=0;
-	for(i=1; i<numOfrels; i++){
-			
-		for(s=0; s<numOfrels; s++ ){
-			if(i==1)curr = 1 << s ;
-			pos=curr;
-			printf("________S %d \n",s );	
-			
-			for(j=0; j<numOfrels; j++){
-				printf("________J %d \n",j );	
-
-				if(best & 1 << j ){ continue;}
-				k= relCombHash(s, j, jh->relCombs, jh->numOfcombs);
-				if(k==-1)continue;
-				if(jh->bucketArr[k]==NULL){ printf("x %d \n",k );continue;}
-				
-				posJ=1 << j;
-				
-				curr=curr | posJ;
-				//printf("POS: %d me relS %d kai relJ %d\n",pos, s,j );
-				memcpy(joinTree[curr].path, joinTree[pos].path, i * sizeof(int)) ;
-				
-
-				joinTree[curr].path[i]=j;
-		
-				joinTree[curr].cost=createJoinTRee(	joinTree[pos], &joinTree[curr] ,s, j, jh,k, numOfrels);
-				if(best==0 || joinTree[best].cost>joinTree[curr].cost){
-					best=curr;
-					
-				}			
-				
+		//printf("Join %d=%d curr_cost %lf , best_cost %lf\n",rel1, rel2,cost,bestCost );
+		if(best_stats==NULL || bestCost>cost){
+			bestCost=cost;
+			//printf("\t new Best %lf\n",bestCost );
+			if(best_stats !=NULL){ 
+				free_stats( best_stats, numOfrels);
+				best_stats=copy_stats(temp, numOfrels);
 			}
+			else{
+				best_stats=copy_stats(temp, numOfrels);
+			}
+			best_pred=curr_pred;
 
-			curr=best;
+			best_rel1=rel1;
+			best_rel2=rel2;
+		}
+		free_stats(temp, numOfrels);
+		curr_pred=curr_pred->next;
+		numOfpreds++;
+	}
+	s[0]=best_rel1;
+	hash_checked[0]=0;
+	s[1]=best_rel2;
+	hash_checked[1]=1 << best_rel1;
+	height =2;
+	best_pred->priority=prior;
+	hash_code=1 << best_rel1 | 1 <<best_rel2;
+
+
+	//printf("-------------END OF INITIALIZATION-------------\n");
+	//printf("PREDS %d\n",numOfpreds );
+	//printf("BEST COST %lf\n",bestCost );
+	//printf("HASH CODE %d\n",hash_code );
+	//printf("RELATIONS: %d CHECKED %d + %d CHECKED %d\n",s[0],hash_checked[0], s[1],hash_checked[1] );
+
+	bestOfH=copy_stats(best_stats, numOfrels);
+	for(i=0; i<numOfpreds-1; i++){
+		free_stats(best_stats, numOfrels); //arxikopoiountai ta kainourgia kalutera
+		best_stats=NULL;
+		bestCost=0;
+		
+		start_stats=bestOfH;
+		for(j=0; j<height; j++){
+			curr_pred =*predl;
+			while(curr_pred!=NULL){
+				rel1=curr_pred->rels[0] ;
+				rel2=curr_pred->rels[1] ;
+				col1=curr_pred->cols[0];
+				col2=curr_pred->cols[1];
+
+				if( (s[j]==rel1 || s[j]==rel2) && curr_pred->priority==0){
+					//printf("--MPHKA GIA s[j] %d kai rel1 %d rel2 %d\n",s[j],rel1,rel2 );
+					if(s[j]==rel1){
+						if( hash_checked[j] & (1 << rel2)){
+							//printf("EXIT gia checked %d me rel2 %d\n", hash_checked[j], rel2);
+							curr_pred=curr_pred->next;
+							continue;
+						}
+					}
+					if(s[j]==rel2){
+						if( hash_checked[j] & (1 << rel1 )){
+							//printf("EXIT gia checked %d me rel1 %d\n", hash_checked[j], rel1);
+							curr_pred=curr_pred->next;
+							continue;
+						}
+					}
+					
+					temp=copy_stats(start_stats, numOfrels);
+					update_joinStats(&temp[rel1], &temp[rel2],col1 ,col2);
+					cost= temp[rel1].f[col1];
+
+					//printf("Join %d=%d curr_cost %lf , best_cost %lf\n",rel1, rel2,cost,bestCost );
+					if(best_stats==NULL || bestCost>cost){
+						bestCost=cost;
+						//printf("\t new Best %lf\n",bestCost );
+						if(best_stats !=NULL){ 
+							free_stats( best_stats, numOfrels);
+							best_stats=copy_stats(temp, numOfrels);
+						}
+						else{
+							best_stats=copy_stats(temp, numOfrels);
+						}
+						best_pred=curr_pred;
+						if(s[j]==rel1){best_rnew=rel2; }
+						else{ best_rnew=rel1;}
+						//printf("best r new %d \n",best_rnew );
+					}
+					free_stats(temp, numOfrels);
+					
+
+				}
+				//else{printf("den vrhka allo query hash_code %d\n", hash_code);}
+				curr_pred=curr_pred->next;
+
+			}
 			
-			printf("BEST TREE UNTIL NOW WITH HIGHT: %d STORED POS: %d \n",i, best);
-			for(int g=0; g<i; g++){printf("~ %d ",joinTree[best].path[g]);}
-			printf("\n");
+		}
+
+		//if(best_stats==NULL){printf("EIIIIIIIIIIIINAIIIIIIIIIIIII NUUUUUUUUUULL\n");}
+		//else{printf("kompleeeeee\n");}
+		if(bestOfH!=NULL)free_stats(bestOfH, numOfrels);
+		bestOfH=copy_stats(best_stats, numOfrels);
+		if( !( hash_code & (1 << best_rnew) ) ){ //an to rnew den uparxei sto s 
+			s[height]=best_rnew;
+			hash_checked[height]= hash_checked[height - 1 ] | ( 1 << s[height-1] ) ; //krataei ton prohgoumeno hash code kai to s prin to rnew
+			height+=1;
+			hash_code= hash_code | 1 << best_rnew ; //to monopati mexri twra 
+			//printf("NEW HASH CODE %d\n",hash_code );
 
 		}
-		curr=best;
-		
-		
+		prior+=1;
+		best_pred->priority=prior; 
+
+
+
 	}
 
-	exit(0);
-	return NULL;	
+
+	
+
+	return 0;	
 }
 
 /*
