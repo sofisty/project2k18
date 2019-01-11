@@ -32,6 +32,7 @@ typedef struct arguments{
 	class JobScheduler* sch;
 }arguments;
 
+
 typedef struct jqueue_node{
 	class Job* job;
 	struct jqueue_node* next;

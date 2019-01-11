@@ -141,7 +141,6 @@ int joinEnumeration(int numOfrels, pred** predl, stats* qu_stats){
 					}
 					free_stats(temp, numOfrels);
 					
-
 				}
 				//else{printf("den vrhka allo query hash_code %d\n", hash_code);}
 				curr_pred=curr_pred->next;
@@ -149,8 +148,6 @@ int joinEnumeration(int numOfrels, pred** predl, stats* qu_stats){
 			}
 			
 		}
-
-		//if(best_stats==NULL){printf("EIIIIIIIIIIIINAIIIIIIIIIIIII NUUUUUUUUUULL\n");}
 		//else{printf("kompleeeeee\n");}
 		if(bestOfH!=NULL)free_stats(bestOfH, numOfrels);
 		bestOfH=copy_stats(best_stats, numOfrels);
@@ -165,13 +162,11 @@ int joinEnumeration(int numOfrels, pred** predl, stats* qu_stats){
 		prior+=1;
 		best_pred->priority=prior; 
 
-
-
 	}
-
-
-	
-
+	if(best_stats!=NULL){free_stats(best_stats, numOfrels);}
+	if(bestOfH!=NULL){free_stats(bestOfH, numOfrels);}
+	free(s);
+	free(hash_checked);
 	return 0;	
 }
 

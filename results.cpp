@@ -504,8 +504,6 @@ result* RadixHashJoin(relation *R, relation *S){
 
 	
 	jsch->barrier(jsch,legit_jobs);
-	
-
 	jsch->finishJobs(jsch);	
 
 	
@@ -514,13 +512,18 @@ result* RadixHashJoin(relation *R, relation *S){
 
  
 	//free(S_head);
+	delete[] args;
+	delete[] arrR;
+	delete[] arrS;
+	delete[] arrJ;
  	delete[] hist_list;	
 	delete[] hist_job;
- 	free(phead);
- 
- 	free(S_phead);
- 	
+	delete[] R_hist;
+	delete[] S_hist;
 
+	//delete[] resultList_arr;
+ 	free(phead);
+ 	free(S_phead);
  	free(R_new->tuples);
     
     free(S_new->tuples);
