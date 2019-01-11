@@ -82,8 +82,7 @@ infoNode* create_InfoMap(RelFiles* relList, infoNode* infoMap, int numOffiles){
         return NULL;
     }
 
-    // oi 2 prwtoi uint64 einai oi sthles kai o arithmos twn tuples 
-    //printf("%ld\n",*(uint64_t*) addr );
+    // oi 2 prwtoi uint64 einai oi sthles kai o arithmos twn tuples
     numOftuples=*(uint64_t*)addr;
     addr+=sizeof(uint64_t);
     numOfcol=*(uint64_t*)addr;
@@ -116,7 +115,8 @@ infoNode* create_InfoMap(RelFiles* relList, infoNode* infoMap, int numOffiles){
       ptr=(uint64_t*)infoMap[i].addr[j];
       max=*(ptr);
       min=*(ptr);
-      for(k=0; k<numOftuples; k++){
+
+      for(k=0; k<(int)numOftuples; k++){
         if( *(ptr)>max ){max=*(ptr);}
         if( *(ptr)<min){min=*(ptr);}
         ptr++;
@@ -126,11 +126,12 @@ infoNode* create_InfoMap(RelFiles* relList, infoNode* infoMap, int numOffiles){
       
       if(max>MAX){ dist_size=MAX;}
       else{dist_size=max; }
+
       dist_hash=(char*)malloc(dist_size*sizeof(char));
       memset(dist_hash, 0, dist_size);
-      //for(int g=0; g<dist_size ; g++){if(dist_hash[g]!=0){printf("WHAAAAAAAAAT\n"); exit(0);} }
+
       ptr=(uint64_t*)infoMap[i].addr[j];
-      for(k=0; k<numOftuples; k++){
+      for(k=0; k<(int)numOftuples; k++){
         if(max>MAX){pos=*(ptr)-min ; }
         else{pos= (*(ptr)-min) % MAX ;}
         dist_hash[pos]=1;
@@ -138,15 +139,10 @@ infoNode* create_InfoMap(RelFiles* relList, infoNode* infoMap, int numOffiles){
       }
 
       distincts=0;
-      for(k=0; k<dist_size; k++){ if(dist_hash[k]==1){distincts+=1;} }
+      for(k=0; k<(int)dist_size; k++){ if(dist_hash[k]==1){distincts+=1;} }
       infoMap[i].d[j]=distincts;
-      //printf("Rel %d col %d distincts : %ld \n",i,j, distincts );
 
       free(dist_hash);
-
-      //uint64_t* temp=(uint64_t*)(infoMap[i].addr[j]);
-      //printf("First of col %ld\n", *temp ); 
-      //printf("REl: %d col: %d : --MAX: %ld | MIN: %ld |DIST: %ld --\n",i,j,  infoMap[i].u[j],  infoMap[i].l[j], infoMap[i].d[j] );
     }
     
     currFile=currFile->next;

@@ -1,172 +1,5 @@
 #include "query.h"
 
-/*
-int factorial(int n){
-  return (n == 1 || n == 0) ? 1 : factorial(n - 1) * n;
-}
-
-//edw einai oles oi synarthseis gia to hash twn zeugariwn apo relations twn join 
-int create_comb(int rel1, int rel2){
-	int combination=0;
-
-	if(rel1>rel2){
-		combination+=rel1*10;
-		combination+=rel2;
-	}  
-	else{
-		combination+=rel2*10;
-		combination+=rel1;
-	}  
-	//printf("------%d & %d = %d ---------\n",rel1, rel2, combination);
-	return combination;
-
-}
-int relCombHash(int rel1, int rel2, int* relCombs,int numOfcombs){
-	int i,combination;
-	combination=create_comb(rel1,rel2);
-   	
-   	//hashcode= combination & ((1<<numOfrels)-1);
-   	for(i=0;i<numOfcombs;i++){
-   		if(relCombs[i]==combination) return i;
-   	}
-   	return -1;
-}
-
-joinHash* create_joinHash(int numOfrels, pred* head){
-	int i,j,k,index,rel1,rel2,combination,hash_index;
-	pred* buckStart;
-	pred* curr=head;
-	pred* join,*curr_join;
-	//twra tha vrw apo pou ksekinane ta join tou predicate array , diladi tha prospaerasw join kai selfjoin
-	while(curr!=NULL){
-		if((curr->isFilter)||(curr->isSelfjoin)) curr=curr->next;
-		else break;
-	}
-	if(curr==NULL){
-		fprintf(stderr, "No joins to do here!\n");
-		return NULL;
-	}
-	//ftiaxnw th domh
-	joinHash* jh=(joinHash*)malloc(sizeof(joinHash));
-	if (jh== NULL) {
-	    fprintf(stderr, "Malloc failed \n"); 
-	    exit(-1);
-	}
-	jh->numOfrels=numOfrels;
-	jh->numOfcombs=(factorial(jh->numOfrels)/((factorial(jh->numOfrels-2))*2));//de tha xrisimopoihthoun ola einai apla gia tin arxikopoihsh tou hash
-
-	jh->relCombs=(int*)malloc(jh->numOfcombs*sizeof(int));
-	if (jh->relCombs== NULL) {
-	    fprintf(stderr, "Malloc failed \n"); 
-	    exit(-1);
-	}
-	k=0;
-	for(i=0;i<jh->numOfrels;i++){
-		j=i+1;
-		while(j<jh->numOfrels){
-			int combo=create_comb(i,j);
-			//printf("================================== %d\n",combo);
-			jh->relCombs[k]=create_comb(i,j);
-			j++;
-			k++;
-		}
-	}
-
-	
-	jh->buckCount=(int*)malloc(jh->numOfcombs*sizeof(int));
-	if (jh->buckCount== NULL) {
-	    fprintf(stderr, "Malloc failed \n"); 
-	    exit(-1);
-	}
-	jh->bucketArr=(pred**)malloc(jh->numOfcombs*sizeof(pred*));
-	if (jh->bucketArr== NULL) {
-	    fprintf(stderr, "Malloc failed \n"); 
-	    exit(-1);
-	}
-
-	for(i=0;i<jh->numOfcombs;i++){
-		jh->bucketArr[i]=NULL;
-		jh->buckCount[i]=0;
-	} 
-
-	i=0;
-	int count=0;
-	while(curr!=NULL){
-		i=0;
-		count++;
-		rel1=curr->cols[i]; //krataei to index tou prwtou rel
-		i++;
-		while(curr->cols[i]!=-1){ //opws parapanw krataei to string tou column
-			i++;
-		}
-		i++;
-		rel2=curr->cols[i]; //krataei to index tou deuterou rel
-		hash_index=relCombHash(rel1,rel2, jh->relCombs,jh->numOfcombs);
-		if(jh->bucketArr[hash_index]==NULL){
-			jh->bucketArr[hash_index]=(pred*)malloc(jh->numOfcombs*sizeof(pred));
-			if (jh->bucketArr[hash_index]== NULL) {
-			    fprintf(stderr, "Malloc failed \n"); 
-			    exit(-1);
-			}
-		}
-
-		jh->bucketArr[hash_index][jh->buckCount[hash_index]]=*curr;
-		printf("\n");
-		jh->buckCount[hash_index]++;
-		curr=curr->next;
-	}
-
-	return jh;
-}
-
-void statusOfJoinHash(joinHash* jh){
-	int i,j,k,m,hashcode;
-	for(i=0;i<jh->numOfrels;i++){
-		j=i+1;
-		while(j<jh->numOfrels){
-			printf("--------Combinations %d%d or %d%d :\n",i,j,j,i);
-			printf("--------Joins :\n");
-
-			hashcode=relCombHash(i,j,jh->relCombs,jh->numOfcombs);;
-			pred* curr=jh->bucketArr[hashcode];
-			if(curr==NULL) printf("No joins available for this combination of relations.\n");
-			for(k=0;k<jh->buckCount[hashcode];k++){
-				printf("%d.",curr[k].cols[0]);
-				m=1;
-				while(curr[k].cols[m]!=-1){
-					printf("%d",curr[k].cols[m]);
-					m++;
-				}
-				m++;
-				printf(" "); 
-				printf("= ");
-				printf("%d.",curr[k].cols[m]);
-				m++;
-				while(curr[k].cols[m]!=-1){
-					printf("%d",curr[k].cols[m]);
-					m++;
-				}				
-				printf("\n");
-			}
-			j++;
-		}
-	}
-}
-
-void free_joinHash(joinHash* jh){
-	int numOfrels,i;
-	for(i=0;i<jh->numOfcombs;i++){
-		free(jh->bucketArr[i]);
-	}
-	free(jh->bucketArr);
-	free(jh->buckCount);
-	free(jh->relCombs);
-	free(jh);
-	jh=NULL;
-}
-*/
-
-
 //metraei ta queries enos batch
 int count_Qnum(FILE* fp,long int* offset){ 
 	int num_queries=0,ch=0;
@@ -274,7 +107,7 @@ void free_quList(query_list* quList){
 
 //apothikevei ena pred sth thesh pou prepei sth lista predicates tou query
 void store_pred(char* pred_str, pred* p){
-	int i,dots=0, index,rel1,rel2;
+	int i,dots=0,rel1,rel2;
 	char *token, *predicate, delim[]="><=";
 	
 	//sthn arxh thwrw oti to sigekrimeno kathgorhma den einai oute filtro oute selfJoin gia na ta allaksw sth poreia
@@ -298,7 +131,7 @@ void store_pred(char* pred_str, pred* p){
 		fprintf(stderr,"Not apropriate format for a predicate.\n");
 		exit(-1);
 	}
-	for(i=0;i<strlen(token);i++){ //metraw posa dots iparxoun sto tmima tou kathgorhmatos, gia na dw ena einai col h value
+	for(i=0;i<(int)strlen(token);i++){ //metraw posa dots iparxoun sto tmima tou kathgorhmatos, gia na dw ena einai col h value
 		if(token[i]=='.') dots++;
 	}
 	if(dots==1){ //exw column, ara apothikevw ta columns tou predicate
@@ -318,7 +151,7 @@ void store_pred(char* pred_str, pred* p){
 		fprintf(stderr,"Not apropriate format for a predicate.\n");
 		exit(-1);
 	}
-	for(i=0;i<strlen(token);i++){ //metraw pali ta dots gia na dw ean prokeitai gia column h value
+	for(i=0;i<(int)strlen(token);i++){ //metraw pali ta dots gia na dw ean prokeitai gia column h value
 		if(token[i]=='.') dots++;
 	}
 	if(dots==1){ //ean exw ena dot paei na pei pws einai column
@@ -363,7 +196,7 @@ void store_proj(char* proj_str, query* q){
 	strcpy(projections, proj_str);
 
 	//metraw posa einai ta projections gia na desmefsw xwro
-	for(i=0;i<strlen(projections);i++){
+	for(i=0;i<(int)strlen(projections);i++){
 		if(projections[i]=='.') dots++;
 	}
 	q->num_projs=dots; //osa einai ta dots toses einai kai oi provoles pou zitaei to query
@@ -382,7 +215,7 @@ void store_proj(char* proj_str, query* q){
 	}
 	index=0;
 	while(token!=NULL){ //mexri na teleiwsoun oi provoles
-		for(i=0;i<strlen(token);i++){ //pali, opws kai sta columns twn predicates, apothikevei ta columns xwris ta dots me diaxwristiko to -1
+		for(i=0;i<(int)strlen(token);i++){ //pali, opws kai sta columns twn predicates, apothikevei ta columns xwris ta dots me diaxwristiko to -1
 			if(token[i]!='.'){
 				proj[index]=token[i] - '0';
 				index++;
@@ -435,14 +268,15 @@ void reorder_preds(query* q){
 }
 
 //synarthsh pou anadiorganwnei ta joins me vasi tin proteraiothta ekteleshs (less cost->bigger priority) 
-void reorder_priority(pred* joinHead){
+pred* reorder_priority(pred* joinHead){
 	pred* head=joinHead;
 	pred* curr=head;
 	pred* prev,*temp, *max;
 	max=curr;
 	prev=curr;
+	//an vrei pred me megalitero priority apo to max to vazei brosta
 	while(curr!=NULL){
-		if((curr->priority>max->priority)&&(curr!=head)){
+		if((curr->priority<max->priority)&&(curr!=head)){
 			prev->next=curr->next;
 			temp=head;
 			head=curr;
@@ -454,6 +288,7 @@ void reorder_priority(pred* joinHead){
 	}
 
 	joinHead=head;
+	return joinHead;
 }
 
 //ektypwnei eola ta dedomena pou einai apothikevmena se mia domh query
@@ -753,10 +588,7 @@ void execute_batch(batch* b, int num_loadedrels, infoNode* infoMap ,int* numquer
 
 //ektelei ena kathgorhma enos query
 interm_node* execute_pred(interm_node* interm, joinHistory** joinHist,pred* p,int* rels, int num_loadedrels, infoNode* infoMap, stats** qu_stats){
-	int i=0,j=0,index;
 	stats* rel_stats=*qu_stats;
-	stats* rel1_stats=*qu_stats;
-	stats* rel2_stats=*qu_stats;
 
 	if(p->isFilter){ //ean prokeitai gia filtro
 		int col,rel,indexOfrel;
@@ -792,9 +624,6 @@ interm_node* execute_pred(interm_node* interm, joinHistory** joinHist,pred* p,in
 		col2=p->cols[1];	
 
 		//ektelw to join
-		//rel1_stats=&(rel1_stats[indexOfrel1]);
-		//rel2_stats=&(rel2_stats[indexOfrel2]);
-		//update_joinStats(rel1_stats, rel2_stats, col1, col2);
 		interm=join2(interm, infoMap, joinHist, rel1, indexOfrel1, rel2, indexOfrel2, col1, col2, num_loadedrels);
 	}
 	return interm; //epistrefw to intermediate		
@@ -813,15 +642,13 @@ void free_stats(stats* qu_stats, int numOfrels){
 
 //ektelei ena query tou batch
 interm_node* execute_query(interm_node* interm, joinHistory** joinHist, query* q, infoNode* InfoMap, int num_loadedrels){
-	int i,j,r,clmns;
+	int i,r,clmns;
 	pred* curr, *temp;
-	long long int* crossArr=NULL;
 	stats* qu_stats=(stats*)malloc(num_loadedrels* sizeof(stats));
 	for(i=0; i<q->num_rels; i++){
 		r=q->rels[i];
 		clmns=InfoMap[r].columns;
 		qu_stats[i].columns=clmns;
-		//printf("REl %d, i: %d with columns %d \n",r,i,clmns );
 
 		qu_stats[i].u=(uint64_t*)malloc(clmns* sizeof(uint64_t));
 		memcpy(qu_stats[i].u, InfoMap[r].u, clmns*sizeof(uint64_t));
@@ -834,14 +661,8 @@ interm_node* execute_query(interm_node* interm, joinHistory** joinHist, query* q
 		
 		qu_stats[i].f=(double*)malloc(clmns* sizeof(double));
 		memcpy(qu_stats[i].f, InfoMap[r].f, clmns*sizeof(double));
-		/*for(j=0; j<clmns; j++){
-			printf("\tCOLUMN: %d\n",j );
-			printf("\t\t--Info: u:%ld, l:%ld, f:%lf, d:%lf \n",InfoMap[r].u[j], InfoMap[r].l[j],InfoMap[r].f[j], InfoMap[r].d[j]);
-			printf("\t\tStats: u:%ld, l:%ld, f:%lf, d:%lf --\n",qu_stats[i].u[j],qu_stats[i].l[j],qu_stats[i].f[j],qu_stats[i].d[j] );
-		}*/
-
+		
 	}
-	//print_stats( qu_stats, q->num_rels);
 	//arxika elegxw an to query einai valid
 	for(i=0;i<q->num_rels;i++){
 		if(q->rels[i]>num_loadedrels-1){
@@ -851,17 +672,22 @@ interm_node* execute_query(interm_node* interm, joinHistory** joinHist, query* q
 	}
 
 	curr=q->preds;
+	//prwta ektelw ola ta kathgorhmata filtra kai selfjoin (pou einai sthn arxh ths listas)
 	while((curr!=NULL)&&((curr->isSelfjoin)||(curr->isFilter))){ //ektelw ola ta kathgorhmata pou exei to query
 		interm=execute_pred(interm, joinHist, curr, q->rels, q->num_rels, InfoMap, &qu_stats);
 
 		if(interm==NULL)break;
 		temp=curr;
 		curr=curr->next;
-		free(temp);
+		free(temp); //ta vgazw apo tin lista
 	}
 	if(curr!=NULL){
-		q->preds=curr;
-		reorder_priority(q->preds);
+		q->preds=curr; //orizw ws kefali tin lista thn arxh twn join, kai i lista pleon apoteleitai mono apo predicates join
+
+		joinEnumeration(q->num_rels, &(q->preds),qu_stats);
+		q->preds=reorder_priority(q->preds); //ta anadiorganwnwn me vasi to priority pou orise h joinEnumeration
+
+		curr=q->preds;
 		while(curr!=NULL){
 			interm=execute_pred(interm, joinHist, curr, q->rels, q->num_rels, InfoMap, &qu_stats);
 
@@ -870,15 +696,7 @@ interm_node* execute_query(interm_node* interm, joinHistory** joinHist, query* q
 		}
 	}
 
-	//Kalw thn cross_nodes h opoia epistrefei null ean den xreiazetai na ginei cross metaksi twn relations pou iparxoun sto intermediate
-	if(interm!=NULL) crossArr=cross_nodes(interm, q->rels, InfoMap, joinHist, q->num_rels);
-	if(crossArr==NULL) {
-		proj_sums(interm,q, InfoMap); //an de xreiastike cross ftiaxnw ta athroismata twn provolwn kanonika
-	}
-	else { //alliws ftiaxnw ta athroismata siberilamvanontas panta ta duplicates tou cross
-		proj_sumsAfterCross(crossArr, interm, q, InfoMap);
-		free(crossArr); //apodesmevw ton xwro pou pianei o array twn multiplyin values tou cross
-	}
+	if(interm!=NULL) proj_sums(interm,q, InfoMap); //an de xreiastike cross ftiaxnw ta athroismata twn provolwn kanonika
 
 	free_interm( interm); //apodesmevw to intermediate
 	free_joinistory( *joinHist); //apodesmevw to history twn joins

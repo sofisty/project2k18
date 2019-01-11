@@ -15,7 +15,7 @@ int hash_func(uint64_t value){ //hash function gia thn tmhmatopoish , dimiourgia
 }
 
 
-
+//ftiaxnei ena kommati tou istogrammatos entos twn oriwn pou exei anlavei to sigekrimeno thread
 hist_node* update_hist( int start,int end, relation* R){
 	int i;
 	int hash_val;
@@ -23,7 +23,6 @@ hist_node* update_hist( int start,int end, relation* R){
 	if (hist == NULL) { fprintf(stderr, "Malloc failed \n"); return NULL;}
 
 	for(i=0; i<256; i++){ hist[i].count=0; }
-	//printf("--START %d END %d--\n",start, end );
 	for(i =start; i<end; i++){ //pernaw apo ton tuplesR tis eggrafes sti domi tou relation
 		hash_val= hash_func( (R->tuples[i].key));
 		if(hash_val<0)return NULL;
@@ -65,13 +64,13 @@ void print_psum(psum_node * psum) { //ektypwnei tin psum lista
     }
 }
 
-
-relation* reorder_R(psum_node* phead, relation* R, relation* R_new, int start, int end ){ //kanei reorder na relation me vasi thn psum list
+//kanei reorder  ena kommati ths relation me vasi thn psum list kommati pou exei analavei to sigekrimeno thread
+relation* reorder_R(psum_node* phead, relation* R, relation* R_new, int start, int end ){ 
 	int i,y, size=R->num_tuples, curr_off;
 	int  key, payload;
 
-	for(i=0; i<size; i++){ //ftiaxnei to R_new pou tha epistrafei me thn seira etsi wste na armozei h tmhmatopoihsh tou
-						   // me auth thn psum kai tou isogrammatos
+	for(i=0; i<size; i++){ //enimerwnei to R_new pou tha epistrafei me thn seira etsi wste na armozei h tmhmatopoihsh tou
+						   // me auth tou kommatiou psum pou exei analavei to sigekrimeno thread
 		key=R->tuples[i].key;
 		payload=R->tuples[i].payload;
 		y=hash_func(key);

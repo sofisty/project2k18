@@ -1,6 +1,6 @@
 #include "results.h"
 #include "jobScheduler.h"
-#define NUM_THREADS 4
+#define NUM_THREADS 8
 #define n 8
 
 #define size (128*1024-1) //arithmos eggrafwn pou xwrane sto ena bucket ths listas 
@@ -33,7 +33,6 @@ result* store_results( result** head,result* curr_res, tup resultR, tup resultS 
 	else{//ean den einai kenh, prosthetw to apotelesma (sindiasmo tuples )sth lista
 
 		if(curr_res->count<size){ //an to apotelesma xwraei sto bucket pou vriskomai, to kataxwrw ekei
-				//printf("woo hoo\n");
 			
 			count=curr_res->count;
 			index=count*3;
@@ -77,13 +76,13 @@ void print_results(result* result_list, int* resfortest){ //ektypwnw th lista ap
 	printf("--RESULTS--\n");
 	if(result_list==NULL)printf("0 results found!\n");
 	while(curr!=NULL){
-		//printf("\n-Bucket: %d\n", b);
+		printf("\n-Bucket: %d\n", b);
 
 		count=curr->count;
 		for(i=0; i<count; i++){
 			total++;
 			index=3*i;
-			//printf(" Matchin Keys %ld=%ld Payload R %ld, Payload S %ld\n", curr->matches[index+2], curr->matches[index+2], curr->matches[index],curr->matches[index+1]);
+			printf(" Matchin Keys %ld=%ld Payload R %ld, Payload S %ld\n", curr->matches[index+2], curr->matches[index+2], curr->matches[index],curr->matches[index+1]);
 		}
 		curr=curr->next;
 		b++;
@@ -305,8 +304,7 @@ result* RadixHashJoin(relation *R, relation *S){
 	result* result_list=NULL;
 
 	//-------------Hist---------------------------
-	hist_node* R_hist=new hist_node[256];
-	hist_node* R_head, *S_head;		
+	hist_node* R_hist=new hist_node[256];		
  	hist_node* S_hist=new hist_node [256];
  	int thr_size;
  	int start;
@@ -398,77 +396,71 @@ result* RadixHashJoin(relation *R, relation *S){
 	
 
 	jsch->set_ready();	
-	//jsch->finishJobs(jsch);
 	for(i=0; i<NUM_THREADS; i++){free(hist_list[i]);}
-
-	//exit(0);
-	
 
 	
 	phead=update_psumlist(phead,R_hist);
 	S_phead=update_psumlist(S_phead,S_hist);
 
-	//##################################################################################################################################
-	//cout<<"------------------------------"<<endl;
-	//Job* job;
-	arguments argsR[jsch->numOfthreads];
-	PartitionJob* arrR=new PartitionJob[jsch->numOfthreads];
+
+	arguments argsR[NUM_THREADS];
+	PartitionJob* arrR=new PartitionJob[NUM_THREADS];
 	
-	//Ftixnw ta partition Jobs,--thewrw oti exw 3 threads
-	for(i=0;i<jsch->numOfthreads;i++){
+	//Ftixnw ta partition Jobs gia to R
+	for(i=0;i<NUM_THREADS;i++){
 		argsR[i].head=phead;
 		argsR[i].R=R;
 		argsR[i].R_new=R_new;
 		argsR[i].hash_n=n;
 		if(i==0){
 			argsR[i].start=0;
-			argsR[i].end=256/jsch->numOfthreads;
+			argsR[i].end=256/NUM_THREADS;
 		}
-		else if(i==jsch->numOfthreads-1){
+		else if(i==NUM_THREADS-1){
 			argsR[i].start=argsR[i-1].end+1;
 			argsR[i].end=255;
 		}
 		else{
 			argsR[i].start=argsR[i-1].end+1;
-			argsR[i].end=argsR[i].start+256/jsch->numOfthreads;
+			argsR[i].end=argsR[i].start+256/NUM_THREADS;
 
 		}
 		arrR[i]=PartitionJob();
 		arrR[i].set_args(i,&argsR[i]);
 	}
 
-	for(i=0;i<jsch->numOfthreads;i++){
+	for(i=0;i<NUM_THREADS;i++){
 		job=&arrR[i];
 		jsch->pushJob(job);
 	}
 
-	arguments argsS[jsch->numOfthreads];
-	PartitionJob* arrS=new PartitionJob[jsch->numOfthreads];
+	arguments argsS[NUM_THREADS];
+	PartitionJob* arrS=new PartitionJob[NUM_THREADS];
 	
-	//Ftixnw ta partition Jobs,--thewrw oti exw 3 threads
-	for(i=0;i<jsch->numOfthreads;i++){
+	//Ftixnw ta partition Jobs gia to S
+	for(i=0;i<NUM_THREADS;i++){
 		argsS[i].head=S_phead;
 		argsS[i].R=S;
 		argsS[i].R_new=S_new;
 		argsS[i].hash_n=n;
 		if(i==0){
 			argsS[i].start=0;
-			argsS[i].end=256/jsch->numOfthreads;
+			argsS[i].end=256/NUM_THREADS;
 		}
-		else if(i==jsch->numOfthreads-1){
+		else if(i==NUM_THREADS-1){
 			argsS[i].start=argsS[i-1].end+1;
 			argsS[i].end=255;
 		}
 		else{
 			argsS[i].start=argsS[i-1].end+1;
-			argsS[i].end=argsS[i].start+256/jsch->numOfthreads;
+			argsS[i].end=argsS[i].start+256/NUM_THREADS;
 
 		}
 		arrS[i]=PartitionJob();
 		arrS[i].set_args(i,&argsS[i]);
 	}
 
-	for(i=0;i<jsch->numOfthreads;i++){
+	for(i=0;i<NUM_THREADS;i++){
 		job=&arrS[i];
 		jsch->pushJob(job);
 	}
@@ -477,15 +469,10 @@ result* RadixHashJoin(relation *R, relation *S){
 	jsch->barrier(jsch,NUM_THREADS*2);
 	jsch->set_ready();	
 
-	//print_R(R_new);
-
-	//exit(0);
-
-	//###################################################################################################
+	
 	//Twra tha dimiourgisw ta join jobs
  	//gia kathe node apo tous pinakes hist twn relations
 
- 	//cout<<"ARXIZOUN TA JOIN"<<endl;
  	arguments joinArgs[256];
  	JoinJob* arrJ=new JoinJob[256];
 
@@ -522,6 +509,7 @@ result* RadixHashJoin(relation *R, relation *S){
 	jsch->finishJobs(jsch);	
 
 	
+	//link ta apotelesmata se mia sinoliki lista
 	result_list=copy_results(resultList_arr,result_list);
 
  

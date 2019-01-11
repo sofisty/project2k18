@@ -186,6 +186,7 @@ void print_stats(stats* qu_stats, int rels){
   }
 }
 
+//enimerwtnei ta statistics gia filtra R.a=value
 void update_eqStats( stats* rel_stats, int col, uint64_t value ,int found){
   double dA,fA,new_fA, dC, fC,val;
   int i;
@@ -223,6 +224,7 @@ void update_eqStats( stats* rel_stats, int col, uint64_t value ,int found){
   }
 }
 
+//enhmerwnei ta statistics gia filtra R.a>value1 kai R.a<value2
 void update_gsStats(stats* rel_stats, int col, uint64_t k1, uint64_t k2){
   int i;
   double fA, new_fA, fC, dC,val;
@@ -266,6 +268,7 @@ void update_gsStats(stats* rel_stats, int col, uint64_t k1, uint64_t k2){
   }
 }
 
+//enhmerwnei ta statistics gia R.a=R.b
 void update_selfJoinStats( stats* rel_stats, int col1, int col2 ){
   int i;
   uint64_t max, min, d ;
@@ -322,6 +325,7 @@ void update_selfJoinStats( stats* rel_stats, int col1, int col2 ){
 
 }
 
+//enhmerwnei ta statistics gia R.a=R.a
 void update_autocorrStats( stats* rel_stats, int col ){
   int i;
   double new_f,d;
@@ -336,9 +340,10 @@ void update_autocorrStats( stats* rel_stats, int col ){
 
 }
 
+//enhmerwnei ta statistics gia opoiodhpote join R.a=S.b
 void update_joinStats(stats* rel1_stats, stats* rel2_stats, int col1, int col2){
   int i;
-  double fA, new_fA, new_fB, fB, fC, dA, new_dA, dB, new_dB, dC,val;
+  double fA, new_fA, fB, fC, dA, new_dA, dB, new_dB, dC,val;
   uint64_t uA, uB, lB, lA, n;
 
 
@@ -377,7 +382,7 @@ void update_joinStats(stats* rel1_stats, stats* rel2_stats, int col1, int col2){
     rel1_stats->f[col1]=0;
     new_fA=0;
     rel2_stats->f[col2]=0;
-    new_fB=0;
+
     rel1_stats->d[col1]=0;
     new_dA=0;
     rel2_stats->d[col2]=0;
@@ -387,7 +392,6 @@ void update_joinStats(stats* rel1_stats, stats* rel2_stats, int col1, int col2){
     rel1_stats->f[col1]=(double)((fA*fB)/(double)n);
     new_fA=rel1_stats->f[col1];
     rel2_stats->f[col2]=rel1_stats->f[col1];
-    new_fB=rel1_stats->f[col1];
 
     val=(double)((dA*dB)/(double)n);
     if((new_fA>0)&&((isnan(val))||(val<=1))) rel1_stats->d[col1]=1;

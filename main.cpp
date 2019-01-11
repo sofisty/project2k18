@@ -8,7 +8,7 @@
 
 #define n 8
 
-int main(int argc,char** argv){
+int main(void){
 	int numOffiles=0;
 	char file[250];
 	RelFiles* relList=NULL;
@@ -29,8 +29,6 @@ int main(int argc,char** argv){
 
 	//dimiourgw to infomap apo ta dosmena relations
 	infoMap=create_InfoMap(relList,  infoMap, numOffiles);
-
-	//sleep(1); //perimenw ena lepto na fortwsoun ta relation sigoura gia na arxisei thn ektelesh
 
   	fprintf(stderr,"Enter query: \n");
   	execute_workload(numOffiles,infoMap); //ektelei to workload pou dinetai se  batches  apo to stdin

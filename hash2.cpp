@@ -161,28 +161,3 @@ result*	join( result** head, result* curr_res, int index, hist_node curr_R, hist
 	free(chain);
 	return curr_res;
 }
-
-
-//Sarwnei ola ta buckets kai kalei tis sunarthseis gia th dhmiourgia twn bucket,chain kai thn anazhthsh twn apotelesmatwn 
-result* final_hash(hist_node* R_hist, hist_node* S_hist,psum_node* R_psum,psum_node* S_psum, relation* R_new, relation* S_new){
-	int i;
-	result* result_list=NULL;
-	result* curr_res=result_list;	
-
-	int  index; //match: flag an 1:uparxei match, 0: alliws, index: 0: an sto R ginetai hash2, 1:alliws
-	
-	
-	//gia kathe node apo tous pinakes hist twn relations
-	for(i=0; i<256; i++){
-		if(R_hist[i].count==0 || S_hist[i].count==0)continue;
-		index=buck_compare( R_hist[i],S_hist[i]);
-		curr_res=join(&result_list ,curr_res, index, R_hist[i], S_hist[i], R_psum[i], S_psum[i], R_new, S_new); //epestrepse ta apotelesmata
-	}
-
-	int num_results=0;
-	
-	
-	return result_list;
-}
-
-
