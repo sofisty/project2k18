@@ -1,12 +1,13 @@
 #include "hash1.h"
 #include "hash2.h"
 #define n 8
+#define m (1<<n)
 
 int hash_func(uint64_t value){ //hash function gia thn tmhmatopoish , dimiourgia evretiriwn sta R kai S	
 	int last8;
    	
    	last8 = value & ((1L<<n)-1);
-	if(last8>=256 || last8<0){
+	if(last8>=m || last8<0){
 		fprintf(stderr, "Wrong hash value %d\n",last8 );
 		return -1;
 	}
@@ -19,10 +20,10 @@ int hash_func(uint64_t value){ //hash function gia thn tmhmatopoish , dimiourgia
 hist_node* update_hist( int start,int end, relation* R){
 	int i;
 	int hash_val;
-	hist_node* hist=(hist_node*)malloc(256* sizeof(hist_node));
+	hist_node* hist=(hist_node*)malloc(m* sizeof(hist_node));
 	if (hist == NULL) { fprintf(stderr, "Malloc failed \n"); return NULL;}
 
-	for(i=0; i<256; i++){ hist[i].count=0; }
+	for(i=0; i<m; i++){ hist[i].count=0; }
 	for(i =start; i<end; i++){ //pernaw apo ton tuplesR tis eggrafes sti domi tou relation
 		hash_val= hash_func( (R->tuples[i].key));
 		if(hash_val<0)return NULL;
@@ -35,7 +36,7 @@ hist_node* update_hist( int start,int end, relation* R){
 
 void print_hist( hist_node* hist) { //typwnei to istogramma sth parousa katastash sou
    if(hist!=NULL){
-   		for(int i=0; i<256; i++){printf("Hash value %d has %d records\n",i, hist[i].count );}
+   		for(int i=0; i<m; i++){printf("Hash value %d has %d records\n",i, hist[i].count );}
    	}
   	
 }
@@ -46,7 +47,7 @@ psum_node* update_psumlist(psum_node* psum, hist_node* hist ){ //dhmiourgei thn 
 	
 	 if(psum==NULL)return NULL;
 
-	 for(i=0; i<256; i++){
+	 for(i=0; i<m; i++){
 	 	psum[i].hash_val=hist[i].hash_val;
 	 	psum[i].offset=offset;
 	 	psum[i].curr_off=offset;
@@ -59,7 +60,7 @@ psum_node* update_psumlist(psum_node* psum, hist_node* hist ){ //dhmiourgei thn 
 
 
 void print_psum(psum_node * psum) { //ektypwnei tin psum lista
-    for(int i =0; i< 256; i++){
+    for(int i =0; i< m; i++){
     	printf("Psum with hash value %d and %d offset\n",psum[i].hash_val, psum[i].offset );
     }
 }

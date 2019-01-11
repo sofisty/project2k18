@@ -2,6 +2,7 @@
 #include "jobScheduler.h"
 #define NUM_THREADS 8
 #define n 8
+#define m (1<<n)
 
 #define size (128*1024-1) //arithmos eggrafwn pou xwrane sto ena bucket ths listas 
 //#define size 2000000000
@@ -157,7 +158,7 @@ result* copy_results(result** resultList_arr,result* result_list){
 	result* curr_res=result_list;
 	int ch_index,index,count;
 
-	for(int i=0;i<256;i++){
+	for(int i=0;i<m;i++){
 		curr_head=resultList_arr[i];		
 
 		while(curr_head!=NULL){
@@ -304,8 +305,8 @@ result* RadixHashJoin(relation *R, relation *S){
 	result* result_list=NULL;
 
 	//-------------Hist---------------------------
-	hist_node* R_hist=new hist_node[256];		
- 	hist_node* S_hist=new hist_node [256];
+	hist_node* R_hist=new hist_node[m];		
+ 	hist_node* S_hist=new hist_node [m];
  	int thr_size;
  	int start;
 
@@ -323,9 +324,9 @@ result* RadixHashJoin(relation *R, relation *S){
 	if(S_new->tuples==NULL){ fprintf(stderr, "Malloc failed \n"); return NULL;}
 
 	//------------------Psum----------------------------------
-	psum_node* phead=(psum_node*)malloc(256* sizeof(psum_node));
+	psum_node* phead=(psum_node*)malloc(m* sizeof(psum_node));
 	if (phead == NULL) { fprintf(stderr, "Malloc failed \n"); return NULL;}
-	psum_node* S_phead=(psum_node*)malloc(256* sizeof(psum_node));
+	psum_node* S_phead=(psum_node*)malloc(m* sizeof(psum_node));
 	if (S_phead == NULL) { fprintf(stderr, "Malloc failed \n"); return NULL;}
 	
 
@@ -357,11 +358,11 @@ result* RadixHashJoin(relation *R, relation *S){
 		start+=thr_size;
 		//cout<<"Push i: "<<i<<endl;
 	}
-	jsch->barrier(jsch, NUM_THREADS);
+	jsch->waitJobs(jsch, NUM_THREADS);
 
 
 	//-----Link histograms--------------------------
-	for( i =0; i<256; i++){
+	for( i =0; i<m; i++){
 		R_hist[i].count=0;
 		for(int j=0; j<NUM_THREADS; j++){
 			R_hist[i].count+=hist_list[j][i].count;
@@ -385,9 +386,9 @@ result* RadixHashJoin(relation *R, relation *S){
 		start+=thr_size;
 	}
 	
-	jsch->barrier(jsch, NUM_THREADS);
+	jsch->waitJobs(jsch, NUM_THREADS);
 	
-	for( i =0; i<256; i++){
+	for( i =0; i<m; i++){
 		S_hist[i].count=0;
 		for(int j=0; j<NUM_THREADS; j++){
 			S_hist[i].count+=hist_list[j][i].count;
@@ -414,7 +415,7 @@ result* RadixHashJoin(relation *R, relation *S){
 		argsR[i].hash_n=n;
 		if(i==0){
 			argsR[i].start=0;
-			argsR[i].end=256/NUM_THREADS;
+			argsR[i].end=m/NUM_THREADS;
 		}
 		else if(i==NUM_THREADS-1){
 			argsR[i].start=argsR[i-1].end+1;
@@ -422,7 +423,7 @@ result* RadixHashJoin(relation *R, relation *S){
 		}
 		else{
 			argsR[i].start=argsR[i-1].end+1;
-			argsR[i].end=argsR[i].start+256/NUM_THREADS;
+			argsR[i].end=argsR[i].start+m/NUM_THREADS;
 
 		}
 		arrR[i]=PartitionJob();
@@ -445,7 +446,7 @@ result* RadixHashJoin(relation *R, relation *S){
 		argsS[i].hash_n=n;
 		if(i==0){
 			argsS[i].start=0;
-			argsS[i].end=256/NUM_THREADS;
+			argsS[i].end=m/NUM_THREADS;
 		}
 		else if(i==NUM_THREADS-1){
 			argsS[i].start=argsS[i-1].end+1;
@@ -453,7 +454,7 @@ result* RadixHashJoin(relation *R, relation *S){
 		}
 		else{
 			argsS[i].start=argsS[i-1].end+1;
-			argsS[i].end=argsS[i].start+256/NUM_THREADS;
+			argsS[i].end=argsS[i].start+m/NUM_THREADS;
 
 		}
 		arrS[i]=PartitionJob();
@@ -466,20 +467,20 @@ result* RadixHashJoin(relation *R, relation *S){
 	}
 
 
-	jsch->barrier(jsch,NUM_THREADS*2);
+	jsch->waitJobs(jsch,NUM_THREADS*2);
 	jsch->set_ready();	
 
 	
 	//Twra tha dimiourgisw ta join jobs
  	//gia kathe node apo tous pinakes hist twn relations
 
- 	arguments joinArgs[256];
- 	JoinJob* arrJ=new JoinJob[256];
+ 	arguments joinArgs[m];
+ 	JoinJob* arrJ=new JoinJob[m];
 
- 	result** resultList_arr=new result* [256];
+ 	result** resultList_arr=new result* [m];
  	int legit_jobs=0;
 
-	for(i=0; i<256; i++){
+	for(i=0; i<m; i++){
 		resultList_arr[i]=NULL;
 		if(R_hist[i].count==0 || S_hist[i].count==0)continue;
 
@@ -503,12 +504,18 @@ result* RadixHashJoin(relation *R, relation *S){
 	}
 
 	
-	jsch->barrier(jsch,legit_jobs);
+	jsch->waitJobs(jsch,legit_jobs);
 	jsch->finishJobs(jsch);	
 
 	
 	//link ta apotelesmata se mia sinoliki lista
 	result_list=copy_results(resultList_arr,result_list);
+
+	for(i=0;i<m;i++){
+		free_result_list(resultList_arr[i]);
+	}
+
+	delete [] resultList_arr;
 
  
 	//free(S_head);

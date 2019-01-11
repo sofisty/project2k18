@@ -44,7 +44,6 @@ typedef struct jqueue{
 	int numOfJobs;
 
 	pthread_mutex_t    job_mutex; //wait
-	pthread_mutex_t	   pop_mutex;
 	pthread_cond_t 	   job_cond; 
 }jqueue;
 
@@ -112,7 +111,7 @@ class JobScheduler{
 		void destroyQueue();
 
 		static void* runThread(void*);
-		void barrier(void* sch, int numOfJobs);
+		void waitJobs(void* sch, int numOfJobs);
 		void set_ready();
 		void finishJobs(void* sch);
 };

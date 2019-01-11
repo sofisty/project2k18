@@ -1,12 +1,9 @@
 #include "jobScheduler.h"
+#define n 8
 
 using namespace std;
 
-#define n 8
-int test(int i){
-	printf("i: %d\n", i);
-	return i;
-}
+//arxikopoiei tin oura apo jobs tou scheduler, to mutex kai to conditional variable tis ouras
 jqueue* init_queue(void){
 	jqueue* queue=new jqueue;
 	queue->start=NULL;
@@ -17,57 +14,68 @@ jqueue* init_queue(void){
 	return queue;
 }
 
-Job::Job(){
-	
-}
+//constructor tou job
+Job::Job(){};
 
 void Job::set_args(int jobId, arguments* args ){
 	this->jobId=jobId;
 	this->args=args;
 }
 
-Job::~Job(){
-	/*if(args!=NULL){
-		delete args;
-	}*/
-};
+//destructor tou job
+Job::~Job(){};
 
+//i function tou job
 int Job::function(void){
 	cout<<"This is a job "<<this->jobId<<endl;
 	return 0;
 } 
 
+//hist job
+
+//constructor kai destructor, derived class
+HistJob::HistJob():Job(){};
+HistJob::~HistJob(){};
+
+//h function tou histogram job, diladi i update hist
+int HistJob::function(void){
+	args->hist_list[this->jobId]= update_hist(this->args->start, this->args->end, this->args->rel);
+	return 1;	
+}
+
 //partitionJob
+
+//constructor kai destructor, derivative tou job
 PartitionJob::PartitionJob():Job(){};
 PartitionJob::~PartitionJob(){};
 
+//function ths partition job, diladi to reorder
 int PartitionJob::function(void){
-	//cout<<"This is a partitionJob"<<this->jobId<<endl;
 	if(this->args==NULL) {
 		cout<<"Null arguments given"<<endl;
 		return 1;
 	}
-
 	this->args->R_new=reorder_R(this->args->head, this->args->R, this->args->R_new, this->args->start, this->args->end);
 	return 0;
 } 
 
 //JoinJob
+
+//constructor kai destructor, derived apo to job
 JoinJob::JoinJob():Job(){};
 JoinJob::~JoinJob(){};
 
+//function tou join job, diladi to join
 int JoinJob::function(void){
-	//cout<<"This is a partitionJob"<<this->jobId<<endl;
 	if(this->args==NULL) {
 		cout<<"Null arguments given here"<<endl;
-		//exit(1);
 		return 1;
 	}
-	//join(result** head,result* curr_res, int index,hist_node curr_R, hist_node curr_S, psum_node curr_Rp, psum_node curr_Sp, relation* R_new, relation* S_new);
 	this->args->curr_res=join(this->args->list_head,this->args->curr_res,this->args->index,*(this->args->curr_R), *(this->args->curr_S),*(this->args->curr_Rp),*(this->args->curr_Sp),this->args->R_new,this->args->S_new);
 	return 0;
 } 
 
+//arxikopoiei to scheduler, dimiourgei ton array apo threads kai arxikopoiei thn queue, arxikopoiei to mutex kai to cond var
 JobScheduler::JobScheduler(uint32_t numOfthreads){
 	int rv, i;
 	this->numOfthreads=numOfthreads;
@@ -84,16 +92,13 @@ JobScheduler::JobScheduler(uint32_t numOfthreads){
 		rv=pthread_create(&(this->thr_arr[i]), NULL, this->runThread,this);
 		if(rv!=0) cout<<"kati paei lathos"<<endl;
 	}
-	//cout<<"Now threads are created"<<endl;
-
-	
 }
 
-
+//prosthetei sthn oura apo jobs ena job
 void JobScheduler::pushJob(Job* j){
-	pthread_mutex_lock (&(this->queue->job_mutex));  
+	pthread_mutex_lock (&(this->queue->job_mutex));   //arxika kanei lock ton mutex apagorevontas alles drasthriothtes sthn oura
 	if(this->queue->start==NULL){
-		this->queue->start=new jqueue_node;
+		this->queue->start=new jqueue_node;	//kanei push to job
 		this->queue->start->job=j;
 		this->queue->start->next=NULL;
 		this->queue->end=this->queue->start;
@@ -108,11 +113,12 @@ void JobScheduler::pushJob(Job* j){
 		this->queue->numOfJobs+=1;
 	}
 	                                   
-    pthread_cond_signal (&(this->queue->job_cond));                                    
-    pthread_mutex_unlock (&(this->queue->job_mutex));
+    pthread_cond_signal (&(this->queue->job_cond));       //kanei signal oti prostethike neo job                             
+    pthread_mutex_unlock (&(this->queue->job_mutex));	//kanei unlock to mutex ths ouras
 
 }
 
+//afairei ena job apo thn arxh ths ouras kai to epistrefei
 Job* JobScheduler::popJob(){
 	Job* ret;
 	jqueue_node* temp;
@@ -136,6 +142,7 @@ Job* JobScheduler::popJob(){
 	}
 }
 
+//ektipwnei thn oura apo jobs tou sch
 void  JobScheduler::printQueue(){
 	jqueue_node* curr;
 	if(this->queue!=NULL){
@@ -151,6 +158,7 @@ void  JobScheduler::printQueue(){
 		
 }
 
+//katastrefei thn oura 
 void JobScheduler::destroyQueue(){
 	jqueue_node* curr=this->queue->start;
 	jqueue_node* temp;
@@ -162,56 +170,48 @@ void JobScheduler::destroyQueue(){
 	}
 	delete queue;
 	queue=NULL;
-	//pthread_cond_destroy (&(this->queue->job_cond));
 }
 
+//mhdenizei to var pou krataei posa jobs exoun ektelestei, kai einai etoimos na lavei nea omada apo jobs, diaforetikou tipou
 void JobScheduler::set_ready(){
 
-	this->finished=0;
-	
+	this->finished=0;	
 }
 
+
+//synarthsh pou kathorizei ti kanei to thread otan trexei, arxikopoiei thn pthread_create
 void* JobScheduler::runThread(void* sch){
 	Job* j;
-	//void* ret=NULL;
-	
 	JobScheduler* js=reinterpret_cast<JobScheduler*>(sch);
 		
 	while(js->run==1){ //perimenei mexri na parei kapoia douleia h na prepei na kanei exit
-		pthread_mutex_lock(&(js->queue->job_mutex));
-		//cout<<"This is thread with id: "<<pthread_self()<<endl;
-		while(js->queue->numOfJobs==0 ){ 
-			if(js->run==0)break; //prepei na kanei exit
-			pthread_cond_wait(&(js->queue->job_cond), &(js->queue->job_mutex));
+		pthread_mutex_lock(&(js->queue->job_mutex)); 
+
+		while(js->queue->numOfJobs==0 ){  //oso einai adeia i oura
+			if(js->run==0)break; //an exei termatisei i diadikasia prepei na kanei exit
+			pthread_cond_wait(&(js->queue->job_cond), &(js->queue->job_mutex)); //perimenoun ta thread
 		}
 		pthread_mutex_unlock(&(js->queue->job_mutex));
 		if(js->run==0) return NULL; //epistrofh kai exit
 			
 		pthread_mutex_lock(&(js->queue->job_mutex));	 
-		//cout<<"Kanw pop thread: "<<pthread_self()<<endl;
-		j=js->popJob();
-		//cout<<"POP JOB ID : "<<j->jobId<<endl; 
+		j=js->popJob();									//kanei pop ena job
 		pthread_mutex_unlock(&(js->queue->job_mutex));
-		//if(j==NULL){cout<<"NOP"<<endl;}
-		if(j!=NULL){
-			
-			j->function();
-			//cout<<"HIST JOB ID : "<<j->jobId<<endl; 
-			
+
+		if(j!=NULL){		//an den einai null ektelei to function tou job	
+			j->function();			
 		}
-		//cout<<"---------------------------"<<js->queue->numOfJobs<<endl;
+
 		pthread_mutex_lock(&(js->jobs_mutex));
-			if(j!=NULL)js->finished+=1;  
+			if(j!=NULL)js->finished+=1;  		//auksanei to var pou krataei to posa jobs exoun ektelestei
 		pthread_mutex_unlock(&(js->jobs_mutex));
 
 		pthread_mutex_lock(&(js->jobs_mutex));
-		//if (js->finished==3) { 		
-		if(js->queue->numOfJobs==0){	
-			//cout<<"FINISHED "<<js->finished<<endl;
-			//cout<<"ekana signal: "<<pthread_self()<<endl;
-			                      
-	        pthread_cond_signal(&js->jobs_cond);
+		
+		if(js->queue->numOfJobs==0){			       //an einai adeia i oura ginetai signal sta threads oti teleiwse           
+	        pthread_cond_signal(&js->jobs_cond); 
 		}
+
 		pthread_mutex_unlock(&(js->jobs_mutex));
 			
 		
@@ -220,122 +220,39 @@ void* JobScheduler::runThread(void* sch){
 
 }
 
-void JobScheduler::barrier(void* sch, int numOfJobs){
+//synarthsh pou vazei ta threads na perimenoun oso iparxoun kai alles douleies na ginoun push kai na ektelestoun
+void JobScheduler::waitJobs(void* sch, int numOfJobs){
+
 	JobScheduler* jsch=reinterpret_cast<JobScheduler*>(sch);
-
-	/*pthread_mutex_lock (&(jsch->queue->job_mutex));
-	pthread_cond_broadcast (&(jsch->queue->job_cond));
-	pthread_mutex_unlock (&(jsch->queue->job_mutex)); */
 	
-	
-		pthread_mutex_lock (&(jsch->jobs_mutex));
-	  		//cout<<"NUMOFJOBS "<<jsch->queue->numOfJobs<<endl;
-		    while (jsch->finished < numOfJobs) {
-		       pthread_cond_wait (&(jsch->jobs_cond), &(jsch->jobs_mutex));
+	pthread_mutex_lock (&(jsch->jobs_mutex));
+    while (jsch->finished < numOfJobs) {
+       pthread_cond_wait (&(jsch->jobs_cond), &(jsch->jobs_mutex));
 
-		    }
-	    	
-		pthread_mutex_unlock (&(jsch->jobs_mutex));
-
-	
+    }	    	
+	pthread_mutex_unlock (&(jsch->jobs_mutex));	
 }
 
+//an den iparxoun alla jobs na parei i queue, termatizei ta threads
 void JobScheduler::finishJobs(void* sch){
 	int i;
 	JobScheduler* jsch=reinterpret_cast<JobScheduler*>(sch);
 
 	jsch->run = 0; //den uparxoun alla jobs na parei h queue opote 
     pthread_mutex_lock (&(jsch->queue->job_mutex));         
-    pthread_cond_broadcast (&(jsch->queue->job_cond));                                    
+    pthread_cond_broadcast (&(jsch->queue->job_cond)); //ksipnaei ta threads                                    
     pthread_mutex_unlock (&(jsch->queue->job_mutex));
 
     for (i = 0; i < (int)jsch->numOfthreads; i++) {
-    	pthread_join (jsch->thr_arr[i], NULL);  
+    	pthread_join (jsch->thr_arr[i], NULL);  //kai ta termatizei
 
 	}
 
 }
 
-
+//destructor tou scheduler
 JobScheduler::~JobScheduler(){
-	int i;
     delete[] thr_arr;
-
     this->destroyQueue();
-    /*pthread_cond_destroy (&(this->jobs_cond));
-    */
 }
 
-HistJob::HistJob():Job(){
-
-	//if(args!=NULL)cout<<"~CONSTRUCTOR~ start: "<<args->start<<" and end: "<<args->end<<endl; 
-};
-
-HistJob::~HistJob(){};
-
-int HistJob::function(void){
-	//cout<<"HistJob "<<this->jobId<<" : "<<this->args->start<<" + "<<this->args->end <<endl;
-	args->hist_list[this->jobId]= update_hist(this->args->start, this->args->end, this->args->rel);
-	return 1;
-	//print_hist( hist);
-	//return (void*) hist;
-	
-}
-
-
-
-/*
-int main (void){
-	int i, rv;
-	arguments* args=NULL;
-	JobScheduler sch= JobScheduler(3);
-	JobScheduler *jsch=&sch;
-	Job* job1;
-	//Work work=Work(1,&args);
-	Work work1=Work(1,args);
-	Work work2=Work(2,args);
-	Work work3=Work(3,args);
-	Work work4=Work(4,args);
-
-	Work1 work11=Work1(1,args);
-	Work1 work12=Work1(2,args);
-	Work1 work13=Work1(3,args);
-	Work1 work14=Work1(4,args);
-
-	job1=&work1;
-	jsch->pushJob(job1);
-	job1=&work2;
-	jsch->pushJob(job1);
-	job1=&work3;
-	jsch->pushJob(job1);
-	
-	job1=&work4;
-	jsch->pushJob(job1);
-	//jsch->printQueue();
-
-
-	jsch->barrier(jsch);
-
-
-	//load work
-
-	job1=&work11;
-	jsch->pushJob(job1);
-	job1=&work12;
-	jsch->pushJob(job1);
-
-	
-	job1=&work13;
-	jsch->pushJob(job1);
-	job1=&work14;
-	jsch->pushJob(job1);
-
-	//jsch->printQueue();
-
-	jsch->barrier(jsch);
-
-	jsch->finishJobs(jsch);
-
-
-}
-*/

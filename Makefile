@@ -3,8 +3,8 @@ CXXFLAGS += -std=c++11 -Wall -Wextra -g
 LIBS += -lm -pthread
 
 
-rhj:  main.o results.o hash1.o hash2.o infomap.o interm.o query.o join.o jobScheduler.o
-	$(CXX) $(CXXFLAGS) -o rhj main.o results.o hash1.o hash2.o infomap.o interm.o query.o join.o jobScheduler.o $(LIBS)
+rhj:  main.o results.o hash1.o hash2.o infomap.o interm.o query.o join.o jobScheduler.o optim.o
+	$(CXX) $(CXXFLAGS) -o rhj main.o results.o hash1.o hash2.o infomap.o interm.o query.o join.o jobScheduler.o optim.o $(LIBS)
 
 query.o:  query.cpp query.h
 	$(CXX) $(CXXFLAGS) -c query.cpp
@@ -29,6 +29,10 @@ join.o: join.cpp join.h
 
 jobScheduler.o: jobScheduler.cpp jobScheduler.h
 	$(CXX) $(CXXFLAGS) -c jobScheduler.cpp
+
+optim.o: optim.cpp optim.h
+	$(CXX) $(CXXFLAGS) -c optim.cpp
+
 clean: 
 	-rm -f *.o 
 	-rm -f rhj
