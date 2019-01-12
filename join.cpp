@@ -527,7 +527,7 @@ interm_node* join2(interm_node* interm, infoNode* infoMap, joinHistory** joinHis
       }
       
     }
-    currHist1=update_nodeHistory(indexOfrel2,indexOfrel1, currHist1)
+    currHist1=update_nodeHistory(indexOfrel2,indexOfrel1, currHist1);
     currHist1=update_nodeHistory(indexOfrel1,indexOfrel2, currHist1);
    
     free_rowIds(updateIds);
@@ -704,127 +704,128 @@ long long int* cross_nodes(interm_node* interm,int* q_rels, infoNode* infoMap, j
            
             toMul[k]=toMul[k]*rowsToMul;
             
-        }
-      }
-    }
-  
-    return toMul;
-  }
- 
-  first=1;
-  for(i=0;i<numOfrels;i++){
-    found=0;
-
-    if(interm->numOfrows[i]!=-1){
-      currHist=*joinHist;
-      while(currHist!=NULL){
-        if(currHist->rels[i]!=NULL){
-          found=1;
-          break;
-        }
-        currHist=currHist->next;
-      }
-      if(!found){
-       
-        rowsToMul=interm->numOfrows[i];
-        
-        for(k=0;k<numOfrels;k++){           
-          if((*joinHist)->rels[k]!=NULL){
-            if(first){
-              prev_rowsToMul=interm->numOfrows[k];
-              first=0;
-            }
-            if(toMul==NULL) toMul=init_crossArr(toMul,numOfrels);
-           
-            toMul[k]=toMul[k]*rowsToMul;
-            
           }
         }
-        if(toMul==NULL) toMul=init_crossArr(toMul,numOfrels);
-       
-        toMul[i]=toMul[i]*prev_rowsToMul;
-        
-        prev_rowsToMul=prev_rowsToMul*rowsToMul;
-        prevs[j]=i;
-        j++;
       }
-    }
-  }
-  currHist=*joinHist;
-  
-  if(currHist->next!=NULL){
-   
-    first=1;
-    for(i=0;i<numOfrels;i++){
-      if(currHist->rels[i]!=NULL){ 
-        if(first){
-          prev_rowsToMul=interm->numOfrows[i];
-          first=0;
-        }
-            
-        prevs[j]=i;
-        j++;
-      }
+
+      return toMul;
     }
 
-    //twra tha ipologisw to cross product olwn twn joinhist nodes
-    currHist=currHist->next;
-    while(currHist!=NULL){
+    first=1;
+    for(i=0;i<numOfrels;i++){
+      found=0;
+
+      if(interm->numOfrows[i]!=-1){
+        currHist=*joinHist;
+        while(currHist!=NULL){
+          if(currHist->rels[i]!=NULL){
+            found=1;
+            break;
+          }
+          currHist=currHist->next;
+        }
+        if(!found){
+         
+          rowsToMul=interm->numOfrows[i];
+          
+          for(k=0;k<numOfrels;k++){           
+            if((*joinHist)->rels[k]!=NULL){
+              if(first){
+                prev_rowsToMul=interm->numOfrows[k];
+                first=0;
+              }
+              if(toMul==NULL) toMul=init_crossArr(toMul,numOfrels);
+             
+              toMul[k]=toMul[k]*rowsToMul;
+              
+            }
+          }
+          if(toMul==NULL) toMul=init_crossArr(toMul,numOfrels);
+         
+          toMul[i]=toMul[i]*prev_rowsToMul;
+          
+          prev_rowsToMul=prev_rowsToMul*rowsToMul;
+          prevs[j]=i;
+          j++;
+        }
+      }
+    }
+    currHist=*joinHist;
+
+    if(currHist->next!=NULL){
      
       first=1;
       for(i=0;i<numOfrels;i++){
         if(currHist->rels[i]!=NULL){ 
-          if(first){ //sauth th periptwsh prokeitai gia to prwto relation tou sygekrimenou joinhist node
-            rowsToMul=interm->numOfrows[i];
-            for(k=0;k<j;k++){
-             
-              if(toMul==NULL) toMul=init_crossArr(toMul,numOfrels);
-             
-              toMul[prevs[k]]=toMul[prevs[k]]*rowsToMul;
-             
-            }   
-            first=0; 
-          } 
-         // printf("TWRA TO KAINOURGIO\n");    
-          if(toMul==NULL) toMul=init_crossArr(toMul,numOfrels);
-         
-          toMul[i]=toMul[i]*prev_rowsToMul;
-        
-
-          prevs[j]=i;
-          j++;   
-        }
-      }
-      prev_rowsToMul=prev_rowsToMul*rowsToMul;
-      currHist=currHist->next;
-    }   
-  }
-
-  //twra tha siberilavw kai ta rows twn relations pou den exoun simmetexei se kamia praksi
-  first=1;
-  for(i=0;i<numOfrels;i++){
-    if(interm->numOfrows[i]==-1){
-      real_rel=q_rels[i];
-      interm->numOfrows[i]=infoMap[real_rel].tuples;
-      rowsToMul=interm->numOfrows[i];
-      for(k=0;k<numOfrels;k++){
-        if(k!=i){
           if(first){
-            prev_rowsToMul=interm->numOfrows[k]*toMul[k];
+            prev_rowsToMul=interm->numOfrows[i];
             first=0;
           }
-    
-          toMul[k]=toMul[k]*rowsToMul;
-      
+              
+          prevs[j]=i;
+          j++;
         }
       }
 
-      toMul[i]=toMul[i]*prev_rowsToMul;
-    }
-  }
+      //twra tha ipologisw to cross product olwn twn joinhist nodes
+      currHist=currHist->next;
+      while(currHist!=NULL){
+       
+        first=1;
+        for(i=0;i<numOfrels;i++){
+          if(currHist->rels[i]!=NULL){ 
+            if(first){ //sauth th periptwsh prokeitai gia to prwto relation tou sygekrimenou joinhist node
+              rowsToMul=interm->numOfrows[i];
+              for(k=0;k<j;k++){
+               
+                if(toMul==NULL) toMul=init_crossArr(toMul,numOfrels);
+               
+                toMul[prevs[k]]=toMul[prevs[k]]*rowsToMul;
+               
+              }   
+              first=0; 
+            } 
+           // printf("TWRA TO KAINOURGIO\n");    
+            if(toMul==NULL) toMul=init_crossArr(toMul,numOfrels);
+           
+            toMul[i]=toMul[i]*prev_rowsToMul;
+          
 
-  free(prevs);
-  return toMul;
+            prevs[j]=i;
+            j++;   
+          }
+        }
+        prev_rowsToMul=prev_rowsToMul*rowsToMul;
+        currHist=currHist->next;
+      }   
+    }
+
+    //twra tha siberilavw kai ta rows twn relations pou den exoun simmetexei se kamia praksi
+    first=1;
+    for(i=0;i<numOfrels;i++){
+      if(interm->numOfrows[i]==-1){
+        real_rel=q_rels[i];
+        interm->numOfrows[i]=infoMap[real_rel].tuples;
+        rowsToMul=interm->numOfrows[i];
+        for(k=0;k<numOfrels;k++){
+          if(k!=i){
+            if(first){
+              prev_rowsToMul=interm->numOfrows[k]*toMul[k];
+              first=0;
+            }
+      
+            toMul[k]=toMul[k]*rowsToMul;
+        
+          }
+        }
+
+        toMul[i]=toMul[i]*prev_rowsToMul;
+      }
+    }
+
+    free(prevs);
+    return toMul;
+  }
 }
 
 void statusOfCross(interm_node* interm, long long int* toMul, int numOfrels){

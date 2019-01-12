@@ -419,7 +419,7 @@ result* RadixHashJoin(relation *R, relation *S){
 		}
 		else if(i==NUM_THREADS-1){
 			argsR[i].start=argsR[i-1].end+1;
-			argsR[i].end=255;
+			argsR[i].end=m-1;
 		}
 		else{
 			argsR[i].start=argsR[i-1].end+1;
@@ -450,7 +450,7 @@ result* RadixHashJoin(relation *R, relation *S){
 		}
 		else if(i==NUM_THREADS-1){
 			argsS[i].start=argsS[i-1].end+1;
-			argsS[i].end=255;
+			argsS[i].end=m-1;
 		}
 		else{
 			argsS[i].start=argsS[i-1].end+1;
