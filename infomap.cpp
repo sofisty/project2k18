@@ -5,7 +5,7 @@
 RelFiles* add_Relation(RelFiles** relHead, RelFiles* relList, char* file){
   RelFiles* curr=relList; //pairnei thn lista twn files pou exoun dothei mexri twra
 
-  if(*relHead==NULL){ //ean i lista einai adeia thn arxikopoiei me to dothen file
+  if(*relHead==NULL){ 
     curr=*relHead;
     curr=(RelFiles*)malloc(sizeof(RelFiles));
     if(curr==NULL){ fprintf(stderr, "Malloc failed \n"); return NULL;}
@@ -16,7 +16,7 @@ RelFiles* add_Relation(RelFiles** relHead, RelFiles* relList, char* file){
     return curr;
   }
 
-  if(curr->next==NULL){ //alliws prosthetei to dothen arxieo sth lista
+  if(curr->next==NULL){ 
     curr->next=(RelFiles*)malloc(sizeof(RelFiles));
     if(curr->next==NULL){ fprintf(stderr, "Malloc failed \n"); return NULL;}
     strcpy(curr->next->file,file);
@@ -149,7 +149,7 @@ infoNode* create_InfoMap(RelFiles* relList, infoNode* infoMap, int numOffiles){
 
 
   }
-  free_RelFiles( relList); //apodesmevei ton xwro ths listas twn relation files
+  free_RelFiles( relList); 
   return infoMap;
 
 }
@@ -239,7 +239,7 @@ uint64_t* filterFromRel(int oper,uint64_t value,uint64_t* ptr, int numOftuples,u
 //efarmozei to zitoumeno join stis stiles pairnontas ta rowIds tou idiou relation apo to infoMap, giati den iparxei akoma sto intermediate
 uint64_t* selfjoinFromRel(uint64_t* ptr1, uint64_t* ptr2, int numOftuples, uint64_t* sjoinRowIds, int* numOfrows){
   int i, j=0;
-  for(i=0; i<numOftuples; i++){ //gia kathe ena apo ta tuples
+  for(i=0; i<numOftuples; i++){ 
     if(*ptr1==*ptr2){ //ean einai isa tote valta sta rowIds
       sjoinRowIds[j]=(uint64_t)i;
       j++;
@@ -247,11 +247,11 @@ uint64_t* selfjoinFromRel(uint64_t* ptr1, uint64_t* ptr2, int numOftuples, uint6
     ptr1++;
     ptr2++;
   }
-  *numOfrows=j; //enimerwnei ton arithmo matches
-   //printf(" numofrows %d\n",j );
+  *numOfrows=j; 
+
   if(j==0){
   	free(sjoinRowIds);
   	sjoinRowIds=NULL;
-  } //den iparxoun koina stoixeia metaksi twn columns
+  } 
   return sjoinRowIds; //epistrefei ton pinaka twn koinwn apotelesmatwn se rowIds
 }
