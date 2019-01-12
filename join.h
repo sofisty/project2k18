@@ -30,9 +30,9 @@ int find_join(joinHistory* joinHist, int indexOfrel1, int indexOfrel2);
 void free_joinistory(joinHistory* joinHist);
 
 joinHistory* delete_nodeHistory( joinHistory** joinHist, joinHistory* currHist);
-joinHistory* merge_nodeHistory(int indexOfrel1, int indexOfrel2, joinHistory* newj, joinHistory** joinHist);
+joinHistory* merge_nodeHistory( joinHistory* newj, joinHistory** joinHist);
 
-uint64_t** exec_join(interm_node* interm, infoNode* infoMap, int  rel1,int  indexOfrel1,int rel2,int indexOfrel2, int col1, int col2, int numOfrels, uint64_t** rowIds1, uint64_t** rowIds2, int* numOfrows, int* free_flag);
+uint64_t** exec_join(interm_node* interm, infoNode* infoMap, int  rel1,int  indexOfrel1,int rel2,int indexOfrel2, int col1, int col2, uint64_t** rowIds1, uint64_t** rowIds2, int* numOfrows, int* free_flag);
 interm_node* special_sjoin(interm_node* interm, infoNode* infoMap, int  rel1,int  indexOfrel1,int rel2,int indexOfrel2, int col1, int col2, int numOfrels);
 interm_node* join2(interm_node* interm, infoNode* infoMap, joinHistory** joinHist,int rel1,int indexOfrel1,int rel2,int indexOfrel2, int col1, int col2, int numOfrels);
 
