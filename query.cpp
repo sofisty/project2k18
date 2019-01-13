@@ -629,17 +629,6 @@ interm_node* execute_pred(interm_node* interm, joinHistory** joinHist,pred* p,in
 	return interm; //epistrefw to intermediate		
 }
 
-void free_stats(stats* qu_stats, int numOfrels){
-	int i;
-	for(i=0; i<numOfrels; i++){
-		free(qu_stats[i].u);
-		free(qu_stats[i].l);
-		free(qu_stats[i].f);
-		free(qu_stats[i].d);
-	}
-	free(qu_stats);
-}
-
 //ektelei ena query tou batch
 interm_node* execute_query(interm_node* interm, joinHistory** joinHist, query* q, infoNode* InfoMap, int num_loadedrels){
 	int i,r,clmns;

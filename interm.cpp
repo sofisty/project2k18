@@ -435,6 +435,17 @@ void update_joinStats(stats* rel1_stats, stats* rel2_stats, int col1, int col2){
 
 }
 
+void free_stats(stats* qu_stats, int numOfrels){
+  int i;
+  for(i=0; i<numOfrels; i++){
+    free(qu_stats[i].u);
+    free(qu_stats[i].l);
+    free(qu_stats[i].f);
+    free(qu_stats[i].d);
+  }
+  free(qu_stats);
+}
+
 
 //einai h genikh synarthsh pou efarmozei filtro se relation, apofasizontas apo pou prepei
 //na parei ta rowIds tou relation analoga me th katastash tou sto intermediate
