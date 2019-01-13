@@ -826,6 +826,7 @@ long long int* cross_nodes(interm_node* interm,int* q_rels, infoNode* infoMap, j
     free(prevs);
     return toMul;
   }
+  return NULL;
 }
 
 void statusOfCross(interm_node* interm, long long int* toMul, int numOfrels){
