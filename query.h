@@ -7,24 +7,14 @@
 #include <math.h>
 #include <time.h>
 #include <stdint.h>
-#include <iostream>
+
 #include <cstdlib>
 
-#include "infomap.h"
-#include "interm.h"
+
 #include "join.h"
 #include "optim.h"
 
-typedef struct pred{
-	int rels[2];//ean exw 0.1=1.22 tote apothikevetai [0,1] 
-	int cols[2];// ean exw 0.1=1.22 tote apothikevetai [1,2]
-	int op; // i sxesh metaksi twn cols h col-val 1--> > , 2--> <, 3--> =
-	uint64_t val; // ean prokeitai gia filtro
-	int isFilter;
-	int isSelfjoin;
-	int priority;
-	struct pred* next;
-}pred;
+
 
 
 typedef struct query{

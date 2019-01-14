@@ -673,8 +673,8 @@ interm_node* execute_query(interm_node* interm, joinHistory** joinHist, query* q
 	if(curr!=NULL){
 		q->preds=curr; //orizw ws kefali tin lista thn arxh twn join, kai i lista pleon apoteleitai mono apo predicates join
 
-		joinEnumeration(q->num_rels, &(q->preds),qu_stats);
-		q->preds=reorder_priority(q->preds); //ta anadiorganwnwn me vasi to priority pou orise h joinEnumeration
+		q->preds=joinEnumeration(q->num_rels, q->preds,qu_stats);
+		//q->preds=reorder_priority(q->preds); //ta anadiorganwnwn me vasi to priority pou orise h joinEnumeration
 
 		curr=q->preds;
 		while(curr!=NULL){
