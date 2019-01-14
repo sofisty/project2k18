@@ -68,6 +68,17 @@ pred* copy_predl( pred* predl){
 
 }
 
+void add_predl(pred** head, pred* new_pred){
+	pred* curr=*head;
+	
+	if( (*head)->next==NULL){(*head)->next= copy_predl( new_pred); return;}
+
+	while(curr->next!=NULL){curr=curr->next;}
+
+	curr->next= copy_predl( new_pred);
+	
+}
+
  void replace_pred(pred** head, pred* new_pred){
 	pred* curr=*head;
 
@@ -121,7 +132,7 @@ void print_joinTree(treeNode* joinTree, int size){
 
  pred* joinEnumeration(int numOfrels,  pred* predl, stats* qu_stats){
 	int numOfpreds, i, s, j, size, rel1, rel2, col1, col2, r_new,pos;
-	pred* curr_pred=predl;
+	pred* curr_pred=predl, *pred_head;
 	treeNode* joinTree;
 	stats* temp=NULL, *best_stats=NULL;
 	double cost;
@@ -150,27 +161,28 @@ void print_joinTree(treeNode* joinTree, int size){
 
 		pos=1 << rel1 | 1 << rel2;
 		
-		if(joinTree[pos].path_stats==NULL || joinTree[pos].cost > cost){
+		if(joinTree[pos].path_stats==NULL ){	
 			
-			if(joinTree[pos].path_stats==NULL){ 
-				
-				joinTree[pos].path_stats=copy_stats(temp, numOfrels);
-				add_pred(	&(joinTree[pos].predl) ,curr_pred);
-				print_predList(joinTree[pos].predl);
-				
-			}
-			else{
-				printf("REPLACE \n");
-				free_stats(joinTree[pos].path_stats, numOfrels);
-				joinTree[pos].path_stats=copy_stats(temp, numOfrels);
-				replace_pred( &(joinTree[pos].predl), curr_pred);
-
-				print_predList(joinTree[pos].predl);
-			}
+			joinTree[pos].path_stats=copy_stats(temp, numOfrels);
+			add_pred(	&(joinTree[pos].predl) ,curr_pred);
+			print_predList(joinTree[pos].predl);
 			joinTree[pos].cost=cost;
-			joinTree[pos].path=1 << numOfpreds;
 			
 		}
+		else{
+			printf("REPLACE \n");
+			free_stats(joinTree[pos].path_stats, numOfrels);
+			joinTree[pos].path_stats=copy_stats(temp, numOfrels);
+			//replace_pred( &(joinTree[pos].predl), curr_pred);
+			add_pred(	&(joinTree[pos].predl) ,curr_pred);
+			print_predList(joinTree[pos].predl);
+			joinTree[pos].cost+=cost;
+
+		}
+	
+		joinTree[pos].path= joinTree[pos].path | 1 << numOfpreds;
+			
+		
 		free_stats(temp, numOfrels);
 		curr_pred=curr_pred->next;
 		numOfpreds++;
@@ -185,76 +197,66 @@ void print_joinTree(treeNode* joinTree, int size){
 		for(s=1; s<size; s++){
 			printf("--S %d\n",s);
 			if( __builtin_popcount(s)!=i )continue; //height
-			
-			curr_pred=predl;
-			for(j=0; j<numOfpreds; j++){
+				
+			for(j=1; j<size; j++){
+				if( __builtin_popcount(j)!=2 || j==s )continue; //height
+				if(joinTree[s].path_stats==NULL){ continue;}
+				if(joinTree[j].path_stats==NULL){ continue;}
 
+				curr_pred=joinTree[j].predl;
 				rel1=curr_pred->rels[0];
 				rel2=curr_pred->rels[1];
-				col1=curr_pred->cols[0];
-				col2=curr_pred->cols[1];
-
-				printf("\t J %d| %d.%d & %d.%d \n",j,rel1,col1,rel2,col2 );
-				if(joinTree[s].path_stats==NULL){ curr_pred=curr_pred->next;continue;}
-				if( ! (1<<rel1 & s || 1<<rel2 & s )){ curr_pred=curr_pred->next;continue;} //connected
-				if( 1<<j & joinTree[s].path){ curr_pred=curr_pred->next;continue;} //predicate hdh sto path
 				
-				if( (1<< rel1 & s) && (1<< rel1 & s) ){
-					
-					temp=copy_stats(joinTree[s].path_stats, numOfrels);
+				if( ! (1<<rel1 & s || 1<<rel2 & s )){continue;} //connected
+				if( 1<<j & joinTree[s].path){ continue;} //predicate hdh sto path
+				
+				if(1<<rel1 &s ){r_new=rel2;}
+				else{r_new=rel1;}
+				
+				temp=copy_stats(joinTree[s].path_stats, numOfrels);
+				cost=0;
+				pred_head=joinTree[j].predl;
+				while(curr_pred!=NULL){
+					//printf("MPHKA WHILE\n");
+					col1=curr_pred->cols[0];
+					col2=curr_pred->cols[1];
+					printf("\t J %d| %d.%d & %d.%d \n",j,rel1,col1,rel2,col2 );
+		
 					update_joinStats(&temp[rel1], &temp[rel2],col1 ,col2);
-					cost= temp[rel1].f[col1];
-
-					if(joinTree[s].path_stats!=NULL){
-						free_stats(joinTree[s].path_stats, numOfrels);
-						joinTree[s].path_stats=NULL;
-					}
-					joinTree[s].path_stats=copy_stats(temp, numOfrels);
-					
-					add_pred( &(joinTree[s].predl),curr_pred);
-												
-					joinTree[s].cost=cost+joinTree[s].cost;
-					joinTree[s].path= joinTree[s].path | 1 << j;
-
-				}				
-				else{ 
-					if(1<<rel1 &s ){r_new=rel2;}
-					else{r_new=rel1;}
-					printf("\t RNEW %d\n",r_new );
-					temp=copy_stats(joinTree[s].path_stats, numOfrels);
-					update_joinStats(&temp[rel1], &temp[rel2],col1 ,col2);
-					cost= temp[rel1].f[col1];
-
-					pos=s | 1<< r_new;
-					printf("POS %d \n",pos );
-					if(joinTree[pos].path_stats!=NULL){
-						printf("SUGKRINW cost now %lf me join tree %lf \n",joinTree[s].cost+cost, joinTree[pos].cost);
-					} 
-					if(joinTree[pos].path_stats==NULL || joinTree[pos].cost>joinTree[s].cost+cost){
-
-						
-						if(joinTree[pos].predl!=NULL){
-							free_predl(joinTree[pos].predl);
-							joinTree[pos].predl=NULL;
-						}
-						if(joinTree[pos].path_stats!=NULL){
-							free_stats(joinTree[pos].path_stats, numOfrels);
-							joinTree[pos].path_stats=NULL;
-						}
-
-						joinTree[pos].path_stats=copy_stats(temp, numOfrels);
-						joinTree[pos].predl= copy_predl( joinTree[s].predl);
-						//print_predList(joinTree[pos].predl);
-						add_pred( &(joinTree[pos].predl),curr_pred);
-						print_predList(joinTree[pos].predl);
-							
-										
-						joinTree[pos].cost=cost+joinTree[s].cost;
-						joinTree[pos].path= joinTree[pos].path | 1 << j;
-					}
+					cost+= temp[rel1].f[col1];
+					curr_pred=curr_pred->next;
+				
 				}
+				
+				pos=s | 1<< r_new;
+				printf("POS %d \n",pos );
+				if(joinTree[pos].path_stats!=NULL){
+					printf("SUGKRINW cost now %lf me join tree %lf \n",joinTree[s].cost+cost, joinTree[pos].cost);
+				} 
+				if(joinTree[pos].path_stats==NULL || joinTree[pos].cost>joinTree[s].cost+cost){
+
+					
+					if(joinTree[pos].predl!=NULL){
+						free_predl(joinTree[pos].predl);
+						joinTree[pos].predl=NULL;
+					}
+					if(joinTree[pos].path_stats!=NULL){
+						free_stats(joinTree[pos].path_stats, numOfrels);
+						joinTree[pos].path_stats=NULL;
+					}
+
+					joinTree[pos].path_stats=copy_stats(temp, numOfrels);
+					joinTree[pos].predl= copy_predl( joinTree[s].predl);
+					//print_predList(joinTree[pos].predl);
+					add_predl( &(joinTree[pos].predl),pred_head);
+					print_predList(joinTree[pos].predl);
+															
+					joinTree[pos].cost=cost+joinTree[s].cost;
+					joinTree[pos].path= joinTree[pos].path | 1 << joinTree[j].path;
+				}
+				
 				free_stats(temp, numOfrels);
-				curr_pred=curr_pred->next;
+				
 				
 			}
 
