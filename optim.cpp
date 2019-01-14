@@ -196,50 +196,67 @@ void print_joinTree(treeNode* joinTree, int size){
 
 				printf("\t J %d| %d.%d & %d.%d \n",j,rel1,col1,rel2,col2 );
 				if(joinTree[s].path_stats==NULL){ curr_pred=curr_pred->next;continue;}
-				if( !(1<<rel1 & s | 1<<rel2 & s )){ curr_pred=curr_pred->next;continue;} //connected
+				if( ! (1<<rel1 & s || 1<<rel2 & s )){ curr_pred=curr_pred->next;continue;} //connected
 				if( 1<<j & joinTree[s].path){ curr_pred=curr_pred->next;continue;} //predicate hdh sto path
 				
-				if(1<<rel1 &s ){r_new=rel2;}
-				else{r_new=rel1;}
-				printf("\t RNEW %d\n",r_new );
-				temp=copy_stats(joinTree[s].path_stats, numOfrels);
-				update_joinStats(&temp[rel1], &temp[rel2],col1 ,col2);
-				cost= temp[rel1].f[col1];
-
-				pos=s | 1<< r_new;
-				printf("POS %d \n",pos );
-				if(joinTree[pos].path_stats!=NULL){
-					printf("SUGKRINW cost now %lf me join tree %lf \n",joinTree[s].cost+cost, joinTree[pos].cost);
-				} 
-				if(joinTree[pos].path_stats==NULL || joinTree[pos].cost>joinTree[s].cost+cost){
-
+				if( (1<< rel1 & s) && (1<< rel1 & s) ){
 					
-					if(joinTree[pos].predl!=NULL){
-						free_predl(joinTree[pos].predl);
-						joinTree[pos].predl=NULL;
-					}
-					if(joinTree[pos].path_stats!=NULL){
-						free_stats(joinTree[pos].path_stats, numOfrels);
-						joinTree[pos].path_stats=NULL;
-					}
+					temp=copy_stats(joinTree[s].path_stats, numOfrels);
+					update_joinStats(&temp[rel1], &temp[rel2],col1 ,col2);
+					cost= temp[rel1].f[col1];
 
-					joinTree[pos].path_stats=copy_stats(temp, numOfrels);
-					joinTree[pos].predl= copy_predl( joinTree[s].predl);
-					//print_predList(joinTree[pos].predl);
-					add_pred( &(joinTree[pos].predl),curr_pred);
-					print_predList(joinTree[pos].predl);
+					if(joinTree[s].path_stats!=NULL){
+						free_stats(joinTree[s].path_stats, numOfrels);
+						joinTree[s].path_stats=NULL;
+					}
+					joinTree[s].path_stats=copy_stats(temp, numOfrels);
+					
+					add_pred( &(joinTree[s].predl),curr_pred);
+												
+					joinTree[s].cost=cost+joinTree[s].cost;
+					joinTree[s].path= joinTree[s].path | 1 << j;
+
+				}				
+				else{ 
+					if(1<<rel1 &s ){r_new=rel2;}
+					else{r_new=rel1;}
+					printf("\t RNEW %d\n",r_new );
+					temp=copy_stats(joinTree[s].path_stats, numOfrels);
+					update_joinStats(&temp[rel1], &temp[rel2],col1 ,col2);
+					cost= temp[rel1].f[col1];
+
+					pos=s | 1<< r_new;
+					printf("POS %d \n",pos );
+					if(joinTree[pos].path_stats!=NULL){
+						printf("SUGKRINW cost now %lf me join tree %lf \n",joinTree[s].cost+cost, joinTree[pos].cost);
+					} 
+					if(joinTree[pos].path_stats==NULL || joinTree[pos].cost>joinTree[s].cost+cost){
+
 						
-									
-					joinTree[pos].cost=cost+joinTree[s].cost;
-					joinTree[pos].path= joinTree[pos].path | 1 << j;
+						if(joinTree[pos].predl!=NULL){
+							free_predl(joinTree[pos].predl);
+							joinTree[pos].predl=NULL;
+						}
+						if(joinTree[pos].path_stats!=NULL){
+							free_stats(joinTree[pos].path_stats, numOfrels);
+							joinTree[pos].path_stats=NULL;
+						}
+
+						joinTree[pos].path_stats=copy_stats(temp, numOfrels);
+						joinTree[pos].predl= copy_predl( joinTree[s].predl);
+						//print_predList(joinTree[pos].predl);
+						add_pred( &(joinTree[pos].predl),curr_pred);
+						print_predList(joinTree[pos].predl);
+							
+										
+						joinTree[pos].cost=cost+joinTree[s].cost;
+						joinTree[pos].path= joinTree[pos].path | 1 << j;
+					}
 				}
 				free_stats(temp, numOfrels);
 				curr_pred=curr_pred->next;
 				
-
 			}
-
-			
 
 		}
 		
@@ -247,156 +264,9 @@ void print_joinTree(treeNode* joinTree, int size){
 	}
 
 
-print_joinTree( joinTree,  size);
-
+	print_joinTree( joinTree,  size);
 
 	exit(0);
 	return joinTree[size].predl;
 }
 
-/*
-//upologizei thn veltisth seira ekteleshs twn joins kai enhmerwnei thn proteraiothta tou predicate
-int joinEnumeration(int numOfrels, pred** predl, stats* qu_stats){
-	pred* curr_pred =*predl, *best_pred;
-	int i =0,j=0,height ,rel1, rel2, col1, col2, best_rel1, best_rel2, best_rnew ,numOfpreds, prior=1, hash_code;
-	int* s, *hash_checked;
-	double cost=0, bestCost=0;
-	stats* temp=NULL, *bestOfH=NULL, *best_stats=NULL, *start_stats=NULL;
-	s=(int*)malloc(numOfrels* sizeof(int));
-	if(s==NULL){fprintf(stderr, "Malloc failed\n"); exit(1);}
-	hash_checked=(int*)malloc(numOfrels* sizeof(int));
-	if(hash_checked==NULL){fprintf(stderr, "Malloc failed\n"); exit(1);}
-
-	//epilegetai poio predicate exei ta ligotera apotelesmata gia na ektelestei prwto
-	numOfpreds=0;
-	while(curr_pred!=NULL){
-		rel1=curr_pred->rels[0];
-		rel2=curr_pred->rels[1];
-		col1=curr_pred->cols[0];
-		col2=curr_pred->cols[1];
-
-		temp=copy_stats(qu_stats, numOfrels);
-		update_joinStats(&temp[rel1], &temp[rel2],col1 ,col2);
-		cost= temp[rel1].f[col1];
-
-		if(best_stats==NULL || bestCost>cost){
-			bestCost=cost;
-			if(best_stats !=NULL){ 
-				free_stats( best_stats, numOfrels);
-				best_stats=copy_stats(temp, numOfrels);
-			}
-			else{
-				best_stats=copy_stats(temp, numOfrels);
-			}
-			best_pred=curr_pred;
-
-			best_rel1=rel1;
-			best_rel2=rel2;
-		}
-		free_stats(temp, numOfrels);
-		curr_pred=curr_pred->next;
-		numOfpreds++;
-	}
-	//int s[numOfrelations]: krataei tis sxeseis twn predicates pou exoun epilegei na ektelestoun mexri twra
-	s[0]=best_rel1;
-	s[1]=best_rel2;
-	//int hash_checked[numOfrelations]: parallhlos me ton s kai krataei gia thn sxesh sthn thesh i tou s pinaka,
-	// enan int, pou dhlwnei oles tis prohgoumenes sxeseis ston s pinaka
-	//gia kathe prohgoumenh sxesh h antistoixh thesh bit ston int ginetai 1, dhladh to prwto relation antistoixei sto prwto bit klp
-	hash_checked[0]=0;
-	hash_checked[1]=1 << best_rel1;
-	//poses sxeseis exoun ta epilegmena predicates mexri twra 
-	height =2;
-	best_pred->priority=prior;
-	//int pou dhlwnei poies sxeseis exoun epilegei, to bit tou int pou upodhlwnei thn sxesh ginetai 1
-	hash_code=1 << best_rel1 | 1 <<best_rel2;
-
-	bestOfH=copy_stats(best_stats, numOfrels);
-	//gia ola ta predicates pou den exoun epilegei 
-	for(i=0; i<numOfpreds-1; i++){
-		free_stats(best_stats, numOfrels); 
-		best_stats=NULL;
-		bestCost=0;
-		
-		start_stats=bestOfH;
-		//anazhthsh gia ta predicates pou exoun sxeseis sto s 
-		for(j=0; j<height; j++){
-			curr_pred =*predl;
-			while(curr_pred!=NULL){
-				rel1=curr_pred->rels[0] ;
-				rel2=curr_pred->rels[1] ;
-				col1=curr_pred->cols[0];
-				col2=curr_pred->cols[1];
-
-				if( (s[j]==rel1 || s[j]==rel2) && curr_pred->priority==0){
-			
-					//apofygh twn diplwn elegxwn twn predicates
-					if(s[j]==rel1){
-						//an to bit sto hash_checked[j] einai 1 gia thn sxesh rel2
-						// shmainei oti exoun upologistei se prohgoumeno relation apo ton s ta predicates me sunduasmo rel1-rel2  
-						if( hash_checked[j] & (1 << rel2)){
-							curr_pred=curr_pred->next;
-							continue;
-						}
-					}
-					if(s[j]==rel2){
-						if( hash_checked[j] & (1 << rel1 )){
-							curr_pred=curr_pred->next;
-							continue;
-						}
-					}
-					
-					temp=copy_stats(start_stats, numOfrels);
-					update_joinStats(&temp[rel1], &temp[rel2],col1 ,col2);
-					cost= temp[rel1].f[col1];
-
-					
-					if(best_stats==NULL || bestCost>cost){
-						bestCost=cost;
-						
-						if(best_stats !=NULL){ 
-							free_stats( best_stats, numOfrels);
-							best_stats=copy_stats(temp, numOfrels);
-						}
-						else{
-							best_stats=copy_stats(temp, numOfrels);
-						}
-						best_pred=curr_pred;
-						if(s[j]==rel1){best_rnew=rel2; }
-						else{ best_rnew=rel1;}
-						
-					}
-					free_stats(temp, numOfrels);
-					
-				}
-				
-				curr_pred=curr_pred->next;
-
-			}
-			
-		}
-	
-		if(bestOfH!=NULL)free_stats(bestOfH, numOfrels);
-		bestOfH=copy_stats(best_stats, numOfrels);
-		if( !( hash_code & (1 << best_rnew) ) ){ //an to rnew den uparxei sto s 
-			s[height]=best_rnew; //prostithetai h kainourgia sxesh
-			hash_checked[height]= hash_checked[height - 1 ] | ( 1 << s[height-1] ) ; //enhmerwnetai to hash_checked
-			height+=1; //auksanetai to upsos
-			hash_code= hash_code | 1 << best_rnew ; //prostithetai h kainourgia sxesh
-			
-		}
-		//enhmerwnetai h proteraiothta tou predicate
-		prior+=1;
-		best_pred->priority=prior;
-		//printf("Prioir: %d Join: rel1 %d col1 %d rel2 %d col2 %d \n", prior ,best_pred->rels[0], best_pred->cols[0], best_pred->rels[1], best_pred->cols[1]);
-	
-
-	}
-	if(best_stats!=NULL){free_stats(best_stats, numOfrels);}
-	if(bestOfH!=NULL){free_stats(bestOfH, numOfrels);}
-	free(s);
-	free(hash_checked);
-	return 0;	
-}
-
-*/
