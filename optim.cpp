@@ -147,7 +147,7 @@ void print_joinTree(treeNode* joinTree, int size){
 	// __builtin_popcount (unsigned int x)
 
 	size= 1 << numOfrels;
-	printf("SIZE IS %d \n",size );
+	//printf("SIZE IS %d \n",size );
 	joinTree= (treeNode*) malloc(size* sizeof(treeNode));
 	for(i=0; i<size; i++){
 		joinTree[i].path_stats=NULL;
@@ -172,17 +172,17 @@ void print_joinTree(treeNode* joinTree, int size){
 			
 			joinTree[pos].path_stats=copy_stats(temp, numOfrels);
 			add_pred(	&(joinTree[pos].predl) ,curr_pred);
-			print_predList(joinTree[pos].predl);
+			//print_predList(joinTree[pos].predl);
 			joinTree[pos].cost=cost;
 			
 		}
 		else{
-			printf("REPLACE \n");
+			//printf("REPLACE \n");
 			free_stats(joinTree[pos].path_stats, numOfrels);
 			joinTree[pos].path_stats=copy_stats(temp, numOfrels);
 			//replace_pred( &(joinTree[pos].predl), curr_pred);
 			add_pred(	&(joinTree[pos].predl) ,curr_pred);
-			print_predList(joinTree[pos].predl);
+			//print_predList(joinTree[pos].predl);
 			joinTree[pos].cost+=cost;
 
 		}
@@ -195,14 +195,14 @@ void print_joinTree(treeNode* joinTree, int size){
 		numOfpreds++;
 	}
 
-	printf("END OF INIT\n");
-	print_joinTree( joinTree,  size);
+	//printf("END OF INIT\n");
+	//print_joinTree( joinTree,  size);
 
 	//-----------------------------------------------------------
 	for(i=2; i<numOfrels; i++){
 	
 		for(s=1; s<size; s++){
-			printf("--S %d\n",s);
+			//printf("--S %d\n",s);
 			if( __builtin_popcount(s)!=i )continue; //height
 				
 			for(j=1; j<size; j++){
@@ -227,7 +227,7 @@ void print_joinTree(treeNode* joinTree, int size){
 					//printf("MPHKA WHILE\n");
 					col1=curr_pred->cols[0];
 					col2=curr_pred->cols[1];
-					printf("\t J %d| %d.%d & %d.%d \n",j,rel1,col1,rel2,col2 );
+					//printf("\t J %d| %d.%d & %d.%d \n",j,rel1,col1,rel2,col2 );
 		
 					update_joinStats(&temp[rel1], &temp[rel2],col1 ,col2);
 					cost+= temp[rel1].f[col1];
@@ -236,9 +236,9 @@ void print_joinTree(treeNode* joinTree, int size){
 				}
 				
 				pos=s | 1<< r_new;
-				printf("POS %d \n",pos );
+				//printf("POS %d \n",pos );
 				if(joinTree[pos].path_stats!=NULL){
-					printf("SUGKRINW cost now %lf me join tree %lf \n",joinTree[s].cost+cost, joinTree[pos].cost);
+					//printf("SUGKRINW cost now %lf me join tree %lf \n",joinTree[s].cost+cost, joinTree[pos].cost);
 				} 
 				if(joinTree[pos].path_stats==NULL || joinTree[pos].cost>joinTree[s].cost+cost){
 
@@ -256,7 +256,7 @@ void print_joinTree(treeNode* joinTree, int size){
 					joinTree[pos].predl= copy_predl( joinTree[s].predl);
 					//print_predList(joinTree[pos].predl);
 					add_predl( &(joinTree[pos].predl),pred_head);
-					print_predList(joinTree[pos].predl);
+					//print_predList(joinTree[pos].predl);
 															
 					joinTree[pos].cost=cost+joinTree[s].cost;
 					joinTree[pos].path= joinTree[pos].path | 1 << joinTree[j].path;
@@ -274,7 +274,7 @@ void print_joinTree(treeNode* joinTree, int size){
 
 
 	//print_joinTree( joinTree,  size);
-	print_predList(joinTree[size-1].predl);
+	//print_predList(joinTree[size-1].predl);
 	
 	return joinTree[size-1].predl;
 }
