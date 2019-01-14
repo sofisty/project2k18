@@ -34,6 +34,8 @@ pred* copy_predl( pred* predl){
 	head->rels[1]=predl->rels[1];
 	head->cols[0]=predl->cols[0];
 	head->cols[1]=predl->cols[1];
+	head->isFilter=0;
+	head->isSelfjoin=0;
 	head->next=copy_predl(predl->next);
 	return head;
 	
@@ -48,6 +50,9 @@ pred* copy_predl( pred* predl){
 		(*head)->rels[1]=new_pred->rels[1];
 		(*head)->cols[0]=new_pred->cols[0];
 		(*head)->cols[1]=new_pred->cols[1];
+		(*head)->isFilter=0;
+		(*head)->isSelfjoin=0;
+
 		(*head)->next=NULL;
 		return;
 		
@@ -63,6 +68,8 @@ pred* copy_predl( pred* predl){
 	curr->next->rels[1]=new_pred->rels[1];
 	curr->next->cols[0]=new_pred->cols[0];
 	curr->next->cols[1]=new_pred->cols[1];
+	curr->next->isFilter=0;
+	curr->next->isSelfjoin=0;
 	curr->next->next=NULL;
 	
 
@@ -266,9 +273,9 @@ void print_joinTree(treeNode* joinTree, int size){
 	}
 
 
-	print_joinTree( joinTree,  size);
-
-	exit(0);
-	return joinTree[size].predl;
+	//print_joinTree( joinTree,  size);
+	print_predList(joinTree[size-1].predl);
+	
+	return joinTree[size-1].predl;
 }
 
