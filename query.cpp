@@ -579,7 +579,7 @@ void execute_batch(batch* b, int num_loadedrels, infoNode* infoMap ,int* numquer
 	for(i=0;i<b->num_queries;i++){
 		interm_node* interm=NULL;
 		joinHistory* joinHist=NULL;
-		fprintf(stderr,"**********QUERY %d *************\n",count );
+		//fprintf(stderr,"**********QUERY %d *************\n",count );
 		interm=execute_query(interm, &joinHist, b->q_arr[i], infoMap, num_loadedrels); //ektelei to kathe query
 		count++;
 	}
@@ -672,10 +672,12 @@ interm_node* execute_query(interm_node* interm, joinHistory** joinHist, query* q
 	}
 	if(curr!=NULL){
 		q->preds=curr; //orizw ws kefali tin lista thn arxh twn join, kai i lista pleon apoteleitai mono apo predicates join
-
+		//printf("BEFORE ENUM\n");
+		//print_predList(q->preds);
 		q->preds=joinEnumeration(q->num_rels, q->preds,qu_stats);
 		//q->preds=reorder_priority(q->preds); //ta anadiorganwnwn me vasi to priority pou orise h joinEnumeration
-
+		//printf("AFTER ENUM\n");
+		//print_predList(q->preds);
 		curr=q->preds;
 		while(curr!=NULL){
 			interm=execute_pred(interm, joinHist, curr, q->rels, q->num_rels, InfoMap, &qu_stats);

@@ -36,6 +36,8 @@ pred* copy_predl( pred* predl){
 	head->cols[1]=predl->cols[1];
 	head->isFilter=0;
 	head->isSelfjoin=0;
+	head->op=3;
+
 	head->next=copy_predl(predl->next);
 	return head;
 	
@@ -52,6 +54,7 @@ pred* copy_predl( pred* predl){
 		(*head)->cols[1]=new_pred->cols[1];
 		(*head)->isFilter=0;
 		(*head)->isSelfjoin=0;
+		(*head)->op=3;
 
 		(*head)->next=NULL;
 		return;
@@ -70,6 +73,7 @@ pred* copy_predl( pred* predl){
 	curr->next->cols[1]=new_pred->cols[1];
 	curr->next->isFilter=0;
 	curr->next->isSelfjoin=0;
+	curr->next->op=3;
 	curr->next->next=NULL;
 	
 
@@ -141,7 +145,7 @@ void print_joinTree(treeNode* joinTree, int size){
 	int numOfpreds, i, s, j, size, rel1, rel2, col1, col2, r_new,pos;
 	pred* curr_pred=predl, *pred_head;
 	treeNode* joinTree;
-	stats* temp=NULL, *best_stats=NULL;
+	stats* temp=NULL;
 	double cost;
 
 	// __builtin_popcount (unsigned int x)
@@ -271,7 +275,6 @@ void print_joinTree(treeNode* joinTree, int size){
 		
 
 	}
-
 
 	//print_joinTree( joinTree,  size);
 	//print_predList(joinTree[size-1].predl);

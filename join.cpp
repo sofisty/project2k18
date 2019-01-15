@@ -74,9 +74,12 @@ relation* relFromInterm(interm_node* interm, int rel, int col, int indexOfrel, i
 //Sth periptwsh poy exei uparksei prohgoumeno join me ta 2 relations
 //ta apotelesmata vriskontai sto intermediate kai apla skanarwntai oi 2 pinakes gia ta koina values
 //ginetai update tou intermediate me ta nea matches kai epistrefetai
-interm_node* special_sjoin(interm_node* interm, infoNode* infoMap, int  rel1,int  indexOfrel1,int rel2,int indexOfrel2, int col1, int col2, int numOfrels){
+interm_node* special_sjoin(interm_node* interm, infoNode* infoMap, int  rel1,int  indexOfrel1,int rel2,int indexOfrel2, int col1, int col2, 
+  int numOfrels, uint64_t** sj_updateIds, int* new_numOfrows){
+
   int numOfrows,i=0,j=0;
   uint64_t ** rowIds, tuple1, tuple2, key1,key2;
+  uint64_t* temp;
 
   rowIds=(uint64_t**)malloc(2*sizeof(uint64_t*)); //disdiastatos pinakas pou apothhkeuei ta apotelesmata sthn 0 sthlh gia to rel1 kai sthn 1 gia to rel2 
   if(rowIds==NULL){fprintf(stderr, "Malloc failed \n"); return NULL;}
@@ -86,7 +89,12 @@ interm_node* special_sjoin(interm_node* interm, infoNode* infoMap, int  rel1,int
   if(rowIds[0]==NULL){fprintf(stderr, "Malloc failed \n"); return NULL;}
   rowIds[1]=(uint64_t*)malloc(numOfrows*sizeof(uint64_t));
   if(rowIds[1]==NULL){fprintf(stderr, "Malloc failed \n"); return NULL;}
+
+  temp=(uint64_t*)malloc(numOfrows* sizeof(uint64_t)); //disdiastatos pinakas pou apothhkeuei ta apotelesmata sthn 0 sthlh gia to rel1 kai sthn 1 gia to rel2 
+  if(temp==NULL){fprintf(stderr, "Malloc failed \n"); return NULL;}
+  memset(temp, -1, numOfrows* sizeof(uint64_t));
   
+
   for(i=0; i<numOfrows; i++){
     tuple1=interm->rowIds[indexOfrel1][i];
     tuple2=interm->rowIds[indexOfrel2][i];
@@ -96,15 +104,22 @@ interm_node* special_sjoin(interm_node* interm, infoNode* infoMap, int  rel1,int
     if(key1==key2){ 
       rowIds[0][j]=tuple1;
       rowIds[1][j]=tuple2;
+      temp[j]=i;
+
       j++; 
     }    
   }
+
+  *sj_updateIds=(uint64_t*)malloc(j* sizeof(uint64_t));
+  memcpy ( *sj_updateIds, temp, j* sizeof(uint64_t));
+  *new_numOfrows=j;
 
   interm=update_interm( interm, rowIds[0], indexOfrel1,  j, numOfrels);
   interm= update_interm( interm, rowIds[1], indexOfrel2, j,  numOfrels);
   //statusOfinterm(interm);
   
   free_rowIds(rowIds);
+  free(temp);
   return interm;
 }
 
@@ -424,7 +439,7 @@ interm_node* join2(interm_node* interm, infoNode* infoMap, joinHistory** joinHis
   int hold1=-1, hold2=-1,  numOfrows=0, i , j, to_add,free_flag;
   joinHistory* currHist1, *currHist2, *newj;
   joinHistory* curr;
-  uint64_t* temp, *rowIds1, *rowIds2, **updateIds;
+  uint64_t* temp, *rowIds1, *rowIds2, **updateIds, *sj_updateIds;
   currHist1=*joinHist;
   currHist2=*joinHist;
 
@@ -441,10 +456,27 @@ interm_node* join2(interm_node* interm, infoNode* infoMap, joinHistory** joinHis
  
   //an kai ta 2 relations vriskontai ston idio komvo joinHistory 
   if((currHist1==currHist2)&&(currHist2!=NULL)&&(currHist1!=NULL)) {
-    
+   
     //anazhthsh an exoun summetasxei mazi se prohoumeno join wste na sarwthei to intermediate gia ta apotelesmata
   	if(find_join(currHist1, indexOfrel1, indexOfrel2)==0){
-  		interm=special_sjoin( interm, infoMap, rel1, indexOfrel1, rel2, indexOfrel2, col1, col2, numOfrels); 
+    
+  		interm=special_sjoin( interm, infoMap, rel1, indexOfrel1, rel2, indexOfrel2, col1, col2, numOfrels, &sj_updateIds, &numOfrows);
+      
+      
+
+      for(i=0; i<numOfrels; i++) {
+         if( (currHist1->rels[i])!=NULL && i!=indexOfrel1 && i!=indexOfrel2){ //an einai apothhkeumenh sxesh sto komvo joinHist 
+                                                                              
+          temp= real_RowIds( interm, sj_updateIds, numOfrows, i, temp); //enhmerwnetai to temp me ta nea rowIds gia thn sxesh, me vash ta lines pou epestrepse h result_list
+                                                                        
+          interm= update_interm(interm, temp, i, numOfrows,  numOfrels); 
+
+          free(temp);
+        }      
+      }
+      free(sj_updateIds);
+     
+
   	}
   	else{ //an den exoun ektelesei mazi kapoio join
 
@@ -457,9 +489,10 @@ interm_node* join2(interm_node* interm, infoNode* infoMap, joinHistory** joinHis
       
 	  	
       //Enhmerwnetai to intermediate gia tis upoloipes sxeseis tou komvou JoinHistory pou vrethhkan ta relations tou join.
-	  	for(i=0; i<numOfrels; i++) {
+	  
+      for(i=0; i<numOfrels; i++) {
 	       if( (currHist1->rels[i])!=NULL && i!=indexOfrel1 && i!=indexOfrel2){ //an einai apothhkeumenh sxesh sto komvo joinHist 
-                                                                                   
+                                                                   
           temp= real_RowIds( interm, updateIds[0], numOfrows, i, temp); //enhmerwnetai to temp me ta nea rowIds gia thn sxesh, me vash ta lines pou epestrepse h result_list
                                                                         
 	        interm= update_interm(interm, temp, i, numOfrows,  numOfrels); 
