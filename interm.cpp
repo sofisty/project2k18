@@ -30,6 +30,8 @@ interm_node* update_interm(interm_node* interm, uint64_t* rowIds, int indexOfrel
     if(interm->numOfrows==NULL){fprintf(stderr, "Malloc failed \n"); return NULL;}
     for(j=0; j<numOfrels; j++)interm->numOfrows[j]=-1;
     interm=store_interm_data(interm,  rowIds, indexOfrel, numOfrows, numOfrels); 
+    
+
     return interm;   
    
   }
@@ -37,6 +39,7 @@ interm_node* update_interm(interm_node* interm, uint64_t* rowIds, int indexOfrel
     i=indexOfrel;
     if(interm->numOfrows[i]==-1){ //ean den exei ksanaxrisimopoiithei to dothen relation se kapoia praksi, tote apla apothikevw ta rowIds
       interm=store_interm_data(interm,  rowIds, indexOfrel, numOfrows, numOfrels); 
+      
       return interm;
     }
     else{ //alliws , svinw prwta ta apotelesmata pou iparxoun kai meta apothikevw ta kainourgia koina apotelesmata
@@ -45,10 +48,13 @@ interm_node* update_interm(interm_node* interm, uint64_t* rowIds, int indexOfrel
       interm->rowIds[i]=NULL;
     
       interm=store_interm_data(interm,  rowIds, indexOfrel, numOfrows, numOfrels ); 
+
       return interm; //epitrefw to intermediate
     }
 
   }
+
+
   
   return NULL;
 

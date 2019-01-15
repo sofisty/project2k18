@@ -671,20 +671,25 @@ interm_node* execute_query(interm_node* interm, joinHistory** joinHist, query* q
 		free(temp); //ta vgazw apo tin lista
 	}
 	if(curr!=NULL){
-		q->preds=curr; //orizw ws kefali tin lista thn arxh twn join, kai i lista pleon apoteleitai mono apo predicates join
-		//printf("BEFORE ENUM\n");
-		//print_predList(q->preds);
-		q->preds=joinEnumeration(q->num_rels, q->preds,qu_stats);
-		//q->preds=reorder_priority(q->preds); //ta anadiorganwnwn me vasi to priority pou orise h joinEnumeration
-		//printf("AFTER ENUM\n");
-		//print_predList(q->preds);
-		curr=q->preds;
+		treeNode* joinT=NULL; 
+		int size= 1<< q->num_rels;
+		joinT= (treeNode*) malloc(size* sizeof(treeNode));
+		for(i=0; i<size; i++){
+			joinT[i].path_stats=NULL;
+			joinT[i].predl=NULL;
+			joinT[i].path=0;
+		}
+
+		q->preds=curr; //orizw ws kefali tin lista thn arxh twn join, kai i lista pleon apoteleitai mono apo predicates join	
+		curr=joinEnumeration(q->num_rels, q->preds,qu_stats, &joinT);
+	
 		while(curr!=NULL){
 			interm=execute_pred(interm, joinHist, curr, q->rels, q->num_rels, InfoMap, &qu_stats);
 
 			if(interm==NULL)break;
 			curr=curr->next;
 		}
+		 free_joinTree( joinT, size, q->num_rels);
 	}
 
 	if(interm!=NULL) proj_sums(interm,q, InfoMap); //an de xreiastike cross ftiaxnw ta athroismata twn provolwn kanonika

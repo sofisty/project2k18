@@ -28,6 +28,7 @@ typedef struct treeNode {
 
 
 //int joinEnumeration(int numOfrels, struct pred** predl, stats* qu_stats);
+void free_joinTree(treeNode* joinTree, int size, int numOfrels);
 void free_predl(pred* head);
 void add_predl(pred** head, pred* new_pred);
  void add_pred(pred** head, pred* new_pred);
@@ -35,7 +36,7 @@ void add_predl(pred** head, pred* new_pred);
 pred* copy_predl( pred* predl);
 void print_predList(pred* head);
 stats* copy_stats(stats* qu_stats, int numOfrels);
- pred* joinEnumeration(int numOfrels, pred* predl, stats* qu_stats);
+ pred* joinEnumeration(int numOfrels, pred* predl, stats* qu_stats, treeNode** joinT);
  void print_joinTree(treeNode* joinTree, int size);
 
 
