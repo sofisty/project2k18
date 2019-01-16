@@ -246,8 +246,6 @@ void free_joinTree(treeNode* joinTree, int size, int numOfrels){
 				}
 				
 				pos=s | 1<< r_new;
-
-				if(joinTree[pos].path_stats!=NULL){
 					
 				if(joinTree[pos].path_stats==NULL || joinTree[pos].cost>joinTree[s].cost+cost){
 
