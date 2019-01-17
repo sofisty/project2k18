@@ -292,17 +292,12 @@ joinHistory* add_nodeHistory(int indexOfrel,int joinedRel, joinHistory* joinHist
 		if(joinHist==NULL){fprintf(stderr, "Malloc failed \n"); return NULL;}
 		joinHist->numOfrels=numOfrels; 
 
-		joinHist->rels=(int**)malloc(numOfrels* sizeof(int*)); //disdiastatos int pinakas me ta relation pou summetexoun sto query 
+		joinHist->rels=(int*)malloc(numOfrels* sizeof(int)); 
                                                     //opou gia kathe relation apothhkeuei tis sxeseis pou exoun kanei mazi tou join
 		if(joinHist->rels==NULL){fprintf(stderr, "Malloc failed \n"); return NULL;}
-		for(i=0;i<numOfrels;i++)joinHist->rels[i]=NULL; //arxikopoihsh wste oi sxeseis pou den exoun summetasxei se join tou komvou na einai NULL
+		for(i=0;i<numOfrels;i++)joinHist->rels[i]=0; 
 
-		joinHist->rels[indexOfrel]=(int*)malloc(numOfrels* sizeof(int)); //gia to relation pou klhhthkhe h add ginetai malloc
-		if(joinHist->rels[indexOfrel]==NULL){fprintf(stderr, "Malloc failed \n"); return NULL;}
-		for(i=1;i<numOfrels;i++)joinHist->rels[indexOfrel][i]=-1; //kai gia to relation auto epeidh einai h prwth prosthhkh join 
-                                                              //oi theseis-sxeseis plin ths prwths arxikopoiountai me -1: dhladh den exoun summetasxei se join me auto to relation
-
-		joinHist->rels[indexOfrel][0]=joinedRel; //sthn prwth thesh apothhkeuetai to relation pou egine join
+		joinHist->rels[indexOfrel]= 1 << joinedRel; //sthn prwth thesh apothhkeuetai to relation pou egine join
 		joinHist->next=NULL;
     return joinHist;
 
@@ -316,16 +311,11 @@ joinHistory* add_nodeHistory(int indexOfrel,int joinedRel, joinHistory* joinHist
 		if(curr->next==NULL){fprintf(stderr, "Malloc failed \n"); return NULL;}
 		curr->next->numOfrels=numOfrels;
 
-		curr->next->rels=(int**)malloc(numOfrels* sizeof(int*));
+		curr->next->rels=(int*)malloc(numOfrels* sizeof(int));
 		if(curr->next->rels==NULL){fprintf(stderr, "Malloc failed \n"); return NULL;}
-		for(i=0;i<numOfrels;i++)curr->next->rels[i]=NULL;		
-
-		curr->next->rels[indexOfrel]=(int*)malloc(numOfrels* sizeof(int));
-		if(curr->next->rels[indexOfrel]==NULL){fprintf(stderr, "Malloc failed \n"); return NULL;}
-		for(i=1;i<numOfrels;i++)curr->next->rels[indexOfrel][i]=-1;
+		for(i=0;i<numOfrels;i++)curr->next->rels[i]=0;		
 		
-		
-		curr->next->rels[indexOfrel][0]=joinedRel; 
+		curr->next->rels[indexOfrel]= 1 << joinedRel; 
 		curr->next->next=NULL;
     return curr->next; //epistrefetai o teleutaios komvos ths listas
 
@@ -339,14 +329,8 @@ void free_joinistory(joinHistory* joinHist){
   int i;
   joinHistory* curr=joinHist, *temp;
   while(curr!=NULL){
-    for( i=0; i<curr->numOfrels; i++){
-      if(curr->rels[i]!=NULL){
-       free(curr->rels[i]);
-       curr->rels[i]=NULL;
-      }
 
-    }
-    free(curr->rels);
+    if(curr->rels!=NULL)free(curr->rels);
     curr->rels=NULL;
     temp=curr;
    
@@ -362,23 +346,8 @@ joinHistory* update_nodeHistory(int indexOfrel, int joinedRel, joinHistory* join
     int i=0, numOfrels;
     if(joinHist!=NULL){
       numOfrels=joinHist->numOfrels;
-
-      if(joinHist->rels[indexOfrel]==NULL){ //an den exei summetasxei se join ksana to indexOfrel ginetai malloc o pinakas kai apothhkeuetai to joinedRel sthn prwth thesh
-      	joinHist->rels[indexOfrel]=(int*)malloc(numOfrels* sizeof(int));
-      	if(joinHist->rels[indexOfrel]==NULL){fprintf(stderr, "Malloc failed \n"); return NULL;}
-      	for(i=1;i<numOfrels;i++)joinHist->rels[indexOfrel][i]=-1;
-      	joinHist->rels[indexOfrel][0]=joinedRel;
-      	return joinHist; //epistrefetai o ananewmenos komvos ths listas
-      }
-      else{ //diaforetika psaxnei thn prwth emfanish tou -1 kai to joinedRel apothhkeuetai ekei
-      	while( i<numOfrels ){
-	      if(joinHist->rels[indexOfrel][i]==-1) break;
-	      i++;
-      	}
-      	if(i>=numOfrels){fprintf(stderr, "Updated joinHistory\n"); return NULL;}  
-      	joinHist->rels[indexOfrel][i]=joinedRel;
-      	return joinHist; //epistrefetai o ananewmenos komvos ths listas
-      }
+      joinHist->rels[indexOfrel]=  joinHist->rels[indexOfrel] | (1<< joinedRel);
+      return joinHist; 
       
     }
     else{
@@ -390,7 +359,7 @@ joinHistory* update_nodeHistory(int indexOfrel, int joinedRel, joinHistory* join
 
 
 //sunarthsh ektupwshs joinHIstory , den kaleitai pouthena
-int print_joinHist(joinHistory* joinHist){
+/*int print_joinHist(joinHistory* joinHist){
   int numOfrels=joinHist->numOfrels, i,j;
   if(joinHist==NULL){printf("Empty joinHistory \n"); return 0;}
   printf("---Join History---: \n");
@@ -414,7 +383,7 @@ int print_joinHist(joinHistory* joinHist){
   }
   printf("--------------\n");
   return 0;
-}
+}*/
 
 
 //eidikh sunarthsh gia thn anazhthsh prohgoumenou join me tis 2 sxeseis
@@ -425,10 +394,10 @@ int find_join(joinHistory* joinHist, int indexOfrel1, int indexOfrel2){
 	int i, numOfrels;
 	if(joinHist==NULL)return 1; //kanena relation den uparxei sto joinHist
 	numOfrels=joinHist->numOfrels;
-	if(joinHist->rels[indexOfrel1]==NULL){fprintf(stderr, "find_join indexOfrel1 does not exist\n" ); exit(0);} //to indexOfrel1 den exei kanei join me kamia sxesh, einai kai error
-	for(i=0; i<numOfrels; i++){
-		if(joinHist->rels[indexOfrel1][i]==indexOfrel2) return 0; //to indexOfrelation1 exei kanei join me to 2
-	}
+	if(joinHist->rels==NULL){fprintf(stderr, "find_join indexOfrel1 does not exist\n" ); exit(0);} //to indexOfrel1 den exei kanei join me kamia sxesh, einai kai error
+	
+	if( joinHist->rels[indexOfrel1] & (1 << indexOfrel2 )) return 0; //to indexOfrelation1 exei kanei join me to 2
+	
 	return 1;//den vrethhke
 }
 
@@ -445,11 +414,11 @@ interm_node* join2(interm_node* interm, infoNode* infoMap, joinHistory** joinHis
 
   //anazhthsh sthn lista joinHistory an kapoio relation apo ta 2 exei summetasxei se prohgoumeno join
   while(currHist1!=NULL){
-    if(currHist1->rels[indexOfrel1]!=NULL) {hold1=indexOfrel1; break;} //an vrethei komvos pou to relation1 exei ektelesei prohgoumeno join apothhkeuetai sto currHist1
+    if(currHist1->rels[indexOfrel1]!=0) {hold1=indexOfrel1; break;} //an vrethei komvos pou to relation1 exei ektelesei prohgoumeno join apothhkeuetai sto currHist1
     currHist1=currHist1->next;
   }
   while(currHist2!=NULL){
-    if(currHist2->rels[indexOfrel2]!=NULL) { hold2=indexOfrel2; break;}//antistoixa gia to rel2
+    if(currHist2->rels[indexOfrel2]!=0) { hold2=indexOfrel2; break;}//antistoixa gia to rel2
     currHist2=currHist2->next;
   }
 
@@ -461,11 +430,9 @@ interm_node* join2(interm_node* interm, infoNode* infoMap, joinHistory** joinHis
   	if(find_join(currHist1, indexOfrel1, indexOfrel2)==0){
     
   		interm=special_sjoin( interm, infoMap, rel1, indexOfrel1, rel2, indexOfrel2, col1, col2, numOfrels, &sj_updateIds, &numOfrows);
-      
-      
 
       for(i=0; i<numOfrels; i++) {
-         if( (currHist1->rels[i])!=NULL && i!=indexOfrel1 && i!=indexOfrel2){ //an einai apothhkeumenh sxesh sto komvo joinHist 
+         if( (currHist1->rels[i])!=0 && i!=indexOfrel1 && i!=indexOfrel2){ //an einai apothhkeumenh sxesh sto komvo joinHist 
                                                                               
           temp= real_RowIds( interm, sj_updateIds, numOfrows, i, temp); //enhmerwnetai to temp me ta nea rowIds gia thn sxesh, me vash ta lines pou epestrepse h result_list
                                                                         
@@ -491,7 +458,7 @@ interm_node* join2(interm_node* interm, infoNode* infoMap, joinHistory** joinHis
       //Enhmerwnetai to intermediate gia tis upoloipes sxeseis tou komvou JoinHistory pou vrethhkan ta relations tou join.
 	  
       for(i=0; i<numOfrels; i++) {
-	       if( (currHist1->rels[i])!=NULL && i!=indexOfrel1 && i!=indexOfrel2){ //an einai apothhkeumenh sxesh sto komvo joinHist 
+	       if( (currHist1->rels[i])!=0 && i!=indexOfrel1 && i!=indexOfrel2){ //an einai apothhkeumenh sxesh sto komvo joinHist 
                                                                    
           temp= real_RowIds( interm, updateIds[0], numOfrows, i, temp); //enhmerwnetai to temp me ta nea rowIds gia thn sxesh, me vash ta lines pou epestrepse h result_list
                                                                         
@@ -551,7 +518,7 @@ interm_node* join2(interm_node* interm, infoNode* infoMap, joinHistory** joinHis
   if(currHist1!=NULL && currHist2==NULL) {
     //enhmerwse to intermediate gia tis sxeseis pou exoun kanei prohgoumena joins me to rel1
     for(i=0; i<numOfrels; i++) {
-       if( (currHist1->rels[i])!=NULL && i!=indexOfrel1){
+       if( (currHist1->rels[i])!=0 && i!=indexOfrel1){
         
         temp= real_RowIds( interm, updateIds[0], numOfrows, i, temp);
         
@@ -577,7 +544,7 @@ interm_node* join2(interm_node* interm, infoNode* infoMap, joinHistory** joinHis
   //to rel2 uparxei se komvo tou joinHistory (exei summetasxei se prohgoumeno join) enw to rel1 oxi 
   else if(currHist1==NULL && currHist2!=NULL){
     for(i=0; i<numOfrels; i++) {
-       if( (currHist2->rels[i])!=NULL && i!=indexOfrel2){
+       if( (currHist2->rels[i])!=0 && i!=indexOfrel2){
        
         temp= real_RowIds( interm, updateIds[1], numOfrows, i, temp);
         interm= update_interm(interm, temp, i, numOfrows,  numOfrels); 
@@ -606,46 +573,44 @@ interm_node* join2(interm_node* interm, infoNode* infoMap, joinHistory** joinHis
     
   //ginetai malloc h mnhmh gia ton komvo new  
   newj->numOfrels=numOfrels;
-  newj->rels=(int**)malloc(numOfrels* sizeof(int*));
+  newj->rels=(int*)malloc(numOfrels* sizeof(int));
   if(newj->rels==NULL){fprintf(stderr, "Malloc failed \n"); return NULL;}
-  for(i=0;i<numOfrels;i++)newj->rels[i]=NULL;
+  for(i=0;i<numOfrels;i++)newj->rels[i]=0;
 
   //gia thn sxesh rel1 antigrafontai oles oi sxeseis pou exoun summetasxei se join mazi ths apo to currHist1  
-  newj->rels[indexOfrel1]=(int*)malloc(numOfrels* sizeof(int));
-  if(newj->rels[indexOfrel1]==NULL){fprintf(stderr, "Malloc failed \n"); return NULL;}
   for(i=0;i<numOfrels;i++){
-    if(currHist1->rels[indexOfrel1][i]!=-1){to_add=i;}
-    newj->rels[indexOfrel1][i]=currHist1->rels[indexOfrel1][i]; 
+    if(currHist1->rels[indexOfrel1] & (1 << i) ){
+      newj->rels[indexOfrel1]= newj->rels[indexOfrel1] | (1<<i);
+    }
   
   }
-  to_add++;
-  if(to_add>=numOfrels){fprintf(stderr, "Variable to_add \n"); return NULL;}
-  newj->rels[indexOfrel1][to_add]=indexOfrel2; //kai prostithetai to rel2 sthn teleutaia thesh
+  
+  newj->rels[indexOfrel1]= newj->rels[indexOfrel1] |  (1<< indexOfrel2 ); //kai prostithetai to rel2 sthn teleutaia thesh
   
   //antistoixa gia to rel2 antigrafontai oi sxeseis pou exoun kanei join mazi ths apo to currHist2    
-  newj->rels[indexOfrel2]=(int*)malloc(numOfrels* sizeof(int));
-  if(newj->rels[indexOfrel2]==NULL){fprintf(stderr, "Malloc failed \n"); return NULL;}
   for(i=0;i<numOfrels;i++){
-    if(currHist2->rels[indexOfrel2][i]!=-1){to_add=i;}
-    newj->rels[indexOfrel2][i]=currHist2->rels[indexOfrel2][i]; 
+    if(currHist2->rels[indexOfrel2] & (1<<i)){
+      newj->rels[indexOfrel2]=newj->rels[indexOfrel2] | (1<<i); 
+    }
   
   }
-  to_add++;
-  if(to_add>=numOfrels){fprintf(stderr, "Variable to_add \n"); return NULL;}
-  newj->rels[indexOfrel2][to_add]=indexOfrel1;//kai prostithetai to rel1 sthn teleutaia thesh
+  
+  newj->rels[indexOfrel2]= newj->rels[indexOfrel2] | (1<< indexOfrel1);//kai prostithetai to rel1 sthn teleutaia thesh
 
   newj->next=NULL;
 //----------------------------------------------------------------------------------
 
 //gia tis upoloipes sxeseis pou vriskontai stous duo komvous
    for(i=0; i<numOfrels; i++) {
-       if( (currHist1->rels[i])!=NULL && i!=indexOfrel1){
+       if( (currHist1->rels[i])!=0 && i!=indexOfrel1){
         temp= real_RowIds( interm, updateIds[0], numOfrows, i, temp); //dhmiourgountai ta nea rowIds apo to map
         interm= update_interm(interm, temp, i, numOfrows,  numOfrels); //enhmerwnetai to intermediate
-        newj->rels[i]=(int*)malloc(numOfrels* sizeof(int)); //kai apothhkeuontai kai ston new ta prohgoumena joins
-        if(newj->rels[i]==NULL){fprintf(stderr, "Malloc failed \n"); return NULL;} 
+        //kai apothhkeuontai kai ston new ta prohgoumena joins
         for(j=0;j<numOfrels;j++){
-          newj->rels[i][j]=currHist1->rels[i][j]; 
+          if(currHist1->rels[i] & (1<<j)){
+             newj->rels[i]=newj->rels[i] | (1<<j);
+          }
+          
         }
         free(temp);
       }
@@ -656,10 +621,12 @@ interm_node* join2(interm_node* interm, infoNode* infoMap, joinHistory** joinHis
        if( (currHist2->rels[i])!=NULL && i!=indexOfrel2){
         temp= real_RowIds( interm, updateIds[1], numOfrows, i, temp);
         interm= update_interm(interm, temp, i, numOfrows,  numOfrels);
-        newj->rels[i]=(int*)malloc(numOfrels* sizeof(int));
-        if(newj->rels[i]==NULL){fprintf(stderr, "Malloc failed \n"); return NULL;}
+       
         for(j=0;j<numOfrels;j++){
-          newj->rels[i][j]=currHist2->rels[i][j]; 
+          if(currHist2->rels[i] & (1<<j)){
+            newj->rels[i]= newj->rels[i] | (1<<j);
+          }
+           
         }
         free(temp);
       }
@@ -669,7 +636,6 @@ interm_node* join2(interm_node* interm, infoNode* infoMap, joinHistory** joinHis
     //svhnontai oi 2 komvoi pou uphrxan prin to merge ta relations
     *joinHist =delete_nodeHistory(joinHist, currHist1);
     *joinHist=delete_nodeHistory(joinHist,currHist2);
-    for(i=0; i<numOfrels; i++){free(currHist1->rels[i]); free(currHist2->rels[i]);}
     free(currHist1->rels);
     free(currHist2->rels);
     free(currHist1);
@@ -692,7 +658,7 @@ interm_node* join2(interm_node* interm, infoNode* infoMap, joinHistory** joinHis
 
 }
 
-
+/*
 long long int* init_crossArr(long long int* arr, int numOfrels){
   int i;
   arr=(long long int *)malloc(numOfrels*(sizeof(long long int)));
@@ -875,3 +841,4 @@ void statusOfCross(interm_node* interm, long long int* toMul, int numOfrels){
     }
   }
 }
+*/
