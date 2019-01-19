@@ -25,6 +25,7 @@ stats* copy_stats(stats* qu_stats, int numOfrels){
 	
 }
 
+//antigrafei mia lista apo predicates se mia kainourgia thn opoia epistrefei
 pred* copy_predl( pred* predl){
 	
 	if(predl==NULL)return NULL;
@@ -43,6 +44,8 @@ pred* copy_predl( pred* predl){
 	
 		
 }
+
+//prosthetei ena predicate se mia lista apo predicates
  void add_pred(pred** head, pred* new_pred){
 	pred* curr=*head;
 	
@@ -79,6 +82,8 @@ pred* copy_predl( pred* predl){
 
 }
 
+
+//antigrafei mia lista apo predicates kai thn prosthetei sto telos mias hdh uparkths listas
 void add_predl(pred** head, pred* new_pred){
 	pred* curr=*head;
 	
@@ -90,6 +95,7 @@ void add_predl(pred** head, pred* new_pred){
 	
 }
 
+//antikathista ena predicate se mia lista me ena allo
  void replace_pred(pred** head, pred* new_pred){
 	pred* curr=*head;
 
@@ -106,6 +112,7 @@ void add_predl(pred** head, pred* new_pred){
 
 }
 
+//ektupwnei thn lista apo predicates
 void print_predList(pred* head){
 	pred* curr=head;
 	int i =0;
@@ -127,6 +134,7 @@ void free_predl(pred* head){
 	}
 }
 
+//ektupwnei to joinTree
 void print_joinTree(treeNode* joinTree, int size){
 	int i;
 	for(i=0; i<size; i++){
@@ -158,6 +166,8 @@ void free_joinTree(treeNode* joinTree, int size, int numOfrels){
 	joinTree=NULL;
 }
 
+
+//vriskei thn veltisth seira ekteleshs twn joins kai epistrefei mia taksinomhmenh lista me ta predicates pros ektelesh
  pred* joinEnumeration(int numOfrels,  pred* predl, stats* qu_stats, treeNode** joinT){
 	int numOfpreds, i, s, j, size, rel1, rel2, col1, col2, r_new,pos;
 	pred* curr_pred=predl, *pred_head;
@@ -165,8 +175,9 @@ void free_joinTree(treeNode* joinTree, int size, int numOfrels){
 	stats* temp=NULL;
 	double cost;
 
-	size= 1 << numOfrels;
+	size= 1 << numOfrels; //2^n to megethos tou join tree
 	
+	//arxikopoihsh tou dentrou, apothhkeuontai ta predicates stis theseis tou dentrou gia 2 sxeseis 
 	numOfpreds=0;
 	while(curr_pred!=NULL){
 		rel1=curr_pred->rels[0];
@@ -178,28 +189,24 @@ void free_joinTree(treeNode* joinTree, int size, int numOfrels){
 		update_joinStats(&temp[rel1], &temp[rel2],col1 ,col2);
 		cost= temp[rel1].f[col1];
 
-		pos=1 << rel1 | 1 << rel2;
+		pos=1 << rel1 | 1 << rel2; //thesh tou joinTree opou ta bit stis theseis rel1 kai rel2 einai 1
 		
-		if(joinTree[pos].path_stats==NULL ){	
+		if(joinTree[pos].path_stats==NULL ){ 	//den exei apothhkeutei allo predicate se authn thn thesh
 			
 			joinTree[pos].path_stats=copy_stats(temp, numOfrels);
 			add_pred(	&(joinTree[pos].predl) ,curr_pred);
-			//print_predList(joinTree[pos].predl);
 			joinTree[pos].cost=cost;
 			
 		}
-		else{
-			//printf("REPLACE \n");
+		else{ //prostithetai to predicate sthn lista (periptwsh pou uparxoun panw apo ena predicate pou kanoun join me tis idies sxeseis)
 			free_stats(joinTree[pos].path_stats, numOfrels);
 			joinTree[pos].path_stats=copy_stats(temp, numOfrels);
-			//replace_pred( &(joinTree[pos].predl), curr_pred);
 			add_pred(	&(joinTree[pos].predl) ,curr_pred);
-			//print_predList(joinTree[pos].predl);
 			joinTree[pos].cost+=cost;
 
 		}
 	
-		joinTree[pos].path= joinTree[pos].path | 1 << numOfpreds;
+		joinTree[pos].path= joinTree[pos].path | 1 << numOfpreds; //apothhkeuei poia predicates exoun apothhkeutei sthn thesh pos
 			
 		
 		free_stats(temp, numOfrels);
@@ -209,15 +216,16 @@ void free_joinTree(treeNode* joinTree, int size, int numOfrels){
 
 	
 	//-----------------------------------------------------------
-	for(i=2; i<numOfrels; i++){
+	for(i=2; i<numOfrels; i++){ //ksekinaei apo upsos 2 logw ths arxikopoihshs tou joinTree 
 	
-		for(s=1; s<size; s++){
+		for(s=1; s<size; s++){ 
 			
 			if( __builtin_popcount(s)!=i )continue; //height
 				
 			for(j=1; j<size; j++){
-				if( __builtin_popcount(j)!=2 || j==s )continue; //height
-				if(joinTree[s].path_stats==NULL){ continue;}
+				if( __builtin_popcount(j)!=2 || j==s )continue; // ta predicates epilegontai apo thn arxikopoihsh tou joinTree 
+																//stis theseis s pou aforoun 2 sxeseis
+				if(joinTree[s].path_stats==NULL){ continue;} //an den uparxoun apotthkeumena predicates stis theseis j kai s
 				if(joinTree[j].path_stats==NULL){ continue;}
 
 				curr_pred=joinTree[j].predl;
@@ -225,7 +233,7 @@ void free_joinTree(treeNode* joinTree, int size, int numOfrels){
 				rel2=curr_pred->rels[1];
 				
 				if( ! (1<<rel1 & s || 1<<rel2 & s )){continue;} //connected
-				if( 1<<j & joinTree[s].path){ continue;} //predicate hdh sto path
+				if( 1<<j & joinTree[s].path){ continue;} //predicate hdh sto path 
 				
 				if(1<<rel1 &s ){r_new=rel2;}
 				else{r_new=rel1;}
@@ -233,21 +241,21 @@ void free_joinTree(treeNode* joinTree, int size, int numOfrels){
 				temp=copy_stats(joinTree[s].path_stats, numOfrels);
 				cost=0;
 				pred_head=joinTree[j].predl;
-				while(curr_pred!=NULL){
-					//printf("MPHKA WHILE\n");
+				while(curr_pred!=NULL){ //parapanw apo ena predicate gia join me autes tis sxeseis
+
 					col1=curr_pred->cols[0];
 					col2=curr_pred->cols[1];
 					
 		
 					update_joinStats(&temp[rel1], &temp[rel2],col1 ,col2);
-					cost+= temp[rel1].f[col1];
+					cost+= temp[rel1].f[col1]; //prostithetai to kostos
 					curr_pred=curr_pred->next;
 				
 				}
 				
 				pos=s | 1<< r_new;
 					
-				if(joinTree[pos].path_stats==NULL || joinTree[pos].cost>joinTree[s].cost+cost){
+				if(joinTree[pos].path_stats==NULL || joinTree[pos].cost>joinTree[s].cost+cost){ //palio kostos sthn thesh pos > tou kostous gia to s + to kainourgio
 
 					
 					if(joinTree[pos].predl!=NULL){
@@ -261,9 +269,8 @@ void free_joinTree(treeNode* joinTree, int size, int numOfrels){
 
 					joinTree[pos].path_stats=copy_stats(temp, numOfrels);
 					joinTree[pos].predl= copy_predl( joinTree[s].predl);
-					//print_predList(joinTree[pos].predl);
-					add_predl( &(joinTree[pos].predl),pred_head);
-					//print_predList(joinTree[pos].predl);
+					
+					add_predl( &(joinTree[pos].predl),pred_head);//prosthetei to kainourgio predicate
 															
 					joinTree[pos].cost=cost+joinTree[s].cost;
 					joinTree[pos].path= joinTree[pos].path | 1 << joinTree[j].path;
@@ -280,6 +287,6 @@ void free_joinTree(treeNode* joinTree, int size, int numOfrels){
 	}
 
 	
-	return joinTree[size-1].predl;
+	return joinTree[size-1].predl; //epistrefei thn lista apothhkeumenh sthn thesh pou ola ta bits einai 1
 }
 
