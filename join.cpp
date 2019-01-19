@@ -462,7 +462,6 @@ interm_node* join2(interm_node* interm, infoNode* infoMap, joinHistory** joinHis
     
       interm=special_sjoin( interm, infoMap, rel1, indexOfrel1, rel2, indexOfrel2, col1, col2, numOfrels, &sj_updateIds, &numOfrows);
       
-      
 
       for(i=0; i<numOfrels; i++) {
          if( (currHist1->rels[i])!=NULL && i!=indexOfrel1 && i!=indexOfrel2){ //an einai apothhkeumenh sxesh sto komvo joinHist 
@@ -475,6 +474,8 @@ interm_node* join2(interm_node* interm, infoNode* infoMap, joinHistory** joinHis
         }      
       }
       free(sj_updateIds);
+
+      return interm;
      
 
     }
