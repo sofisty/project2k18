@@ -16,7 +16,7 @@ int main(void){
 	infoNode* infoMap=NULL;
    		
 	
- 	fprintf(stderr, "Enter relation file: \n" );
+ 	//fprintf(stderr, "Enter relation file: \n" );
  	//oso dinwtai apo to stdin arxeio
 	while(1){
 		if(	scanf("%s",file)==-1){fprintf(stderr, "scanf failed\n" ); return 1;}
@@ -30,7 +30,7 @@ int main(void){
 	//dimiourgw to infomap apo ta dosmena relations
 	infoMap=create_InfoMap(relList,  infoMap, numOffiles);
 
-  	fprintf(stderr,"Enter query: \n");
+  	//fprintf(stderr,"Enter query: \n");
   	execute_workload(numOffiles,infoMap); //ektelei to workload pou dinetai se  batches  apo to stdin
 	
   	//apodesmevei ton xwro pou eixe desmevtei gia to infoMap
