@@ -4,7 +4,7 @@
 #define n 8
 #define m (1<<n)
 
-#define size (128*1024-1) //arithmos eggrafwn pou xwrane sto ena bucket ths listas 
+#define size (128*1024)/(3*8) //arithmos eggrafwn pou xwrane sto ena bucket ths listas 
 //#define size 2000000000
 
 using namespace std;
